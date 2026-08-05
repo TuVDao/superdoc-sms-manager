@@ -1,0 +1,370 @@
+<Window
+    x:Class="Message_T480s.WinUI.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="using:Message_T480s.WinUI"
+
+    mc:Ignorable="d"
+    Title="SUPERDOC SMS Manager">
+
+    <!--
+      Secondary text uses TextFillColorSecondary/Tertiary brushes rather than Opacity. Opacity
+      blends the glyphs into the background and makes them look washed out and fuzzy; the theme
+      brushes are tuned for contrast and keep the text crisp.
+      FontSize is bound throughout so the size picker scales the whole window.
+    -->
+    <Grid x:Name="RootGrid"
+          Padding="16"
+          RowDefinitions="Auto,Auto,*"
+          RowSpacing="10">
+
+        <!-- ================================ HEADER ================================ -->
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+            <Button Command="{Binding ToggleLeftPanelCommand}"
+                    Content="&#x2261;"
+                    ToolTipService.ToolTip="{Binding Ui.TogglePanelTooltip}"
+                    VerticalAlignment="Top"
+                    Padding="12,6" />
+
+            <StackPanel Grid.Column="1" Spacing="3">
+                <TextBlock Text="SUPERDOC SMS Manager"
+                           FontSize="{Binding Ui.TitleFontSize}"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding DeviceStatusText}"
+                           FontSize="{Binding Ui.SmallFontSize}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                <!-- ItemTemplate rather than ToString: the labels have to repaint when the
+                     language changes, and ToString is only read once per container. -->
+                <ComboBox ItemsSource="{Binding Ui.LanguageOptions}"
+                          SelectedItem="{Binding Ui.SelectedLanguageOption, Mode=TwoWay}"
+                          ToolTipService.ToolTip="{Binding Loc.LanguageTooltip}"
+                          MinWidth="130">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <ComboBox ItemsSource="{Binding Ui.FontSizeOptions}"
+                          SelectedItem="{Binding Ui.SelectedFontSizeOption, Mode=TwoWay}"
+                          ToolTipService.ToolTip="{Binding Loc.FontSizeTooltip}"
+                          MinWidth="130">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Content="{Binding Loc.Messages}" Command="{Binding ShowMessagesCommand}" />
+                <Button Content="{Binding Loc.Contacts}" Command="{Binding ShowContactsCommand}" />
+            </StackPanel>
+        </Grid>
+
+        <TextBlock Grid.Row="1"
+                   Text="{Binding Conversations.StatusText}"
+                   FontSize="{Binding Ui.SmallFontSize}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                   TextWrapping="Wrap" />
+
+        <!-- ================================ MESSAGES ================================ -->
+        <Grid Grid.Row="2"
+              ColumnDefinitions="Auto,Auto,*"
+              Visibility="{Binding IsMessagesView, Converter={StaticResource BoolToVisibility}}">
+
+            <!-- Thread list -->
+            <Grid RowDefinitions="Auto,Auto,Auto,*"
+                  RowSpacing="8"
+                  Width="{Binding Ui.LeftPanelWidth}"
+                  Visibility="{Binding Ui.IsLeftPanelVisible, Converter={StaticResource BoolToVisibility}}">
+
+                <Button Content="{Binding Loc.NewMessage}"
+                        HorizontalAlignment="Stretch"
+                        Command="{Binding Conversations.NewConversationCommand}" />
+
+                <TextBox Grid.Row="1"
+                         PlaceholderText="{Binding Loc.SearchPlaceholder}"
+                         Text="{Binding Conversations.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                <Button Grid.Row="2"
+                        HorizontalAlignment="Stretch"
+                        Margin="0,0,0,8"
+                        Content="{Binding Conversations.DeleteConversationsLabel}"
+                        Command="{Binding Conversations.DeleteSelectedConversationsCommand}"
+                        Visibility="{Binding Conversations.HasSelectedConversations, Converter={StaticResource BoolToVisibility}}" />
+
+                <ListView Grid.Row="3"
+                          ItemsSource="{Binding Conversations.Conversations}"
+                          SelectedItem="{Binding Conversations.SelectedConversation, Mode=TwoWay}"
+                          SelectionChanged="ConversationList_SelectionChanged"
+                          SelectionMode="Extended">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="*,Auto" Padding="2,8" ColumnSpacing="8">
+                                <StackPanel Spacing="3">
+                                    <TextBlock Text="{Binding Title}"
+                                               FontWeight="SemiBold"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Subtitle}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               Visibility="{Binding Subtitle, Converter={StaticResource StringToVisibility}}" />
+                                    <TextBlock Text="{Binding LastMessagePreview}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxLines="1" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Spacing="4" HorizontalAlignment="Right">
+                                    <TextBlock Text="{Binding LastMessageAtDisplay}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               HorizontalAlignment="Right" />
+                                    <Border Background="#DC2626"
+                                            CornerRadius="9"
+                                            Padding="8,2"
+                                            HorizontalAlignment="Right"
+                                            Visibility="{Binding HasFailed, Converter={StaticResource BoolToVisibility}}">
+                                        <TextBlock Text="{Binding DataContext.Loc.ErrorBadge, ElementName=RootGrid}" Foreground="White" />
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+
+            <!-- Drag to resize the thread list -->
+            <local:SizerBorder Grid.Column="1"
+                    IsHorizontalDrag="True"
+                    Width="10"
+                    Background="Transparent"
+                    PointerPressed="PanelSizer_PointerPressed"
+                    PointerMoved="PanelSizer_PointerMoved"
+                    PointerReleased="PanelSizer_PointerReleased"
+                    PointerCaptureLost="PanelSizer_PointerReleased"
+                    ToolTipService.ToolTip="{Binding Loc.PanelSizerTooltip}"
+                    Visibility="{Binding Ui.IsLeftPanelVisible, Converter={StaticResource BoolToVisibility}}">
+                <Rectangle Width="2"
+                           HorizontalAlignment="Center"
+                           Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+            </local:SizerBorder>
+
+            <!-- Thread detail -->
+            <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto,Auto" RowSpacing="8" Margin="8,0,0,0">
+
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Spacing="3">
+                        <TextBlock Text="{Binding Conversations.ThreadTitle}"
+                                   FontSize="{Binding Ui.HeaderFontSize}"
+                                   FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Conversations.ThreadSubtitle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                        <Button Content="{Binding Conversations.DeleteMessagesLabel}"
+                                Command="{Binding Conversations.DeleteSelectedMessagesCommand}"
+                                Visibility="{Binding Conversations.HasSelectedMessages, Converter={StaticResource BoolToVisibility}}" />
+                        <Button Content="{Binding Loc.SaveToContacts}"
+                                Command="{Binding AddContactForPeerCommand}" />
+                    </StackPanel>
+                </Grid>
+
+                <ListView x:Name="ThreadList"
+                          Grid.Row="1"
+                          Padding="4"
+                          ItemsSource="{Binding Conversations.ThreadMessages}"
+                          ItemContainerStyle="{StaticResource ThreadBubbleItemStyle}"
+                          SelectionMode="Extended"
+                          SelectionChanged="ThreadList_SelectionChanged">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                                <Grid Padding="0,5" HorizontalAlignment="{Binding IsIncoming, Converter={StaticResource IncomingToAlignment}}">
+                                    <Border Background="{Binding IsIncoming, Converter={StaticResource IncomingToBrush}}"
+                                            CornerRadius="12"
+                                            Padding="14,10"
+                                            MaxWidth="620">
+                                        <StackPanel Spacing="5">
+                                            <TextBlock Text="{Binding Body}"
+                                                       Foreground="White"
+                                                       TextWrapping="Wrap"
+                                                       IsTextSelectionEnabled="True" />
+                                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                                <TextBlock Text="{Binding TimestampDisplay}"
+                                                           Foreground="#E8E8E8" />
+                                                <TextBlock Text="{Binding Status, Converter={StaticResource StatusToText}}"
+                                                           Foreground="#E8E8E8" />
+                                                <Button Content="{Binding DataContext.Loc.Retry, ElementName=RootGrid}"
+                                                        Padding="10,2"
+                                                        Click="RetryButton_Click"
+                                                        Tag="{Binding Id}"
+                                                        Visibility="{Binding Status, Converter={StaticResource RetryVisibilityConverter}}" />
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding ErrorMessage}"
+                                                       Foreground="#FFD4D4"
+                                                       TextWrapping="Wrap"
+                                                       Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <!-- Drag to resize the composer. Inverted: dragging up makes it taller. -->
+                <local:SizerBorder Grid.Row="2"
+                        IsHorizontalDrag="False"
+                        Height="12"
+                        Background="Transparent"
+                        PointerPressed="ComposerSizer_PointerPressed"
+                        PointerMoved="ComposerSizer_PointerMoved"
+                        PointerReleased="ComposerSizer_PointerReleased"
+                        PointerCaptureLost="ComposerSizer_PointerReleased"
+                        ToolTipService.ToolTip="{Binding Loc.ComposerSizerTooltip}"
+                        Visibility="{Binding Conversations.HasSelection, Converter={StaticResource BoolToVisibility}}">
+                    <Rectangle Height="2"
+                               VerticalAlignment="Center"
+                               Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                </local:SizerBorder>
+
+                <Grid Grid.Row="3"
+                      RowDefinitions="Auto,*"
+                      RowSpacing="6"
+                      Height="{Binding Ui.ComposerHeight}"
+                      Visibility="{Binding Conversations.HasSelection, Converter={StaticResource BoolToVisibility}}">
+
+                    <TextBox PlaceholderText="{Binding Loc.RecipientPlaceholder}"
+                             Header="{Binding Loc.RecipientHeader}"
+                             Text="{Binding Conversations.NewRecipient, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Visibility="{Binding Conversations.CanEditRecipient, Converter={StaticResource BoolToVisibility}}" />
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <TextBox PlaceholderText="{Binding Loc.MessagePlaceholder}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 VerticalAlignment="Stretch"
+                                 VerticalContentAlignment="Top"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 Text="{Binding Conversations.MessageBody, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button Grid.Column="1"
+                                Content="{Binding Loc.Send}"
+                                MinWidth="100"
+                                VerticalAlignment="Stretch"
+                                Style="{StaticResource AccentButtonStyle}"
+                                Command="{Binding Conversations.SendCommand}" />
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!-- ================================ CONTACTS ================================ -->
+        <Grid Grid.Row="2"
+              ColumnDefinitions="Auto,Auto,*"
+              Visibility="{Binding IsContactsView, Converter={StaticResource BoolToVisibility}}">
+
+            <Grid RowDefinitions="Auto,*"
+                  RowSpacing="8"
+                  Width="{Binding Ui.LeftPanelWidth}"
+                  Visibility="{Binding Ui.IsLeftPanelVisible, Converter={StaticResource BoolToVisibility}}">
+
+                <Button Content="{Binding Loc.AddContact}"
+                        HorizontalAlignment="Stretch"
+                        Command="{Binding ContactBook.NewContactCommand}" />
+
+                <ListView Grid.Row="1"
+                          ItemsSource="{Binding ContactBook.Contacts}"
+                          SelectedItem="{Binding ContactBook.SelectedContact, Mode=TwoWay}"
+                          SelectionMode="Single">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Padding="2,8" Spacing="3">
+                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding DisplayPhone}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock Text="{Binding Note}"
+                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                           TextTrimming="CharacterEllipsis"
+                                           Visibility="{Binding Note, Converter={StaticResource StringToVisibility}}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+
+            <local:SizerBorder Grid.Column="1"
+                    IsHorizontalDrag="True"
+                    Width="10"
+                    Background="Transparent"
+                    PointerPressed="PanelSizer_PointerPressed"
+                    PointerMoved="PanelSizer_PointerMoved"
+                    PointerReleased="PanelSizer_PointerReleased"
+                    PointerCaptureLost="PanelSizer_PointerReleased"
+                    ToolTipService.ToolTip="{Binding Loc.PanelSizerTooltip}"
+                    Visibility="{Binding Ui.IsLeftPanelVisible, Converter={StaticResource BoolToVisibility}}">
+                <Rectangle Width="2"
+                           HorizontalAlignment="Center"
+                           Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+            </local:SizerBorder>
+
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" Margin="8,0,0,0">
+                <StackPanel Spacing="12"
+                            MaxWidth="560"
+                            HorizontalAlignment="Left"
+                            Visibility="{Binding ContactBook.IsEditing, Converter={StaticResource BoolToVisibility}}">
+
+                    <TextBlock Text="{Binding Loc.ContactInfo}"
+                               FontSize="{Binding Ui.HeaderFontSize}"
+                               FontWeight="SemiBold" />
+
+                    <TextBox Header="{Binding Loc.ContactTitle}"
+                             PlaceholderText="{Binding Loc.ContactTitlePlaceholder}"
+                             Text="{Binding ContactBook.Editor.Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBox Header="{Binding Loc.FamilyName}"
+                             PlaceholderText="{Binding Loc.FamilyNamePlaceholder}"
+                             Text="{Binding ContactBook.Editor.FamilyName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBox Header="{Binding Loc.GivenName}"
+                             PlaceholderText="{Binding Loc.GivenNamePlaceholder}"
+                             Text="{Binding ContactBook.Editor.GivenName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBox Header="{Binding Loc.PhoneNumber}"
+                             PlaceholderText="{Binding Loc.PhonePlaceholder}"
+                             Text="{Binding ContactBook.Editor.PhoneNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBox Header="{Binding Loc.Address}"
+                             PlaceholderText="{Binding Loc.AddressPlaceholder}"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             Height="80"
+                             Text="{Binding ContactBook.Editor.Address, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBox Header="{Binding Loc.Note}"
+                             PlaceholderText="{Binding Loc.NotePlaceholder}"
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             Height="120"
+                             Text="{Binding ContactBook.Editor.Note, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="{Binding Loc.Save}"
+                                MinWidth="100"
+                                Style="{StaticResource AccentButtonStyle}"
+                                Command="{Binding ContactBook.SaveCommand}" />
+                        <Button Content="{Binding Loc.Delete}" Command="{Binding ContactBook.DeleteCommand}" />
+                        <Button Content="{Binding Loc.Cancel}" Command="{Binding ContactBook.CancelCommand}" />
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding ContactBook.StatusText}"
+                               TextWrapping="Wrap"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Visibility="{Binding ContactBook.StatusText, Converter={StaticResource StringToVisibility}}" />
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Window>

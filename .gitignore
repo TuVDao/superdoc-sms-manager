@@ -1,0 +1,50 @@
+# ---------------------------------------------------------------------------
+# Vendored toolchain and package caches.
+# This workspace keeps its own SDK and NuGet cache so builds are reproducible
+# without a machine-wide install. Together they are ~1.8 GB and are restored by
+# `dotnet restore`, so they must never enter history.
+# The trailing-space variants (".appdata ", ".dotnet_home ") really do exist on
+# disk; the * covers them.
+# ---------------------------------------------------------------------------
+/.dotnet/
+/.dotnet_home*/
+/.nuget/
+/.appdata*/
+/.user/
+/NuGet/
+vs_BuildTools.exe
+
+# ---------------------------------------------------------------------------
+# Build output. `app/` is the published shipping build (scripts\publish-app.cmd)
+# and `artifacts/` holds MSIX packages and diagnostic dumps - all regenerable.
+# ---------------------------------------------------------------------------
+[Bb]in/
+[Oo]bj/
+/artifacts/
+/app/
+
+# ---------------------------------------------------------------------------
+# IDE and editor state
+# ---------------------------------------------------------------------------
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+
+# ---------------------------------------------------------------------------
+# OS noise
+# ---------------------------------------------------------------------------
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ---------------------------------------------------------------------------
+# Local runtime data. The message database and logs live under %LOCALAPPDATA%,
+# but keep these here in case anyone points the app at the repo.
+# ---------------------------------------------------------------------------
+*.db
+*.db-wal
+*.db-shm
+*.log
+*.binlog

@@ -1,0 +1,41 @@
+<Application
+    x:Class="Message_T480s.WinUI.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+    xmlns:local="using:Message_T480s.WinUI">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!--
+                  The WinUI default styles and theme resources. Without this the app starts
+                  with an empty resource tree, and the first control whose template references
+                  a built-in brush (TabViewScrollButtonBackground, and others) throws
+                  XamlParseException at load time. The packaged build fails on this; the
+                  unpackaged one happened to tolerate it, which is why it only showed up here.
+                -->
+                <controls:XamlControlsResources />
+            </ResourceDictionary.MergedDictionaries>
+
+            <local:SmsStatusToBrushConverter x:Key="StatusBrushConverter" />
+            <local:SmsStatusToVisibilityConverter x:Key="RetryVisibilityConverter" />
+            <local:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+            <local:StringToVisibilityConverter x:Key="StringToVisibility" />
+            <local:IncomingToAlignmentConverter x:Key="IncomingToAlignment" />
+            <local:IncomingToBrushConverter x:Key="IncomingToBrush" />
+            <local:SmsStatusToTextConverter x:Key="StatusToText" />
+
+            <!--
+              The thread is a ListView so messages can be ticked and deleted, but a bubble must
+              still sit hard left or hard right. The default container centres its content and
+              adds its own padding and minimum height, which would break the alignment and put
+              a gap between bubbles.
+            -->
+            <Style x:Key="ThreadBubbleItemStyle" TargetType="ListViewItem">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="MinHeight" Value="0" />
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

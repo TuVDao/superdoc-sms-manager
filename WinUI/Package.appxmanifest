@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
+  xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap uap5 com desktop rescap">
+  <!--
+    Unsigned test package namespace (OID...) is required for Add-AppxPackage -AllowUnsigned.
+    For production distribution, remove OID and sign the package with a proper certificate.
+
+    Identity Name is the app's stable identity, NOT its display name - the visible name is
+    DisplayName below. Renaming it would make Windows treat this as a different app: the
+    already-installed copy would stay behind alongside the new one, each with its own startup
+    task, and the scripts under scripts\ that look the package up by name would stop finding it.
+
+    The same applies to Publisher: package identity is (Name, Publisher), and the
+    PackageFamilyName hash is derived from Publisher. Changing the CN below therefore does not
+    upgrade an installed copy - it installs beside it, and the old one must be removed by hand.
+    Publisher here is the certificate subject; PublisherDisplayName is what users actually see.
+  -->
+  <Identity
+    Name="MessageT480s.WinUI"
+    Publisher="CN=SUPERDOC TECHNOLOGY JSC, OID.2.25.311729368913984317654407730594956997722=1"
+    Version="1.0.1.0" />
+
+  <Properties>
+    <DisplayName>SUPERDOC SMS Manager</DisplayName>
+    <PublisherDisplayName>SUPERDOC TECHNOLOGY JSC</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Applications>
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
+      <!--
+        BackgroundColor applies to the Start menu tile and the splash screen. It must not be
+        "transparent": Windows then fills the tile with the user's accent colour, which here is
+        the same blue as the logo, so the mark vanished into its own background. #202020 is the
+        WinUI dark-theme window background, so the tile matches the app itself.
+
+        This colour no longer reaches the taskbar - the Square44x44Logo.*_altform-unplated
+        assets make the taskbar draw the logo with no plate behind it at all.
+      -->
+      <uap:VisualElements
+        DisplayName="SUPERDOC SMS Manager"
+        Description="SUPERDOC SMS Manager for the built-in WWAN modem"
+        BackgroundColor="#202020"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+
+      <Extensions>
+        <!--
+          Inbound SMS is only delivered to a running process: this app model has no way to be
+          woken by a message (see README). Starting at sign-in and staying in the tray is what
+          makes "always receiving" true in practice.
+        -->
+        <uap5:Extension
+          Category="windows.startupTask"
+          Executable="Message_T480s.WinUI.exe"
+          EntryPoint="Windows.FullTrustApplication">
+          <uap5:StartupTask
+            TaskId="MessageT480sSmsReceiver"
+            Enabled="true"
+            DisplayName="SUPERDOC SMS Manager" />
+        </uap5:Extension>
+
+        <!--
+          AppNotificationManager.Register() needs a COM activator declared here. Without it the
+          call fails asynchronously with "No COM servers are registered for this app", which
+          surfaces as an unhandled exception roughly 100ms later - too late for a try/catch
+          around the Register() call to help.
+        -->
+        <com:Extension Category="windows.comServer">
+          <com:ComServer>
+            <com:ExeServer Executable="Message_T480s.WinUI.exe" DisplayName="SUPERDOC SMS Manager" Arguments="----AppNotificationActivated:">
+              <com:Class Id="DC609F84-DB1B-4CFB-A8F3-59FD2162CCC1" />
+            </com:ExeServer>
+          </com:ComServer>
+        </com:Extension>
+
+        <desktop:Extension Category="windows.toastNotificationActivation">
+          <desktop:ToastNotificationActivation ToastActivatorCLSID="DC609F84-DB1B-4CFB-A8F3-59FD2162CCC1" />
+        </desktop:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <Capability Name="internetClient" />
+    <DeviceCapability Name="cellularMessaging" />
+    <DeviceCapability Name="mobileBroadband" />
+  </Capabilities>
+</Package>
