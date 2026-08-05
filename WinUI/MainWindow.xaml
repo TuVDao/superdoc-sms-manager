@@ -155,7 +155,7 @@
             </local:SizerBorder>
 
             <!-- Thread detail -->
-            <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto,Auto" RowSpacing="8" Margin="8,0,0,0">
+            <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto,Auto,Auto" RowSpacing="8" Margin="8,0,0,0">
 
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel Spacing="3">
@@ -232,7 +232,7 @@
                 </local:SizerBorder>
 
                 <Grid Grid.Row="3"
-                      RowDefinitions="Auto,*,Auto"
+                      RowDefinitions="Auto,*"
                       RowSpacing="6"
                       Height="{Binding Ui.ComposerHeight}"
                       Visibility="{Binding Conversations.HasSelection, Converter={StaticResource BoolToVisibility}}">
@@ -299,19 +299,27 @@
                                 Command="{Binding Conversations.SendCommand}" />
                     </Grid>
 
-                    <!-- Segment counter: one emoji forces UCS-2 and cuts capacity to 70
-                         characters, which the user is otherwise billed for without warning. -->
-                    <StackPanel Grid.Row="2" Spacing="2" Margin="0,4,0,0">
-                        <TextBlock Text="{Binding Conversations.ComposerCounter}"
-                                   FontSize="{Binding Ui.SmallFontSize}"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        <TextBlock Text="{Binding Loc.UnicodeWarning}"
-                                   FontSize="{Binding Ui.SmallFontSize}"
-                                   TextWrapping="Wrap"
-                                   Foreground="{ThemeResource SystemFillColorCautionBrush}"
-                                   Visibility="{Binding Conversations.ShowUnicodeWarning, Converter={StaticResource BoolToVisibility}}" />
-                    </StackPanel>
                 </Grid>
+
+                <!--
+                  The counter lives outside the composer's fixed-height grid on purpose. Inside
+                  it, the warning's own height was subtracted from the text box, so turning on
+                  Unicode text visibly shrank the field you were typing in. Out here the input
+                  keeps the full height the user dragged for, and the counter simply sits below.
+                -->
+                <StackPanel Grid.Row="4"
+                            Spacing="1"
+                            Margin="0,4,0,0"
+                            Visibility="{Binding Conversations.HasSelection, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="{Binding Conversations.ComposerCounter}"
+                               FontSize="{Binding Ui.CounterFontSize}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBlock Text="{Binding Loc.UnicodeWarning}"
+                               FontSize="{Binding Ui.CounterFontSize}"
+                               TextWrapping="Wrap"
+                               Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                               Visibility="{Binding Conversations.ShowUnicodeWarning, Converter={StaticResource BoolToVisibility}}" />
+                </StackPanel>
             </Grid>
         </Grid>
 

@@ -136,6 +136,7 @@ public sealed class UiSettings : INotifyPropertyChanged
             if (SetField(ref _fontSize, clamped))
             {
                 OnPropertyChanged(nameof(SmallFontSize));
+                OnPropertyChanged(nameof(CounterFontSize));
                 OnPropertyChanged(nameof(HeaderFontSize));
                 OnPropertyChanged(nameof(TitleFontSize));
                 OnPropertyChanged(nameof(SelectedFontSizeOption));
@@ -146,6 +147,13 @@ public sealed class UiSettings : INotifyPropertyChanged
 
     /// <summary>Secondary text. Kept close to the body size so it stays comfortably readable.</summary>
     public double SmallFontSize => Math.Max(11, FontSize - 2);
+
+    /// <summary>
+    /// The composer's character counter. Smaller than other secondary text on purpose: it sits
+    /// directly under the input and is read at a glance, so it should take as little vertical
+    /// room as possible.
+    /// </summary>
+    public double CounterFontSize => Math.Max(10, FontSize - 4);
 
     public double HeaderFontSize => FontSize + 2;
 
