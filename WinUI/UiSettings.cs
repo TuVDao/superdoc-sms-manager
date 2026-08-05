@@ -37,7 +37,7 @@ public sealed class UiSettings : INotifyPropertyChanged
     private readonly SmsManager _smsManager;
     private readonly ILogger _logger;
     private readonly Strings _loc;
-    private AppLanguage _language = AppLanguage.Auto;
+    private string _languageCode = string.Empty;
 
     private double _fontSize = DefaultFontSize;
     private double _leftPanelWidth = DefaultPanelWidth;
@@ -63,44 +63,45 @@ public sealed class UiSettings : INotifyPropertyChanged
             new(loc, "FontXXLarge", 24)
         ];
 
-        LanguageOptions =
-        [
-            new(loc, "LanguageAuto", AppLanguage.Auto),
-            new(loc, "LanguageVietnamese", AppLanguage.Vietnamese),
-            new(loc, "LanguageEnglish", AppLanguage.English)
-        ];
+        // "Automatic" is translated; every real language is listed under its own endonym
+        // ("Deutsch", "日本語"), which must not change with the interface language.
+        LanguageOptions = [new PickerOption<string>(loc, "LanguageAuto", string.Empty)];
+        foreach (var pack in loc.Available)
+        {
+            LanguageOptions.Add(new PickerOption<string>(pack.Name, pack.Code));
+        }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public ObservableCollection<PickerOption<double>> FontSizeOptions { get; }
 
-    public ObservableCollection<PickerOption<AppLanguage>> LanguageOptions { get; }
+    public ObservableCollection<PickerOption<string>> LanguageOptions { get; }
 
-    /// <summary>Auto follows the machine's display language; the other values pin it.</summary>
-    public AppLanguage Language
+    /// <summary>Empty follows the machine's display language; a code pins that language.</summary>
+    public string LanguageCode
     {
-        get => _language;
+        get => _languageCode;
         set
         {
-            if (SetField(ref _language, value))
+            if (SetField(ref _languageCode, value ?? string.Empty))
             {
-                _loc.Apply(value);
+                _loc.Apply(string.IsNullOrEmpty(_languageCode) ? null : _languageCode);
                 RefreshLocalisedOptions();
-                Save(LanguageKey, value.ToString());
+                Save(LanguageKey, _languageCode);
                 OnPropertyChanged(nameof(SelectedLanguageOption));
             }
         }
     }
 
-    public PickerOption<AppLanguage>? SelectedLanguageOption
+    public PickerOption<string>? SelectedLanguageOption
     {
-        get => LanguageOptions.FirstOrDefault(o => o.Value == Language);
+        get => LanguageOptions.FirstOrDefault(o => o.Value == LanguageCode);
         set
         {
             if (value is not null)
             {
-                Language = value.Value;
+                LanguageCode = value.Value;
             }
         }
     }
@@ -135,6 +136,7 @@ public sealed class UiSettings : INotifyPropertyChanged
             if (SetField(ref _fontSize, clamped))
             {
                 OnPropertyChanged(nameof(SmallFontSize));
+                OnPropertyChanged(nameof(CounterFontSize));
                 OnPropertyChanged(nameof(HeaderFontSize));
                 OnPropertyChanged(nameof(TitleFontSize));
                 OnPropertyChanged(nameof(SelectedFontSizeOption));
@@ -145,6 +147,13 @@ public sealed class UiSettings : INotifyPropertyChanged
 
     /// <summary>Secondary text. Kept close to the body size so it stays comfortably readable.</summary>
     public double SmallFontSize => Math.Max(11, FontSize - 2);
+
+    /// <summary>
+    /// The composer's character counter. Smaller than other secondary text on purpose: it sits
+    /// directly under the input and is read at a glance, so it should take as little vertical
+    /// room as possible.
+    /// </summary>
+    public double CounterFontSize => Math.Max(10, FontSize - 4);
 
     public double HeaderFontSize => FontSize + 2;
 
@@ -210,14 +219,25 @@ public sealed class UiSettings : INotifyPropertyChanged
 
     public void ToggleLeftPanel() => IsLeftPanelVisible = !IsLeftPanelVisible;
 
+    /// <summary>
+    /// Translates the setting written by the earlier enum-based version ("Vietnamese", "English",
+    /// "Auto") into a language code. Without this an existing install would silently revert to
+    /// the machine's language the first time it ran a build with translation files.
+    /// </summary>
+    private static string MigrateLanguageSetting(string? stored) => stored switch
+    {
+        null or "" or "Auto" => string.Empty,
+        "Vietnamese" => "vi",
+        "English" => "en",
+        _ => stored
+    };
+
     private void Load()
     {
         try
         {
-            _language = Enum.TryParse<AppLanguage>(_smsManager.GetSetting(LanguageKey), out var lang)
-                ? lang
-                : AppLanguage.Auto;
-            _loc.Apply(_language);
+            _languageCode = MigrateLanguageSetting(_smsManager.GetSetting(LanguageKey));
+            _loc.Apply(string.IsNullOrEmpty(_languageCode) ? null : _languageCode);
 
             _fontSize = ReadDouble(FontSizeKey, DefaultFontSize, 11, 28);
             _leftPanelWidth = ReadDouble(PanelWidthKey, DefaultPanelWidth, 180, 640);

@@ -25,7 +25,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         _logger = logger;
         _dispatcher = dispatcher;
 
-        Loc = new Strings();
+        Loc = new Strings(logger);
         Ui = new UiSettings(smsManager, logger, Loc);
 
         Conversations = new ConversationsViewModel(smsManager, logger, dispatcher, Loc);
@@ -71,6 +71,9 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     /// <summary>Every user-visible string, in the active language.</summary>
     public Strings Loc { get; }
+
+    /// <summary>The emoji offered by the composer's picker.</summary>
+    public IReadOnlyList<EmojiGroup> EmojiGroups => EmojiCatalog.Groups;
 
     /// <summary>Text size, language and panel geometry, persisted between runs.</summary>
     public UiSettings Ui { get; }

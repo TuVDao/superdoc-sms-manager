@@ -65,6 +65,13 @@
       Without CopyToPublishDirectory, `dotnet publish` drops the Assets folder and the tray icon
       fails at runtime with DirectoryNotFoundException.
     -->
+    <!-- Translations are read from disk at runtime, so they must reach both the build output
+         and the publish output. Adding a language is then a file, not a rebuild. -->
+    <Content Include="Strings\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+
     <Content Update="Assets\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>

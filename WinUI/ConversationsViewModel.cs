@@ -98,6 +98,7 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(ThreadSubtitle));
         OnPropertyChanged(nameof(DeleteMessagesLabel));
         OnPropertyChanged(nameof(DeleteConversationsLabel));
+        OnPropertyChanged(nameof(ComposerCounter));
 
         // The per-message status text comes from a value converter, which the binding engine has
         // no reason to re-run when only the language changed. Rebuilding the thread is the
@@ -288,8 +289,46 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
             if (SetField(ref _messageBody, value))
             {
                 RaiseSendCanExecute();
+                OnPropertyChanged(nameof(ComposerCounter));
+                OnPropertyChanged(nameof(ShowUnicodeWarning));
             }
         }
+    }
+
+    /// <summary>
+    /// Characters, segments and encoding for what is currently typed.
+    /// </summary>
+    /// <remarks>
+    /// Shown because the arithmetic is unintuitive and costs money: a single emoji forces UCS-2,
+    /// which cuts capacity from 160 characters to 70, and each segment is billed separately.
+    /// </remarks>
+    public string ComposerCounter
+    {
+        get
+        {
+            var info = SmsSegments.Measure(MessageBody);
+            return _loc.ComposerCounter(info.Characters, info.Segments, info.RequiresUnicode);
+        }
+    }
+
+    /// <summary>True once the text has forced Unicode and the message is no longer trivial.</summary>
+    public bool ShowUnicodeWarning
+    {
+        get
+        {
+            var info = SmsSegments.Measure(MessageBody);
+            return info.RequiresUnicode && info.Characters > 0;
+        }
+    }
+
+    /// <summary>Inserts an emoji, replacing whatever the caret has selected.</summary>
+    public void InsertAtCaret(string text, int selectionStart, int selectionLength)
+    {
+        var body = MessageBody ?? string.Empty;
+        var start = Math.Clamp(selectionStart, 0, body.Length);
+        var length = Math.Clamp(selectionLength, 0, body.Length - start);
+
+        MessageBody = body.Remove(start, length).Insert(start, text);
     }
 
     /// <summary>Filters the thread list by contact name or number.</summary>
