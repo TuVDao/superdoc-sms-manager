@@ -1,57 +1,29 @@
+using Microsoft.Extensions.Logging;
 using System.ComponentModel;
 using System.Globalization;
+using System.Text.Json;
 
 namespace Message_T480s.WinUI;
 
-public enum AppLanguage
-{
-    /// <summary>Follow the machine's display language.</summary>
-    Auto,
-    Vietnamese,
-    English
-}
+/// <summary>One installed translation, described by the `_meta` block of its JSON file.</summary>
+public sealed record LanguagePack(
+    string Code,
+    string Name,
+    bool RightToLeft,
+    bool Reviewed,
+    IReadOnlyDictionary<string, string> Values);
 
 /// <summary>
-/// A choice in a picker whose label follows the active language.
+/// Every user-visible string, loaded from <c>Strings\*.json</c> beside the executable.
 /// </summary>
 /// <remarks>
-/// The instances are created once and kept. Rebuilding the collection on every language change
-/// made the ComboBox lose the item it had selected and write a different one back through its
-/// two-way binding — which silently changed the user's language a moment after start-up.
-/// Only the label changes now, so the selected item is never invalidated.
-/// </remarks>
-public sealed class PickerOption<T> : INotifyPropertyChanged
-{
-    private readonly Strings _loc;
-    private readonly string _key;
-
-    public PickerOption(Strings loc, string key, T value)
-    {
-        _loc = loc;
-        _key = key;
-        Value = value;
-    }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    public T Value { get; }
-
-    public string Name => _loc.Text(_key);
-
-    public void RefreshName() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name)));
-
-    public override string ToString() => Name;
-}
-
-/// <summary>
-/// Every string the user sees, in Vietnamese and English.
-/// </summary>
-/// <remarks>
-/// Deliberately not .resw + x:Uid. That is the conventional WinUI route, but it resolves
-/// resources through MRT at load time, which makes switching language without restarting
-/// awkward, and it leans on resources.pri — the same machinery that already needed careful
-/// handling for the taskbar icons. A plain dictionary keeps the switch instant and behaves
-/// identically packaged or unpackaged.
+/// The translations deliberately live outside the code. Adding or fixing a language is then a
+/// single JSON file and needs no build, which is the only realistic way to get good translations
+/// for languages the authors do not speak.
+///
+/// English is the fallback: any key missing from a translation falls back to the English text
+/// rather than showing a raw key, so a partial translation degrades gracefully instead of
+/// looking broken.
 ///
 /// Raising PropertyChanged with an empty name tells the binding engine every property changed,
 /// so one event re-reads the whole window and the UI swaps language live.
@@ -60,14 +32,19 @@ public sealed class PickerOption<T> : INotifyPropertyChanged
 /// </remarks>
 public sealed class Strings : INotifyPropertyChanged
 {
-    private Dictionary<string, string> _active;
-    private AppLanguage _resolved;
+    private const string FallbackCode = "en";
 
-    public Strings(AppLanguage language = AppLanguage.Auto)
+    private readonly Dictionary<string, LanguagePack> _packs = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ILogger? _logger;
+
+    private IReadOnlyDictionary<string, string> _active = new Dictionary<string, string>();
+    private IReadOnlyDictionary<string, string> _fallback = new Dictionary<string, string>();
+
+    public Strings(ILogger? logger = null)
     {
-        _active = Vietnamese;
-        _resolved = AppLanguage.Vietnamese;
-        Apply(language);
+        _logger = logger;
+        LoadPacks();
+        Apply(null);
         Current = this;
     }
 
@@ -75,359 +52,290 @@ public sealed class Strings : INotifyPropertyChanged
     /// The instance value converters read from. They are constructed by the XAML parser and get
     /// no constructor arguments, so there is nowhere else to reach the active language from.
     /// </summary>
-    public static Strings Current { get; private set; } = new(AppLanguage.English);
+    public static Strings Current { get; private set; } = new();
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    /// <summary>The language actually in use once <see cref="AppLanguage.Auto"/> is resolved.</summary>
-    public AppLanguage Resolved => _resolved;
+    /// <summary>Every translation found on disk, English first, then alphabetically by name.</summary>
+    public IReadOnlyList<LanguagePack> Available { get; private set; } = [];
 
-    public void Apply(AppLanguage language)
+    /// <summary>The language actually in use once "automatic" has been resolved.</summary>
+    public string ResolvedCode { get; private set; } = FallbackCode;
+
+    /// <summary>True when the active language is written right to left.</summary>
+    public bool IsRightToLeft { get; private set; }
+
+    /// <summary>
+    /// Applies a language by code. Pass null or an unknown code to follow the machine's display
+    /// language, falling back to English.
+    /// </summary>
+    public void Apply(string? code)
     {
-        var resolved = language == AppLanguage.Auto ? DetectFromSystem() : language;
+        var pack = Resolve(code);
 
-        _resolved = resolved;
-        _active = resolved == AppLanguage.English ? English : Vietnamese;
+        ResolvedCode = pack.Code;
+        IsRightToLeft = pack.RightToLeft;
+        _active = pack.Values;
 
         // Empty name = "all properties"; one event refreshes every bound string.
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
     }
 
-    /// <summary>
-    /// Vietnamese when the machine's display language is Vietnamese, English for anything else.
-    /// </summary>
-    public static AppLanguage DetectFromSystem()
+    private LanguagePack Resolve(string? code)
     {
+        if (!string.IsNullOrWhiteSpace(code) && _packs.TryGetValue(code, out var exact))
+        {
+            return exact;
+        }
+
+        // "Automatic": walk the culture chain, so pt-BR matches a pt pack and zh-Hans-CN
+        // matches zh-Hans, then zh.
         try
         {
             var culture = CultureInfo.CurrentUICulture;
             while (culture is not null && !string.IsNullOrEmpty(culture.Name))
             {
-                if (culture.TwoLetterISOLanguageName.Equals("vi", StringComparison.OrdinalIgnoreCase))
+                if (_packs.TryGetValue(culture.Name, out var byName))
                 {
-                    return AppLanguage.Vietnamese;
+                    return byName;
+                }
+
+                if (_packs.TryGetValue(culture.TwoLetterISOLanguageName, out var byLanguage))
+                {
+                    return byLanguage;
                 }
 
                 culture = culture.Parent;
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Fall through to the default below.
+            _logger?.LogDebug(ex, "Could not read the current UI culture; falling back to English.");
         }
 
-        return AppLanguage.English;
+        return _packs.TryGetValue(FallbackCode, out var english)
+            ? english
+            : new LanguagePack(FallbackCode, "English", false, true, new Dictionary<string, string>());
     }
 
-    private string Get(string key) => _active.TryGetValue(key, out var value) ? value : key;
+    private void LoadPacks()
+    {
+        var directory = Path.Combine(AppContext.BaseDirectory, "Strings");
+        if (!Directory.Exists(directory))
+        {
+            _logger?.LogError("No translations found at {Path}; the UI will show raw keys.", directory);
+            return;
+        }
+
+        foreach (var file in Directory.EnumerateFiles(directory, "*.json"))
+        {
+            try
+            {
+                var pack = ReadPack(file);
+                _packs[pack.Code] = pack;
+            }
+            catch (Exception ex)
+            {
+                // One malformed translation must not take down every other language.
+                _logger?.LogError(ex, "Ignoring translation {File}: it could not be read.", file);
+            }
+        }
+
+        _fallback = _packs.TryGetValue(FallbackCode, out var english)
+            ? english.Values
+            : new Dictionary<string, string>();
+
+        Available = _packs.Values
+            .OrderByDescending(p => p.Code == FallbackCode)
+            .ThenBy(p => p.Name, StringComparer.CurrentCulture)
+            .ToList();
+
+        _logger?.LogInformation("Loaded {Count} translation(s).", _packs.Count);
+    }
+
+    private static LanguagePack ReadPack(string file)
+    {
+        using var stream = File.OpenRead(file);
+        using var document = JsonDocument.Parse(stream);
+        var root = document.RootElement;
+
+        var code = Path.GetFileNameWithoutExtension(file);
+        var name = code;
+        var rtl = false;
+        var reviewed = false;
+
+        if (root.TryGetProperty("_meta", out var meta))
+        {
+            if (meta.TryGetProperty("code", out var c) && c.ValueKind == JsonValueKind.String)
+            {
+                code = c.GetString() ?? code;
+            }
+
+            if (meta.TryGetProperty("name", out var n) && n.ValueKind == JsonValueKind.String)
+            {
+                name = n.GetString() ?? name;
+            }
+
+            rtl = meta.TryGetProperty("rtl", out var r) && r.ValueKind == JsonValueKind.True;
+            reviewed = meta.TryGetProperty("reviewed", out var v) && v.ValueKind == JsonValueKind.True;
+        }
+
+        var values = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var property in root.EnumerateObject())
+        {
+            if (property.NameEquals("_meta") || property.Value.ValueKind != JsonValueKind.String)
+            {
+                continue;
+            }
+
+            values[property.Name] = property.Value.GetString() ?? string.Empty;
+        }
+
+        return new LanguagePack(code, name, rtl, reviewed, values);
+    }
+
+    /// <summary>Looks a string up by key, falling back to English and then to the key itself.</summary>
+    public string Text(string key)
+    {
+        if (_active.TryGetValue(key, out var value) && value.Length > 0)
+        {
+            return value;
+        }
+
+        return _fallback.TryGetValue(key, out var english) ? english : key;
+    }
+
+    private string Format(string key, params object[] args)
+    {
+        try
+        {
+            return string.Format(Text(key), args);
+        }
+        catch (FormatException)
+        {
+            // A translation with the wrong placeholders must not crash the window.
+            _logger?.LogWarning("Translation '{Key}' has malformed placeholders in {Code}.", key, ResolvedCode);
+            return string.Format(_fallback.TryGetValue(key, out var english) ? english : key, args);
+        }
+    }
 
     // ---- Shell ----------------------------------------------------------------------
-    public string Messages => Get(nameof(Messages));
-    public string Contacts => Get(nameof(Contacts));
-    public string FontSizeTooltip => Get(nameof(FontSizeTooltip));
-    public string LanguageTooltip => Get(nameof(LanguageTooltip));
-    public string ShowList => Get(nameof(ShowList));
-    public string HideList => Get(nameof(HideList));
-    public string CheckingModem => Get(nameof(CheckingModem));
+    public string Messages => Text(nameof(Messages));
+    public string Contacts => Text(nameof(Contacts));
+    public string FontSizeTooltip => Text(nameof(FontSizeTooltip));
+    public string LanguageTooltip => Text(nameof(LanguageTooltip));
+    public string ShowList => Text(nameof(ShowList));
+    public string HideList => Text(nameof(HideList));
+    public string CheckingModem => Text(nameof(CheckingModem));
 
     // ---- Conversations --------------------------------------------------------------
-    public string NewMessage => Get(nameof(NewMessage));
-    public string SearchPlaceholder => Get(nameof(SearchPlaceholder));
-    public string SaveToContacts => Get(nameof(SaveToContacts));
-    public string SelectConversation => Get(nameof(SelectConversation));
-    public string NewMessageTitle => Get(nameof(NewMessageTitle));
-    public string EnterRecipient => Get(nameof(EnterRecipient));
-    public string RecipientHeader => Get(nameof(RecipientHeader));
-    public string RecipientPlaceholder => Get(nameof(RecipientPlaceholder));
-    public string MessagePlaceholder => Get(nameof(MessagePlaceholder));
-    public string Send => Get(nameof(Send));
-    public string Retry => Get(nameof(Retry));
-    public string ErrorBadge => Get(nameof(ErrorBadge));
-    public string PanelSizerTooltip => Get(nameof(PanelSizerTooltip));
-    public string ComposerSizerTooltip => Get(nameof(ComposerSizerTooltip));
-    public string NoRecipient => Get(nameof(NoRecipient));
+    public string NewMessage => Text(nameof(NewMessage));
+    public string SearchPlaceholder => Text(nameof(SearchPlaceholder));
+    public string SaveToContacts => Text(nameof(SaveToContacts));
+    public string SelectConversation => Text(nameof(SelectConversation));
+    public string NewMessageTitle => Text(nameof(NewMessageTitle));
+    public string EnterRecipient => Text(nameof(EnterRecipient));
+    public string RecipientHeader => Text(nameof(RecipientHeader));
+    public string RecipientPlaceholder => Text(nameof(RecipientPlaceholder));
+    public string MessagePlaceholder => Text(nameof(MessagePlaceholder));
+    public string Send => Text(nameof(Send));
+    public string Retry => Text(nameof(Retry));
+    public string ErrorBadge => Text(nameof(ErrorBadge));
+    public string PanelSizerTooltip => Text(nameof(PanelSizerTooltip));
+    public string ComposerSizerTooltip => Text(nameof(ComposerSizerTooltip));
+    public string NoRecipient => Text(nameof(NoRecipient));
+    public string EmojiTooltip => Text(nameof(EmojiTooltip));
 
     // ---- Message status -------------------------------------------------------------
-    public string StatusPending => Get(nameof(StatusPending));
-    public string StatusSending => Get(nameof(StatusSending));
-    public string StatusSent => Get(nameof(StatusSent));
-    public string StatusFailed => Get(nameof(StatusFailed));
+    public string StatusPending => Text(nameof(StatusPending));
+    public string StatusSending => Text(nameof(StatusSending));
+    public string StatusSent => Text(nameof(StatusSent));
+    public string StatusFailed => Text(nameof(StatusFailed));
 
     // ---- Contacts -------------------------------------------------------------------
-    public string AddContact => Get(nameof(AddContact));
-    public string ContactInfo => Get(nameof(ContactInfo));
-    public string ContactTitle => Get(nameof(ContactTitle));
-    public string ContactTitlePlaceholder => Get(nameof(ContactTitlePlaceholder));
-    public string FamilyName => Get(nameof(FamilyName));
-    public string FamilyNamePlaceholder => Get(nameof(FamilyNamePlaceholder));
-    public string GivenName => Get(nameof(GivenName));
-    public string GivenNamePlaceholder => Get(nameof(GivenNamePlaceholder));
-    public string PhoneNumber => Get(nameof(PhoneNumber));
-    public string PhonePlaceholder => Get(nameof(PhonePlaceholder));
-    public string Address => Get(nameof(Address));
-    public string AddressPlaceholder => Get(nameof(AddressPlaceholder));
-    public string Note => Get(nameof(Note));
-    public string NotePlaceholder => Get(nameof(NotePlaceholder));
-    public string Save => Get(nameof(Save));
-    public string Delete => Get(nameof(Delete));
-    public string Cancel => Get(nameof(Cancel));
-    public string ContactNeedsPhone => Get(nameof(ContactNeedsPhone));
-    public string ContactDeleted => Get(nameof(ContactDeleted));
+    public string AddContact => Text(nameof(AddContact));
+    public string ContactInfo => Text(nameof(ContactInfo));
+    public string ContactTitle => Text(nameof(ContactTitle));
+    public string ContactTitlePlaceholder => Text(nameof(ContactTitlePlaceholder));
+    public string FamilyName => Text(nameof(FamilyName));
+    public string FamilyNamePlaceholder => Text(nameof(FamilyNamePlaceholder));
+    public string GivenName => Text(nameof(GivenName));
+    public string GivenNamePlaceholder => Text(nameof(GivenNamePlaceholder));
+    public string PhoneNumber => Text(nameof(PhoneNumber));
+    public string PhonePlaceholder => Text(nameof(PhonePlaceholder));
+    public string Address => Text(nameof(Address));
+    public string AddressPlaceholder => Text(nameof(AddressPlaceholder));
+    public string Note => Text(nameof(Note));
+    public string NotePlaceholder => Text(nameof(NotePlaceholder));
+    public string Save => Text(nameof(Save));
+    public string Delete => Text(nameof(Delete));
+    public string Cancel => Text(nameof(Cancel));
+    public string ContactNeedsPhone => Text(nameof(ContactNeedsPhone));
+    public string ContactDeleted => Text(nameof(ContactDeleted));
 
     // ---- Tray and notifications -----------------------------------------------------
-    public string TrayOpen => Get(nameof(TrayOpen));
-    public string TrayTestNotification => Get(nameof(TrayTestNotification));
-    public string TrayExit => Get(nameof(TrayExit));
-    public string TestNotificationBody => Get(nameof(TestNotificationBody));
-    public string UnknownNumber => Get(nameof(UnknownNumber));
+    public string TrayOpen => Text(nameof(TrayOpen));
+    public string TrayTestNotification => Text(nameof(TrayTestNotification));
+    public string TrayExit => Text(nameof(TrayExit));
+    public string TestNotificationBody => Text(nameof(TestNotificationBody));
+    public string UnknownNumber => Text(nameof(UnknownNumber));
 
     // ---- Dialogs --------------------------------------------------------------------
-    public string DeleteMessagesTitle => Get(nameof(DeleteMessagesTitle));
-    public string DeleteConversationsTitle => Get(nameof(DeleteConversationsTitle));
+    public string DeleteMessagesTitle => Text(nameof(DeleteMessagesTitle));
+    public string DeleteConversationsTitle => Text(nameof(DeleteConversationsTitle));
+
+    // ---- Composer -------------------------------------------------------------------
+    public string UnicodeWarning => Text(nameof(UnicodeWarning));
 
     // ---- Formatted ------------------------------------------------------------------
-    public string DeleteNMessages(int n) => string.Format(Get("DeleteNMessages"), n);
+    public string DeleteNMessages(int n) => Format("DeleteNMessages", n);
 
-    public string DeleteNConversations(int n) => string.Format(Get("DeleteNConversations"), n);
+    public string DeleteNConversations(int n) => Format("DeleteNConversations", n);
 
-    public string ConfirmDeleteMessages(int n) => string.Format(Get("ConfirmDeleteMessages"), n);
+    public string ConfirmDeleteMessages(int n) => Format("ConfirmDeleteMessages", n);
 
-    public string ConfirmDeleteConversations(string names) =>
-        string.Format(Get("ConfirmDeleteConversations"), names);
+    public string ConfirmDeleteConversations(string names) => Format("ConfirmDeleteConversations", names);
 
-    public string AndNMore(int n) => string.Format(Get("AndNMore"), n);
+    public string AndNMore(int n) => Format("AndNMore", n);
 
-    public string Queued(long id, string to, int segments) =>
-        string.Format(Get("Queued"), id, to, segments);
+    public string Queued(long id, string to, int segments) => Format("Queued", id, to, segments);
 
-    public string SendFailed(string error) => string.Format(Get("SendFailed"), error);
+    public string SendFailed(string error) => Format("SendFailed", error);
 
-    public string RetryQueued(long id) => string.Format(Get("RetryQueued"), id);
+    public string RetryQueued(long id) => Format("RetryQueued", id);
 
-    public string RetryNotFailed(long id) => string.Format(Get("RetryNotFailed"), id);
+    public string RetryNotFailed(long id) => Format("RetryNotFailed", id);
 
-    public string RetryFailed(string error) => string.Format(Get("RetryFailed"), error);
+    public string RetryFailed(string error) => Format("RetryFailed", error);
 
-    public string LoadListFailed(string error) => string.Format(Get("LoadListFailed"), error);
+    public string LoadListFailed(string error) => Format("LoadListFailed", error);
 
-    public string LoadContactsFailed(string error) => string.Format(Get("LoadContactsFailed"), error);
+    public string LoadContactsFailed(string error) => Format("LoadContactsFailed", error);
 
-    public string DeletedMessages(int n) => string.Format(Get("DeletedMessages"), n);
+    public string DeletedMessages(int n) => Format("DeletedMessages", n);
 
     public string DeletedConversations(int threads, int messages) =>
-        string.Format(Get("DeletedConversations"), threads, messages);
+        Format("DeletedConversations", threads, messages);
 
-    public string DeleteFailed(string error) => string.Format(Get("DeleteFailed"), error);
+    public string DeleteFailed(string error) => Format("DeleteFailed", error);
 
-    public string ContactSaved(string name) => string.Format(Get("ContactSaved"), name);
+    public string ContactSaved(string name) => Format("ContactSaved", name);
 
-    public string SaveFailed(string error) => string.Format(Get("SaveFailed"), error);
+    public string SaveFailed(string error) => Format("SaveFailed", error);
 
-    public string InvalidPhone(string value) => string.Format(Get("InvalidPhone"), value);
+    public string InvalidPhone(string value) => Format("InvalidPhone", value);
 
     public string ModemReady(string status, string number, string cellularClass) =>
-        string.Format(Get("ModemReady"), status, number, cellularClass);
+        Format("ModemReady", status, number, cellularClass);
 
-    public string SendAndReceive(string mode) => string.Format(Get("SendAndReceive"), mode);
+    public string SendAndReceive(string mode) => Format("SendAndReceive", mode);
 
-    public string SendOnly(string diagnostic) => string.Format(Get("SendOnly"), diagnostic);
+    public string SendOnly(string diagnostic) => Format("SendOnly", diagnostic);
 
-    public string ModemUnavailable(string diagnostic) => string.Format(Get("ModemUnavailable"), diagnostic);
+    public string ModemUnavailable(string diagnostic) => Format("ModemUnavailable", diagnostic);
 
-    public string ModemStatusFailed(string error) => string.Format(Get("ModemStatusFailed"), error);
+    public string ModemStatusFailed(string error) => Format("ModemStatusFailed", error);
 
-    /// <summary>Looks a string up by key, for text chosen at runtime rather than at compile time.</summary>
-    public string Text(string key) => Get(key);
-
-    // ---------------------------------------------------------------------------------
-
-    private static readonly Dictionary<string, string> Vietnamese = new()
-    {
-        [nameof(Messages)] = "Tin nhắn",
-        [nameof(Contacts)] = "Danh bạ",
-        [nameof(FontSizeTooltip)] = "Cỡ chữ",
-        [nameof(LanguageTooltip)] = "Ngôn ngữ",
-        [nameof(ShowList)] = "Hiện danh sách",
-        [nameof(HideList)] = "Ẩn danh sách",
-        [nameof(CheckingModem)] = "Đang kiểm tra modem...",
-
-        [nameof(NewMessage)] = "+ Tin nhắn mới",
-        [nameof(SearchPlaceholder)] = "Tìm tên hoặc số...",
-        [nameof(SaveToContacts)] = "Lưu vào danh bạ",
-        [nameof(SelectConversation)] = "Chọn một hội thoại",
-        [nameof(NewMessageTitle)] = "Tin nhắn mới",
-        [nameof(EnterRecipient)] = "Nhập số điện thoại người nhận",
-        [nameof(RecipientHeader)] = "Số người nhận",
-        [nameof(RecipientPlaceholder)] = "+84... hoặc 0...",
-        [nameof(MessagePlaceholder)] = "Nhập nội dung tin nhắn...",
-        [nameof(Send)] = "Gửi",
-        [nameof(Retry)] = "Gửi lại",
-        [nameof(ErrorBadge)] = "Lỗi",
-        [nameof(PanelSizerTooltip)] = "Kéo để đổi độ rộng danh sách",
-        [nameof(ComposerSizerTooltip)] = "Kéo lên để mở rộng ô soạn tin",
-        [nameof(NoRecipient)] = "Chưa có số người nhận.",
-
-        [nameof(StatusPending)] = "Đang chờ",
-        [nameof(StatusSending)] = "Đang gửi",
-        [nameof(StatusSent)] = "Đã gửi",
-        [nameof(StatusFailed)] = "Gửi lỗi",
-
-        [nameof(AddContact)] = "+ Thêm liên hệ",
-        [nameof(ContactInfo)] = "Thông tin liên hệ",
-        [nameof(ContactTitle)] = "Danh xưng",
-        [nameof(ContactTitlePlaceholder)] = "Anh / Chị / Ông / Bà / BS. / TS.",
-        [nameof(FamilyName)] = "Họ",
-        [nameof(FamilyNamePlaceholder)] = "Nguyễn",
-        [nameof(GivenName)] = "Tên",
-        [nameof(GivenNamePlaceholder)] = "Văn Tú",
-        [nameof(PhoneNumber)] = "Số điện thoại",
-        [nameof(PhonePlaceholder)] = "+84... hoặc 0...",
-        [nameof(Address)] = "Địa chỉ",
-        [nameof(AddressPlaceholder)] = "Số nhà, đường, phường, tỉnh/thành...",
-        [nameof(Note)] = "Ghi chú",
-        [nameof(NotePlaceholder)] = "Ghi chú về người này...",
-        [nameof(Save)] = "Lưu",
-        [nameof(Delete)] = "Xoá",
-        [nameof(Cancel)] = "Huỷ",
-        [nameof(ContactNeedsPhone)] = "Cần có số điện thoại.",
-        [nameof(ContactDeleted)] = "Đã xoá liên hệ.",
-
-        [nameof(TrayOpen)] = "Mở SUPERDOC SMS Manager",
-        [nameof(TrayTestNotification)] = "Gửi thông báo thử",
-        [nameof(TrayExit)] = "Thoát",
-        [nameof(TestNotificationBody)] = "Thông báo thử - nếu bạn thấy dòng này thì thông báo đang hoạt động.",
-        [nameof(UnknownNumber)] = "Số không xác định",
-
-        [nameof(DeleteMessagesTitle)] = "Xoá tin nhắn",
-        [nameof(DeleteConversationsTitle)] = "Xoá hội thoại",
-
-        ["DeleteNMessages"] = "Xoá {0} tin",
-        ["DeleteNConversations"] = "Xoá {0} hội thoại",
-        ["ConfirmDeleteMessages"] = "Xoá vĩnh viễn {0} tin nhắn đã chọn? Thao tác này không thể hoàn tác.",
-        ["ConfirmDeleteConversations"] = "Xoá vĩnh viễn toàn bộ tin nhắn với {0}? Thao tác này không thể hoàn tác.",
-        ["AndNMore"] = "và {0} hội thoại khác",
-        ["Queued"] = "Đã xếp hàng tin #{0} tới {1} ({2} phần)",
-        ["SendFailed"] = "Gửi lỗi: {0}",
-        ["RetryQueued"] = "Đã gửi lại tin #{0}",
-        ["RetryNotFailed"] = "Tin #{0} không ở trạng thái lỗi.",
-        ["RetryFailed"] = "Gửi lại lỗi: {0}",
-        ["LoadListFailed"] = "Không tải được danh sách: {0}",
-        ["LoadContactsFailed"] = "Không tải được danh bạ: {0}",
-        ["DeletedMessages"] = "Đã xoá {0} tin nhắn.",
-        ["DeletedConversations"] = "Đã xoá {0} hội thoại ({1} tin nhắn).",
-        ["DeleteFailed"] = "Xoá lỗi: {0}",
-        ["ContactSaved"] = "Đã lưu {0}",
-        ["SaveFailed"] = "Lưu lỗi: {0}",
-        ["InvalidPhone"] = "'{0}' không phải số hợp lệ.",
-        ["ModemReady"] = "Modem {0} - {1} ({2})",
-        ["SendAndReceive"] = " - gửi + nhận ({0})",
-        ["SendOnly"] = " - chỉ gửi: {0}",
-        ["ModemUnavailable"] = "Modem không khả dụng: {0}",
-        ["ModemStatusFailed"] = "Không đọc được trạng thái modem: {0}",
-
-        ["FontSmall"] = "Nhỏ",
-        ["FontMedium"] = "Vừa",
-        ["FontLarge"] = "Lớn",
-        ["FontXLarge"] = "Rất lớn",
-        ["FontXXLarge"] = "Cực lớn",
-
-        ["LanguageAuto"] = "Tự động",
-        ["LanguageVietnamese"] = "Tiếng Việt",
-        ["LanguageEnglish"] = "English"
-    };
-
-    private static readonly Dictionary<string, string> English = new()
-    {
-        [nameof(Messages)] = "Messages",
-        [nameof(Contacts)] = "Contacts",
-        [nameof(FontSizeTooltip)] = "Text size",
-        [nameof(LanguageTooltip)] = "Language",
-        [nameof(ShowList)] = "Show list",
-        [nameof(HideList)] = "Hide list",
-        [nameof(CheckingModem)] = "Checking modem...",
-
-        [nameof(NewMessage)] = "+ New message",
-        [nameof(SearchPlaceholder)] = "Search name or number...",
-        [nameof(SaveToContacts)] = "Save to contacts",
-        [nameof(SelectConversation)] = "Select a conversation",
-        [nameof(NewMessageTitle)] = "New message",
-        [nameof(EnterRecipient)] = "Enter the recipient's number",
-        [nameof(RecipientHeader)] = "Recipient",
-        [nameof(RecipientPlaceholder)] = "+84... or 0...",
-        [nameof(MessagePlaceholder)] = "Type a message...",
-        [nameof(Send)] = "Send",
-        [nameof(Retry)] = "Retry",
-        [nameof(ErrorBadge)] = "Failed",
-        [nameof(PanelSizerTooltip)] = "Drag to resize the list",
-        [nameof(ComposerSizerTooltip)] = "Drag up to enlarge the composer",
-        [nameof(NoRecipient)] = "No recipient number.",
-
-        [nameof(StatusPending)] = "Pending",
-        [nameof(StatusSending)] = "Sending",
-        [nameof(StatusSent)] = "Sent",
-        [nameof(StatusFailed)] = "Failed",
-
-        [nameof(AddContact)] = "+ Add contact",
-        [nameof(ContactInfo)] = "Contact details",
-        [nameof(ContactTitle)] = "Title",
-        [nameof(ContactTitlePlaceholder)] = "Mr / Ms / Dr / Prof.",
-        [nameof(FamilyName)] = "Family name",
-        [nameof(FamilyNamePlaceholder)] = "Nguyen",
-        [nameof(GivenName)] = "Given name",
-        [nameof(GivenNamePlaceholder)] = "Van Tu",
-        [nameof(PhoneNumber)] = "Phone number",
-        [nameof(PhonePlaceholder)] = "+84... or 0...",
-        [nameof(Address)] = "Address",
-        [nameof(AddressPlaceholder)] = "Street, ward, city...",
-        [nameof(Note)] = "Note",
-        [nameof(NotePlaceholder)] = "Notes about this person...",
-        [nameof(Save)] = "Save",
-        [nameof(Delete)] = "Delete",
-        [nameof(Cancel)] = "Cancel",
-        [nameof(ContactNeedsPhone)] = "A phone number is required.",
-        [nameof(ContactDeleted)] = "Contact deleted.",
-
-        [nameof(TrayOpen)] = "Open SUPERDOC SMS Manager",
-        [nameof(TrayTestNotification)] = "Send a test notification",
-        [nameof(TrayExit)] = "Exit",
-        [nameof(TestNotificationBody)] = "Test notification - if you can see this, notifications are working.",
-        [nameof(UnknownNumber)] = "Unknown number",
-
-        [nameof(DeleteMessagesTitle)] = "Delete messages",
-        [nameof(DeleteConversationsTitle)] = "Delete conversations",
-
-        ["DeleteNMessages"] = "Delete {0} message(s)",
-        ["DeleteNConversations"] = "Delete {0} conversation(s)",
-        ["ConfirmDeleteMessages"] = "Permanently delete the {0} selected message(s)? This cannot be undone.",
-        ["ConfirmDeleteConversations"] = "Permanently delete every message exchanged with {0}? This cannot be undone.",
-        ["AndNMore"] = "and {0} more conversation(s)",
-        ["Queued"] = "Queued message #{0} to {1} ({2} segment(s))",
-        ["SendFailed"] = "Send failed: {0}",
-        ["RetryQueued"] = "Retry queued for message #{0}",
-        ["RetryNotFailed"] = "Message #{0} is not in a failed state.",
-        ["RetryFailed"] = "Retry failed: {0}",
-        ["LoadListFailed"] = "Could not load the list: {0}",
-        ["LoadContactsFailed"] = "Could not load contacts: {0}",
-        ["DeletedMessages"] = "Deleted {0} message(s).",
-        ["DeletedConversations"] = "Deleted {0} conversation(s) ({1} message(s)).",
-        ["DeleteFailed"] = "Delete failed: {0}",
-        ["ContactSaved"] = "Saved {0}",
-        ["SaveFailed"] = "Save failed: {0}",
-        ["InvalidPhone"] = "'{0}' is not a valid number.",
-        ["ModemReady"] = "Modem {0} - {1} ({2})",
-        ["SendAndReceive"] = " - send + receive ({0})",
-        ["SendOnly"] = " - send only: {0}",
-        ["ModemUnavailable"] = "Modem unavailable: {0}",
-        ["ModemStatusFailed"] = "Could not read modem status: {0}",
-
-        ["FontSmall"] = "Small",
-        ["FontMedium"] = "Medium",
-        ["FontLarge"] = "Large",
-        ["FontXLarge"] = "Extra large",
-        ["FontXXLarge"] = "Huge",
-
-        ["LanguageAuto"] = "Automatic",
-        ["LanguageVietnamese"] = "Tiếng Việt",
-        ["LanguageEnglish"] = "English"
-    };
+    public string ComposerCounter(int characters, int segments, bool unicode) =>
+        Format("ComposerCounter", characters, segments, Text(unicode ? "EncodingUnicode" : "EncodingGsm"));
 }

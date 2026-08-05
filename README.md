@@ -88,14 +88,44 @@ and delete `app\`.
   relying on the driver's interpretation of `Optimal`.
 - **Notifications** for incoming messages while the window is hidden.
 - **Delete** single messages, several at once, or whole threads — behind a confirmation dialog.
-- **Interface in English and Vietnamese**, following the machine's display language, switchable
-  live from the header.
+- **Emoji picker** in the composer, with a live counter showing characters, segments and
+  encoding — because one emoji changes what the carrier charges (see below).
+- **Interface in 19 languages**, following the machine's display language, switchable live from
+  the header, with right-to-left layout where the language needs it.
 - **Adjustable text size** and drag-resizable panels, remembered between runs.
 
 Everything is stored in a local SQLite database at `%LOCALAPPDATA%\smsmanager.db`. Nothing is
 sent anywhere except through your modem, to your carrier.
 
 ---
+
+## Emoji cost real money
+
+An SMS holds 160 characters in GSM-7. Anything outside ASCII — an emoji, a Vietnamese
+diacritic, a German umlaut — forces UCS-2, and capacity drops to **70**. Worse, emoji are
+counted in UTF-16 code units, so one that lives outside the basic plane costs **two**, and a
+flag or skin-tone sequence costs four or more.
+
+The practical effect: 100 plain characters is one segment. Add a single 😀 and it becomes two —
+double the charge, for one glyph. Once a message spans several segments each one also spends
+part of itself on a concatenation header, dropping capacity again to 153 or 67.
+
+The composer therefore shows characters, segments and encoding as you type, and warns when the
+text has gone Unicode. The arithmetic lives in `Models/SmsSegments.cs` and is covered by tests.
+
+## Translations
+
+The interface ships in 19 languages. Strings live in `WinUI/Strings/<code>.json`, one file per
+language, read at runtime — **adding or fixing a language is a single file and needs no code
+change**. Any key missing from a translation falls back to English, so a partial file degrades
+gracefully rather than showing raw keys.
+
+To add a language: copy `en.json`, translate the values, set `_meta` (`code`, `name` in the
+language's own script, `rtl` if it is written right to left), and open a pull request.
+
+**Only English and Vietnamese have been checked by a speaker.** Every other file is marked
+`"reviewed": false` in its `_meta` block. Corrections from native speakers are the most welcome
+kind of contribution.
 
 ## Things that cost days to work out
 

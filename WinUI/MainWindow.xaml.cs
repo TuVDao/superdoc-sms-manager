@@ -56,6 +56,11 @@ public sealed partial class MainWindow : Window
             }
 
             _viewModel.Conversations.ConfirmAsync = ConfirmDestructiveAsync;
+
+            // Arabic and other right-to-left languages need the whole layout mirrored, not just
+            // translated text: panels, bubble alignment and scroll bars all flip with this.
+            ApplyFlowDirection();
+            _viewModel.Loc.PropertyChanged += (_, _) => DispatcherQueue.TryEnqueue(ApplyFlowDirection);
             _viewModel.Conversations.ThreadChanged += ScrollThreadToBottom;
 
             _toasts = new ToastNotifier(_loggerFactory.CreateLogger<ToastNotifier>(), _viewModel.Loc);
@@ -168,6 +173,23 @@ public sealed partial class MainWindow : Window
         {
             // Cosmetic only; never stop the window opening over an icon.
             _logger.LogWarning(ex, "Could not set the window icon.");
+        }
+    }
+
+    private void ApplyFlowDirection()
+    {
+        try
+        {
+            if (Content is FrameworkElement root && _viewModel is not null)
+            {
+                root.FlowDirection = _viewModel.Loc.IsRightToLeft
+                    ? FlowDirection.RightToLeft
+                    : FlowDirection.LeftToRight;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not apply the layout direction.");
         }
     }
 
@@ -340,6 +362,26 @@ public sealed partial class MainWindow : Window
                 _logger.LogDebug(ex, "Could not scroll the thread to the newest message.");
             }
         }));
+    }
+
+    /// <summary>
+    /// Inserts the tapped emoji where the caret is, then puts the caret after it and returns
+    /// focus to the box, so several can be added in a row without reaching for the mouse again.
+    /// </summary>
+    private void Emoji_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (_viewModel is null || e.ClickedItem is not string emoji)
+        {
+            return;
+        }
+
+        var start = MessageBox.SelectionStart;
+        _viewModel.Conversations.InsertAtCaret(emoji, start, MessageBox.SelectionLength);
+
+        // The binding rewrites Text, which resets the caret to the start; put it back.
+        MessageBox.SelectionStart = Math.Min(start + emoji.Length, MessageBox.Text.Length);
+        MessageBox.SelectionLength = 0;
+        MessageBox.Focus(FocusState.Programmatic);
     }
 
     private void ThreadList_SelectionChanged(object sender, SelectionChangedEventArgs e)
