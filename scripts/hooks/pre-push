@@ -1,10 +1,30 @@
 #!/bin/sh
-# Blocks a push that would publish an identifier listed in .secret-patterns.
+# Two guards, run before anything leaves this machine.
 #
-# Installed by scripts\install-hooks.cmd. Hooks are not versioned by git, so the copy that runs
-# lives in .git/hooks/ and this is the source of truth for it.
+# Installed by scripts\install-hooks.cmd. Hooks are per-clone and not versioned, so the copy that
+# runs lives in .git/hooks/ and this is the source of truth for it.
 #
-# A push is the last point at which this is still cheap to fix: once objects reach a server they
-# stay reachable even after the branch is rewritten.
+# A push is the last point at which either problem is still cheap to fix: once objects reach a
+# server they stay reachable even after the branch or tag is rewritten.
 
+# 1. Never publish the archived tags. They point into the history this repository had before it
+#    was made public, which contains a third party's real phone number. They are kept locally
+#    under archive/ so that history is still reachable, and must stay local.
+blocked=''
+while read -r local_ref local_sha remote_ref remote_sha; do
+	case "$remote_ref" in
+		refs/tags/archive/*)
+			blocked="$blocked  $remote_ref
+"
+			;;
+	esac
+done
+
+if [ -n "$blocked" ]; then
+	printf '\nBLOCKED: these tags point into the pre-public history and must not be pushed:\n%s\n' "$blocked"
+	printf 'Push a branch or a specific new tag instead of --tags or --follow-tags.\n'
+	exit 1
+fi
+
+# 2. No private identifier may appear in any file that would be published.
 exec powershell -NoProfile -ExecutionPolicy Bypass -File "$(git rev-parse --show-toplevel)/scripts/check-no-secrets.ps1"
