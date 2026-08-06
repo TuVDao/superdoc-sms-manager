@@ -19,7 +19,7 @@ if not exist "%OUTDIR%" mkdir "%OUTDIR%"
 set "DOTNET=dotnet"
 if exist "%REPO%\.dotnet\dotnet.exe" set "DOTNET=%REPO%\.dotnet\dotnet.exe"
 
-"%DOTNET%" publish "%REPO%\WinUI\Message_T480s.WinUI.csproj" ^
+"%DOTNET%" publish "%REPO%\WinUI\SuperDoc.SmsManager.csproj" ^
   -c %CONFIG% ^
   -p:Platform=x64 ^
   -p:RuntimeIdentifier=win-x64 ^

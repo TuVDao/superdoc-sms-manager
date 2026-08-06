@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
-namespace Message_T480s.WinUI;
+namespace SuperDoc.Sms.WinUI;
 
 /// <summary>
 /// Makes the unpackaged build start with Windows.

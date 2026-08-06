@@ -1,6 +1,6 @@
 using System.Windows.Input;
 
-namespace Message_T480s.WinUI;
+namespace SuperDoc.Sms.WinUI;
 
 public sealed class DelegateCommand(Action execute, Func<bool>? canExecute = null) : ICommand
 {

@@ -4,12 +4,12 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using MyApp.Models;
-using MyApp.Services;
-using MyApp.Storage;
+using SuperDoc.Sms.Models;
+using SuperDoc.Sms.Services;
+using SuperDoc.Sms.Storage;
 using Windows.Graphics;
 
-namespace Message_T480s.WinUI;
+namespace SuperDoc.Sms.WinUI;
 
 public sealed partial class MainWindow : Window
 {
@@ -219,7 +219,7 @@ public sealed partial class MainWindow : Window
                 Text =
                     "SUPERDOC SMS Manager could not start.\n\n" +
                     $"{ex.GetType().Name}: {ex.Message}\n\n" +
-                    "Details are in %LOCALAPPDATA%\\Message_T480s\\Logs\\.\n\n" +
+                    "Details are in %LOCALAPPDATA%\\SUPERDOC SMS Manager\\Logs\\.\n\n" +
                     ex
             }
         };

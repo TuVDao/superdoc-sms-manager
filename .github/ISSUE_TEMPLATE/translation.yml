@@ -1,0 +1,41 @@
+name: Translation correction
+description: A string reads wrongly, is untranslated, or a language is missing.
+labels: ["translation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Only English and Vietnamese have been checked by a speaker — every other language pack is
+        marked `"reviewed": false`. Corrections from native speakers are the most welcome kind of
+        contribution here.
+
+        A language lives entirely in `WinUI/Strings/<code>.json` and is read at runtime, so a fix
+        is one file and needs no code change. A pull request is very welcome; an issue is fine too.
+
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      description: The file name, if you know it.
+      placeholder: de (WinUI/Strings/de.json)
+    validations:
+      required: true
+
+  - type: textarea
+    id: corrections
+    attributes:
+      label: Corrections
+      description: The key, what it says now, and what it should say.
+      placeholder: |
+        ComposerSizerTooltip — currently "…", should be "…"
+        StatusPending — currently "…", should be "…"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: native
+    attributes:
+      label: Fluency
+      options:
+        - label: I speak this language fluently, so the pack can be marked as reviewed.
+          required: false

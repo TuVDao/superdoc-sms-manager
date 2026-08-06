@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace Message_T480s.WinUI;
+namespace SuperDoc.Sms.WinUI;
 
 /// <summary>
 /// An entry in a ComboBox whose label may follow the active language.

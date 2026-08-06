@@ -1,8 +1,8 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
-using MyApp.Models;
+using SuperDoc.Sms.Models;
 
-namespace MyApp.Storage;
+namespace SuperDoc.Sms.Storage;
 
 public sealed class SmsRepository : IDisposable
 {
@@ -17,6 +17,7 @@ public sealed class SmsRepository : IDisposable
     {
         _logger = logger;
         var effectivePath = dbPath
+            ?? Services.DemoMode.DatabasePathOverride
             ?? Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "smsmanager.db");
@@ -117,8 +118,197 @@ public sealed class SmsRepository : IDisposable
             _logger?.LogInformation("Migrated database: added Contacts.{Column} column.", column);
         }
 
+        // Must run before any key is computed: the country decides what a leading zero means.
+        ResolveCountryCodeBeforeSim();
+
         NormalizeTimestampsToUtc();
         BackfillPeerKeys();
+    }
+
+    /// <summary>Setting holding an explicit country chosen by the user; empty means "detect".</summary>
+    public const string CountryCodeSetting = "phone.countryCode";
+
+    /// <summary>Setting recording which country the stored keys were computed with.</summary>
+    private const string PeerKeyCountrySetting = "phone.peerKeyCountryCode";
+
+    /// <summary>
+    /// Picks the best country available before the modem has reported in: an explicit user choice
+    /// if there is one, otherwise Windows' region.
+    /// </summary>
+    private void ResolveCountryCodeBeforeSim()
+    {
+        var stored = GetSetting(CountryCodeSetting);
+        if (CallingCodes.IsKnownCode(stored))
+        {
+            ApplyCountryCode(stored, "user setting");
+            return;
+        }
+
+        var region = CallingCodes.ForCurrentRegion();
+        if (region.Length > 0)
+        {
+            // Deliberately not allowed to rewrite existing keys. Windows' region is set by
+            // whoever installed the machine and is routinely wrong about which network the SIM
+            // is on - this laptop reports US while carrying a Vietnamese SIM. It is good enough
+            // to interpret what the user types next, but not to re-file their history.
+            ApplyCountryCode(region, "Windows region", rekeyExisting: false);
+            return;
+        }
+
+        _logger?.LogWarning(
+            "No phone country code could be determined; national-format numbers will not be " +
+            "expanded until the modem reports a SIM.");
+    }
+
+    /// <summary>
+    /// Adopts <paramref name="code"/> as the country for national-format numbers and, when that
+    /// differs from the country the stored keys were built with, recomputes every key.
+    /// </summary>
+    /// <remarks>
+    /// Keys are persisted, so they outlive the setting that produced them. Moving a SIM to another
+    /// country, or correcting a wrong guess, would otherwise leave every existing conversation
+    /// filed under a key the app no longer computes — the history would look deleted.
+    /// </remarks>
+    /// <param name="source">How the code was determined, for the log only.</param>
+    /// <param name="rekeyExisting">
+    /// False for a weak source such as Windows' region: it sets the country for numbers typed
+    /// from now on but leaves stored keys, and the marker, untouched. Only a source that actually
+    /// knows the subscriber's network - the SIM, or the user - should rewrite history.
+    /// </param>
+    /// <returns>The number of rows re-keyed; zero when nothing had to change.</returns>
+    public int ApplyCountryCode(string? code, string source, bool rekeyExisting = true)
+    {
+        lock (_sync)
+        {
+            if (!CallingCodes.IsKnownCode(code))
+            {
+                return 0;
+            }
+
+            PhoneNumber.SetDefaultCountryCode(code);
+
+            if (!rekeyExisting)
+            {
+                _logger?.LogInformation(
+                    "Phone country code +{Code} ({Source}); stored keys left as they are.",
+                    code,
+                    source);
+                return 0;
+            }
+
+            var previous = GetSetting(PeerKeyCountrySetting);
+            if (string.Equals(previous, code, StringComparison.Ordinal))
+            {
+                return 0;
+            }
+
+            var rekeyed = RekeyAll();
+            SetSetting(PeerKeyCountrySetting, code!);
+
+            _logger?.LogInformation(
+                "Phone country code +{Code} ({Source}); re-keyed {Count} row(s) from +{Previous}.",
+                code,
+                source,
+                rekeyed,
+                previous.Length == 0 ? "none" : previous);
+
+            return rekeyed;
+        }
+    }
+
+    /// <summary>
+    /// Recomputes <c>SmsMessages.PeerKey</c> and <c>Contacts.PhoneKey</c> from the raw addresses.
+    /// </summary>
+    private int RekeyAll()
+    {
+        var changed = 0;
+
+        using var transaction = _conn.BeginTransaction();
+
+        List<(long Id, string From, string To, string Current)> messages = [];
+        using (var read = _conn.CreateCommand())
+        {
+            read.Transaction = transaction;
+            read.CommandText = "SELECT Id, FromNumber, ToNumber, PeerKey FROM SmsMessages;";
+            using var reader = read.ExecuteReader();
+            while (reader.Read())
+            {
+                messages.Add((reader.GetInt64(0), reader.GetString(1), reader.GetString(2), reader.GetString(3)));
+            }
+        }
+
+        using (var update = _conn.CreateCommand())
+        {
+            update.Transaction = transaction;
+            update.CommandText = "UPDATE SmsMessages SET PeerKey = $key WHERE Id = $id;";
+            var keyParam = update.Parameters.Add("$key", SqliteType.Text);
+            var idParam = update.Parameters.Add("$id", SqliteType.Integer);
+
+            foreach (var (id, from, to, current) in messages)
+            {
+                // Same rule the model uses: an inbound row is identified by a non-empty sender.
+                var key = PhoneNumber.ToKey(string.IsNullOrEmpty(from) ? to : from);
+                if (string.Equals(key, current, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                keyParam.Value = key;
+                idParam.Value = id;
+                update.ExecuteNonQuery();
+                changed++;
+            }
+        }
+
+        List<(long Id, string Phone, string Current)> contacts = [];
+        using (var read = _conn.CreateCommand())
+        {
+            read.Transaction = transaction;
+            read.CommandText = "SELECT Id, PhoneNumber, PhoneKey FROM Contacts;";
+            using var reader = read.ExecuteReader();
+            while (reader.Read())
+            {
+                contacts.Add((reader.GetInt64(0), reader.GetString(1), reader.GetString(2)));
+            }
+        }
+
+        using (var update = _conn.CreateCommand())
+        {
+            update.Transaction = transaction;
+            update.CommandText = "UPDATE Contacts SET PhoneKey = $key WHERE Id = $id;";
+            var keyParam = update.Parameters.Add("$key", SqliteType.Text);
+            var idParam = update.Parameters.Add("$id", SqliteType.Integer);
+
+            foreach (var (id, phone, current) in contacts)
+            {
+                var key = PhoneNumber.ToKey(phone);
+                if (string.Equals(key, current, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                keyParam.Value = key;
+                idParam.Value = id;
+
+                try
+                {
+                    update.ExecuteNonQuery();
+                    changed++;
+                }
+                catch (SqliteException ex) when (ex.SqliteErrorCode == 19)
+                {
+                    // UNIQUE on PhoneKey: two contacts that were distinct under the old country
+                    // collapse to one key under the new one. Leave the row and let the user merge.
+                    _logger?.LogWarning(
+                        "Contact {Id} keeps its old key: {Key} is already taken by another contact.",
+                        id,
+                        key);
+                }
+            }
+        }
+
+        transaction.Commit();
+        return changed;
     }
 
     /// <summary>

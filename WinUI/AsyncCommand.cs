@@ -1,6 +1,6 @@
 using System.Windows.Input;
 
-namespace Message_T480s.WinUI;
+namespace SuperDoc.Sms.WinUI;
 
 public sealed class AsyncCommand(Func<Task> execute, Func<bool>? canExecute = null) : ICommand
 {

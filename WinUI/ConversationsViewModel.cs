@@ -1,13 +1,13 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
-using MyApp.Models;
-using MyApp.Services;
+using SuperDoc.Sms.Models;
+using SuperDoc.Sms.Services;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
-namespace Message_T480s.WinUI;
+namespace SuperDoc.Sms.WinUI;
 
 /// <summary>
 /// The message side of the app: a list of threads on the left, the selected thread on the right.
@@ -409,6 +409,17 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
                 if (selectedKey is not null)
                 {
                     MergeThread(thread);
+                }
+                else if (DemoMode.IsEnabled && Conversations.Count > 0)
+                {
+                    // An empty reading pane is the correct first impression for a real user and
+                    // the wrong one for a documentation screenshot, which exists to show a thread.
+                    SelectedConversation = Conversations[0];
+
+                    // Opening a thread also ticks it in the list, which raises the bulk-delete
+                    // bar. Queued rather than called directly, so it runs after the list's own
+                    // selection event has been handled.
+                    RunOnUi(() => SetSelectedConversations([]));
                 }
             });
         }

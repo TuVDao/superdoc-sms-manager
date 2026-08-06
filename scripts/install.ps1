@@ -22,13 +22,24 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$exe = Join-Path $AppDir "Message_T480s.WinUI.exe"
+$exe = Join-Path $AppDir "SuperDoc.SmsManager.exe"
 if (-not (Test-Path $exe)) {
     throw "Not found: $exe`nBuild it first with: scripts\build.cmd"
 }
 
 $shell = New-Object -ComObject WScript.Shell
 $name = "SUPERDOC SMS Manager"
+
+# Before v1.1 the executable was Message_T480s.WinUI.exe. Publishing does not delete files it no
+# longer produces, so the old one would sit in app\ still being launched by the old Run entry -
+# two copies competing for one modem registration. The Run value name has not changed, so the
+# app repoints it at itself on first launch; only the stale executable has to be cleared out.
+$legacyExe = Join-Path $AppDir "Message_T480s.WinUI.exe"
+if (Test-Path $legacyExe) {
+    Get-Process -Name "Message_T480s.WinUI" -ErrorAction SilentlyContinue | Stop-Process -Force
+    Remove-Item $legacyExe -Force -ErrorAction SilentlyContinue
+    Write-Host "Removed the pre-rename executable from $AppDir."
+}
 
 function New-Shortcut([string]$path) {
     $lnk = $shell.CreateShortcut($path)
@@ -56,7 +67,7 @@ else {
 }
 
 if (-not $NoLaunch) {
-    $running = Get-Process -Name "Message_T480s.WinUI" -ErrorAction SilentlyContinue
+    $running = Get-Process -Name "SuperDoc.SmsManager" -ErrorAction SilentlyContinue
     if ($running) {
         Write-Host "Already running (PID $($running.Id))."
     }

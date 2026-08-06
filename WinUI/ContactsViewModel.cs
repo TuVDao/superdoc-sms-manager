@@ -1,13 +1,13 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
-using MyApp.Models;
-using MyApp.Services;
+using SuperDoc.Sms.Models;
+using SuperDoc.Sms.Services;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
-namespace Message_T480s.WinUI;
+namespace SuperDoc.Sms.WinUI;
 
 /// <summary>The address book: list on the left, an editor for the selected entry on the right.</summary>
 public sealed class ContactsViewModel : INotifyPropertyChanged

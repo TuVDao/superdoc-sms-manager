@@ -8,14 +8,14 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <RootNamespace>MyApp.Cli</RootNamespace>
-    <AssemblyName>Message_T480s.Cli</AssemblyName>
-    <Platforms>x64</Platforms>
-    <PlatformTarget>x64</PlatformTarget>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <AssemblyName>SuperDoc.Sms.Cli</AssemblyName>
+    <Platforms>x64;ARM64</Platforms>
+    <PlatformTarget>$(Platform)</PlatformTarget>
+    <RuntimeIdentifier>win-$(Platform.ToLowerInvariant())</RuntimeIdentifier>
     <SelfContained>false</SelfContained>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Message_T480s.csproj" />
+    <ProjectReference Include="..\SuperDoc.Sms.Core.csproj" />
   </ItemGroup>
 </Project>

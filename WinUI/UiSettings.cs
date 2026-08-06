@@ -1,11 +1,11 @@
 using Microsoft.Extensions.Logging;
-using MyApp.Services;
+using SuperDoc.Sms.Services;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
-namespace Message_T480s.WinUI;
+namespace SuperDoc.Sms.WinUI;
 
 /// <summary>
 /// User interface preferences - text size and panel geometry - persisted in the database so they

@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging;
-using MyApp.Models;
-using MyApp.Storage;
+using SuperDoc.Sms.Models;
+using SuperDoc.Sms.Storage;
 
-namespace MyApp.Services;
+namespace SuperDoc.Sms.Services;
 
 public sealed class SmsQueueProcessor : IDisposable
 {

@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Text.Json;
 
-namespace Message_T480s.WinUI;
+namespace SuperDoc.Sms.WinUI;
 
 /// <summary>One installed translation, described by the `_meta` block of its JSON file.</summary>
 public sealed record LanguagePack(

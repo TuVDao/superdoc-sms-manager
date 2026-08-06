@@ -1,11 +1,11 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
-using MyApp.Models;
-using MyApp.Services;
+using SuperDoc.Sms.Models;
+using SuperDoc.Sms.Services;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace Message_T480s.WinUI;
+namespace SuperDoc.Sms.WinUI;
 
 /// <summary>
 /// The window shell: modem status, which screen is showing, and the two screens themselves.
@@ -139,6 +139,15 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         try
         {
             var snapshot = await _smsManager.GetDeviceSnapshotAsync();
+
+            if (DemoMode.IsEnabled)
+            {
+                // "Modem unavailable" is accurate but reads as a fault; in demo mode there is no
+                // fault, the modem was never opened on purpose.
+                RunOnUi(() => DeviceStatusText = snapshot.Diagnostic);
+                return;
+            }
+
             var text = snapshot.IsAvailable
                 ? Loc.ModemReady(
                       snapshot.DeviceStatus, snapshot.AccountPhoneNumber, snapshot.CellularClass)

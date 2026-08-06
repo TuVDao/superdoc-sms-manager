@@ -1,13 +1,13 @@
 using Microsoft.Extensions.Logging;
 
-namespace MyApp.Logging;
+namespace SuperDoc.Sms.Logging;
 
 public static class LoggingSetup
 {
     public static ILoggerFactory CreateLoggerFactory(string? baseDir = null)
     {
         var root = baseDir
-            ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Message_T480s");
+            ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SUPERDOC SMS Manager");
 
         // The console harness, the unpackaged build and the packaged build can all be open at
         // once. Appending them to one shared file interleaves and truncates each other's lines,

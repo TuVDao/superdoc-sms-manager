@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Logging;
-using MyApp.Models;
-using MyApp.Storage;
+using SuperDoc.Sms.Models;
+using SuperDoc.Sms.Storage;
 using Windows.Devices.Sms;
 
-namespace MyApp.Services;
+namespace SuperDoc.Sms.Services;
 
 /// <summary>
 /// Point-in-time view of the WWAN modem's SMS state, for diagnostics and the UI status bar.
@@ -208,6 +208,46 @@ public sealed class SmsManager : IDisposable
     }
 
     /// <summary>
+    /// Takes the country for national-format numbers from the SIM, which knows better than the
+    /// Windows region guessed at startup.
+    /// </summary>
+    /// <remarks>
+    /// The service centre address is the reliable signal: it is always stored in international
+    /// form and every SIM has one, whereas <c>AccountPhoneNumber</c> is blank on many carriers.
+    /// An explicit user choice still wins, so someone with a foreign SIM can pin their country.
+    /// </remarks>
+    private void AdoptCountryCodeFromSim()
+    {
+        if (_device is null)
+        {
+            return;
+        }
+
+        if (CallingCodes.IsKnownCode(_repo.GetSetting(SmsRepository.CountryCodeSetting)))
+        {
+            return;
+        }
+
+        try
+        {
+            var fromSmsc = CallingCodes.FromInternationalNumber(_device.SmscAddress);
+            var code = fromSmsc.Length > 0
+                ? fromSmsc
+                : CallingCodes.FromInternationalNumber(_device.AccountPhoneNumber);
+
+            if (code.Length > 0)
+            {
+                _repo.ApplyCountryCode(code, "SIM");
+            }
+        }
+        catch (Exception ex)
+        {
+            // A country code is a convenience, never a reason to fail modem initialisation.
+            _logger?.LogWarning(ex, "Could not derive the country code from the SIM.");
+        }
+    }
+
+    /// <summary>
     /// Estimates how the carrier will bill a message: segment count depends on whether the
     /// body fits GSM-7 (160 chars/segment) or needs UCS-2 (70 chars/segment).
     /// </summary>
@@ -248,6 +288,14 @@ public sealed class SmsManager : IDisposable
             return;
         }
 
+        if (DemoMode.IsEnabled)
+        {
+            // Opening the modem here would take the receive registration away from the copy the
+            // user is actually running.
+            _initDiagnostic = "Demo mode: the modem is not opened and nothing can be sent.";
+            return;
+        }
+
         await _initGate.WaitAsync();
         try
         {
@@ -266,6 +314,8 @@ public sealed class SmsManager : IDisposable
 
             _initDiagnostic = $"Modem ready. Status={_device.DeviceStatus}, number={_device.AccountPhoneNumber}, SMSC={_device.SmscAddress}.";
             _logger?.LogInformation("{Diagnostic}", _initDiagnostic);
+
+            AdoptCountryCodeFromSim();
 
             // Re-acquiring the modem after a reset must not register a second time - the receive
             // registration outlives the device handle.

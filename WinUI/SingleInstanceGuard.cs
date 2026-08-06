@@ -1,6 +1,6 @@
 using System.Threading;
 
-namespace Message_T480s.WinUI;
+namespace SuperDoc.Sms.WinUI;
 
 /// <summary>
 /// Ensures only one copy of the app runs. Two instances would both try to hold the SMS receive
@@ -30,8 +30,17 @@ public sealed class SingleInstanceGuard : IDisposable
     /// <summary>Raised on a background thread when another instance asks for the window.</summary>
     public event Action? ShowRequested;
 
-    public static SingleInstanceGuard Acquire()
+    /// <param name="exclusive">
+    /// False for a copy that owns no modem registration, such as a demo window. It reports itself
+    /// as primary without taking the mutex, so it neither exits nor summons the running instance.
+    /// </param>
+    public static SingleInstanceGuard Acquire(bool exclusive = true)
     {
+        if (!exclusive)
+        {
+            return new SingleInstanceGuard(true, null, null);
+        }
+
         var mutex = new Mutex(initiallyOwned: true, MutexName, out var createdNew);
         if (createdNew)
         {

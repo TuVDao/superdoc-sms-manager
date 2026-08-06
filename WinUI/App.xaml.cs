@@ -2,9 +2,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
-using MyApp.Logging;
+using SuperDoc.Sms.Logging;
+using SuperDoc.Sms.Services;
 
-namespace Message_T480s.WinUI;
+namespace SuperDoc.Sms.WinUI;
 
 public partial class App : Application
 {
@@ -46,7 +47,9 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        _guard = SingleInstanceGuard.Acquire();
+        // A demo window is a second, harmless copy: it never touches the modem, so it must not
+        // hand over to - or be blocked by - the instance that is doing the real work.
+        _guard = SingleInstanceGuard.Acquire(exclusive: !DemoMode.IsEnabled);
         if (!_guard.IsPrimary)
         {
             // Another copy already owns the SMS registration; it has been told to show itself.
@@ -63,7 +66,11 @@ public partial class App : Application
         _guard.StartListening();
 
         // Unpackaged builds have no startup task; keep the Run entry pointing at this exe.
-        StartupRegistration.Enable(LoggerFactory.CreateLogger(nameof(StartupRegistration)));
+        // A demo run must not repoint it at whatever build produced the screenshots.
+        if (!DemoMode.IsEnabled)
+        {
+            StartupRegistration.Enable(LoggerFactory.CreateLogger(nameof(StartupRegistration)));
+        }
 
         // Started automatically at sign-in: come up in the tray so the app is receiving without
         // putting a window in the user's face.

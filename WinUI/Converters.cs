@@ -1,10 +1,10 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
-using MyApp.Models;
+using SuperDoc.Sms.Models;
 using Windows.UI;
 
-namespace Message_T480s.WinUI;
+namespace SuperDoc.Sms.WinUI;
 
 /// <summary>Shows an element when the bound bool is true; pass "Invert" to flip it.</summary>
 public sealed class BoolToVisibilityConverter : IValueConverter

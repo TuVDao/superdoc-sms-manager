@@ -1,4 +1,4 @@
-namespace Message_T480s.WinUI;
+namespace SuperDoc.Sms.WinUI;
 
 /// <summary>
 /// The emoji offered by the composer's picker.

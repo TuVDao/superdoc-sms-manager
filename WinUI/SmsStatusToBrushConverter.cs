@@ -1,10 +1,10 @@
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
-using MyApp.Models;
+using SuperDoc.Sms.Models;
 using Windows.UI;
 
-namespace Message_T480s.WinUI;
+namespace SuperDoc.Sms.WinUI;
 
 public sealed class SmsStatusToBrushConverter : IValueConverter
 {

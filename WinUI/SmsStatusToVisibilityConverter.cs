@@ -1,8 +1,8 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
-using MyApp.Models;
+using SuperDoc.Sms.Models;
 
-namespace Message_T480s.WinUI;
+namespace SuperDoc.Sms.WinUI;
 
 public sealed class SmsStatusToVisibilityConverter : IValueConverter
 {

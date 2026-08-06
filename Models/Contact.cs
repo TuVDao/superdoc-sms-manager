@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace MyApp.Models;
+namespace SuperDoc.Sms.Models;
 
 /// <summary>A person in the address book, matched to messages by <see cref="PhoneKey"/>.</summary>
 public sealed class Contact : INotifyPropertyChanged

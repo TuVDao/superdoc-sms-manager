@@ -1,4 +1,4 @@
-namespace MyApp.Models;
+namespace SuperDoc.Sms.Models;
 
 /// <summary>How a message body will be billed once it reaches the network.</summary>
 public readonly record struct SmsSegmentInfo(int Characters, int Segments, bool RequiresUnicode);

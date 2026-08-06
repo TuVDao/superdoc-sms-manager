@@ -69,7 +69,7 @@
         -->
         <uap5:Extension
           Category="windows.startupTask"
-          Executable="Message_T480s.WinUI.exe"
+          Executable="SuperDoc.SmsManager.exe"
           EntryPoint="Windows.FullTrustApplication">
           <uap5:StartupTask
             TaskId="MessageT480sSmsReceiver"
@@ -85,7 +85,7 @@
         -->
         <com:Extension Category="windows.comServer">
           <com:ComServer>
-            <com:ExeServer Executable="Message_T480s.WinUI.exe" DisplayName="SUPERDOC SMS Manager" Arguments="----AppNotificationActivated:">
+            <com:ExeServer Executable="SuperDoc.SmsManager.exe" DisplayName="SUPERDOC SMS Manager" Arguments="----AppNotificationActivated:">
               <com:Class Id="DC609F84-DB1B-4CFB-A8F3-59FD2162CCC1" />
             </com:ExeServer>
           </com:ComServer>

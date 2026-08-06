@@ -1,4 +1,4 @@
-namespace MyApp.Services;
+namespace SuperDoc.Sms.Services;
 
 /// <summary>
 /// How a send attempt ended, so the queue can react differently to "the radio is not up yet"

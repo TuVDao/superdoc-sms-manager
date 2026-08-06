@@ -1,0 +1,59 @@
+name: Bug report
+description: Something in the app behaves incorrectly.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Logs and screenshots are welcome, but they carry message text and phone numbers —
+        **please read them through and remove anything private before posting.**
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the app
+        2. …
+    validations:
+      required: true
+
+  - type: input
+    id: hardware
+    attributes:
+      label: Laptop and WWAN module
+      placeholder: ThinkPad T480s, Fibocom L850-GL
+    validations:
+      required: false
+
+  - type: input
+    id: language
+    attributes:
+      label: Interface language
+      description: Relevant for anything about layout, text that does not fit, or wrong wording.
+      placeholder: Vietnamese
+    validations:
+      required: false
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Relevant log lines
+      description: From `%LOCALAPPDATA%\Message_T480s\Logs\`, redacted as needed.
+      render: text
+    validations:
+      required: false

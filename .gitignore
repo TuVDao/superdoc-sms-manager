@@ -48,3 +48,10 @@ $RECYCLE.BIN/
 *.db-shm
 *.log
 *.binlog
+
+# ---------------------------------------------------------------------------
+# Your own private identifiers, listed for scripts\check-no-secrets.ps1 to look
+# for. Never tracked: committing the list would publish exactly what it exists
+# to keep out.
+# ---------------------------------------------------------------------------
+/.secret-patterns

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
-namespace MyApp.Logging;
+namespace SuperDoc.Sms.Logging;
 
 public sealed class FileLoggerProvider : ILoggerProvider
 {

@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Windows.AppNotifications;
 using Microsoft.Windows.AppNotifications.Builder;
-using MyApp.Models;
+using SuperDoc.Sms.Models;
 using System.Net;
 
-namespace Message_T480s.WinUI;
+namespace SuperDoc.Sms.WinUI;
 
 /// <summary>
 /// Shows a Windows notification for each inbound SMS. Without this, a message arriving while

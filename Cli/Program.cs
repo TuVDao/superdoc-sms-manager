@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging;
-using MyApp.Logging;
-using MyApp.Models;
-using MyApp.Services;
-using MyApp.Storage;
+using SuperDoc.Sms.Logging;
+using SuperDoc.Sms.Models;
+using SuperDoc.Sms.Services;
+using SuperDoc.Sms.Storage;
 
 // Console harness for the SMS module. Sending works from this unpackaged build;
 // receiving requires the packaged WinUI app (see README).
@@ -20,6 +20,16 @@ catch (IOException)
 
 using var loggerFactory = LoggingSetup.CreateLoggerFactory();
 using var repo = new SmsRepository(logger: loggerFactory.CreateLogger<SmsRepository>());
+
+// Seeding runs against the repository alone: it must not open the modem, because the copy the
+// user relies on is holding the receive registration.
+if (args.Length > 0 && args[0].Equals("seed-demo", StringComparison.OrdinalIgnoreCase))
+{
+    SuperDoc.Sms.Cli.DemoSeeder.Seed(repo);
+    Console.WriteLine("Demo data written. Set SUPERDOC_SMS_DEMO=1 to run the app against it.");
+    return;
+}
+
 using var sms = new SmsManager(
     repo,
     loggerFactory.CreateLogger<SmsManager>(),

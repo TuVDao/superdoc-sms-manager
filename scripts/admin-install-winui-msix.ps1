@@ -18,7 +18,7 @@ try {
 
     $latestDir = $candidates |
         Sort-Object {
-            if ($_.Name -match 'Message_T480s\.WinUI_(\d+\.\d+\.\d+\.\d+)_x64_Test') {
+            if ($_.Name -match 'SuperDoc\.SmsManager_(\d+\.\d+\.\d+\.\d+)_x64_Test') {
                 [version]$matches[1]
             }
             else {

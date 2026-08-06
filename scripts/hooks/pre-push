@@ -1,0 +1,10 @@
+#!/bin/sh
+# Blocks a push that would publish an identifier listed in .secret-patterns.
+#
+# Installed by scripts\install-hooks.cmd. Hooks are not versioned by git, so the copy that runs
+# lives in .git/hooks/ and this is the source of truth for it.
+#
+# A push is the last point at which this is still cheap to fix: once objects reach a server they
+# stay reachable even after the branch is rewritten.
+
+exec powershell -NoProfile -ExecutionPolicy Bypass -File "$(git rev-parse --show-toplevel)/scripts/check-no-secrets.ps1"

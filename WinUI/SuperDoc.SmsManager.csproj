@@ -1,6 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
+    <!--
+      Must be stated, not inferred from the project file name. XAML code generation emits into
+      RootNamespace, so leaving it as "SuperDoc.SmsManager" would create a namespace of that name
+      - and every unqualified mention of the SmsManager class inside SuperDoc.Sms.* would then
+      resolve to the namespace instead (CS0118). The executable keeps the product name.
+    -->
+    <RootNamespace>SuperDoc.Sms.WinUI</RootNamespace>
+    <AssemblyName>SuperDoc.SmsManager</AssemblyName>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
     <TargetPlatformVersion>10.0.19041.0</TargetPlatformVersion>
@@ -9,9 +17,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <EnableMsixTooling>true</EnableMsixTooling>
     <WindowsPackageType>None</WindowsPackageType>
-    <Platforms>x64</Platforms>
-    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-    <PlatformTarget>x64</PlatformTarget>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <PlatformTarget>$(Platform)</PlatformTarget>
     <UseXamlCompilerExecutable>true</UseXamlCompilerExecutable>
     <!-- Gives the executable itself an icon in Explorer, the taskbar and Alt+Tab. The MSIX
          tiles come from the Assets PNGs instead; both are generated from the same source. -->
@@ -43,7 +51,7 @@
     <!-- Tray icon: WinUI 3 has no built-in NotifyIcon, and the app must stay resident to keep
          receiving, so closing the window has to hide it somewhere the user can get it back. -->
     <PackageReference Include="H.NotifyIcon.WinUI" />
-    <ProjectReference Include="..\Message_T480s.csproj" />
+    <ProjectReference Include="..\SuperDoc.Sms.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(WindowsPackageType)' != 'None'">

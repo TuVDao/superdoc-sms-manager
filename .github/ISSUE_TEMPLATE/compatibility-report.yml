@@ -1,0 +1,87 @@
+name: Compatibility report
+description: Tell us whether the app works on your laptop and modem — working or not, both help.
+title: "[Compatibility] <laptop model> / <modem>"
+labels: ["compatibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The app is developed against one modem in one laptop on one carrier. Every report from
+        different hardware tells us something we cannot find out ourselves.
+
+        **Please run the checker first** — it is read-only and never sends a message:
+
+        ```bat
+        scripts\check-compatibility.cmd
+        ```
+
+        It masks phone numbers and device identifiers, so its output is safe to paste here.
+
+  - type: input
+    id: laptop
+    attributes:
+      label: Laptop
+      description: Make, model and, if you know it, the model number.
+      placeholder: Lenovo ThinkPad X1 Carbon Gen 11 (21HM)
+    validations:
+      required: true
+
+  - type: input
+    id: modem
+    attributes:
+      label: WWAN module
+      description: As reported by Device Manager, or the line the checker prints.
+      placeholder: Fibocom L860-GL
+    validations:
+      required: true
+
+  - type: input
+    id: carrier
+    attributes:
+      label: Carrier and country
+      placeholder: Vodafone, Germany
+    validations:
+      required: true
+
+  - type: dropdown
+    id: result
+    attributes:
+      label: What worked
+      options:
+        - Sending and receiving both worked
+        - Sending worked, receiving did not
+        - Receiving worked, sending did not
+        - Neither worked
+        - The app would not start
+    validations:
+      required: true
+
+  - type: textarea
+    id: checker
+    attributes:
+      label: Checker output
+      description: The complete output of `scripts\check-compatibility.cmd`.
+      render: text
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      description: Run `winver`, or copy the line from Settings → System → About.
+      placeholder: Windows 11 Pro 24H2 (26100.2314)
+    validations:
+      required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: >
+        Behaviour that surprised you, error codes, or anything that needed a workaround.
+        For a failure, the log in `%LOCALAPPDATA%\Message_T480s\Logs\` is the most useful thing
+        you can attach — please read it through first and remove any phone numbers or message
+        text you would rather not publish.
+    validations:
+      required: false

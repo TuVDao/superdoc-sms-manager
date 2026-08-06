@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace MyApp.Models;
+namespace SuperDoc.Sms.Models;
 
 public enum SmsStatus
 {

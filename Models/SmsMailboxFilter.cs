@@ -1,4 +1,4 @@
-namespace MyApp.Models;
+namespace SuperDoc.Sms.Models;
 
 public enum SmsMailboxFilter
 {
