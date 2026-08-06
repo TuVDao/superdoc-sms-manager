@@ -1,5 +1,7 @@
 # SUPERDOC SMS Manager
 
+[![Build](https://github.com/TuVDao/superdoc-sms-manager/actions/workflows/build.yml/badge.svg)](https://github.com/TuVDao/superdoc-sms-manager/actions/workflows/build.yml)
+
 Send **and receive** SMS from the SIM in your Windows laptop.
 
 Many business laptops — ThinkPad, Latitude, EliteBook, Surface and others — ship with a WWAN
@@ -304,8 +306,17 @@ scripts\build.cmd Release ARM64
 
 Every project builds for `x64` and `ARM64`. This matters more than it looks: the laptops most
 likely to have a SIM today are the Snapdragon X and ThinkPad X13s class of machine, where an x64
-build only runs under emulation. The ARM64 output is verified to be a real ARM64 image, but
-**nobody has yet run it on ARM hardware** — if you have such a machine, that is a very useful
+build only runs under emulation.
+
+You do not have to build it yourself to try it: every push publishes a ready-to-run **ARM64
+build as a workflow artifact**, downloadable from the
+[Actions tab](../../actions/workflows/build.yml) (pick the newest green run). CI also runs the
+test suite on a native ARM64 runner and asserts the published executable's PE machine type, so a
+build that silently came out x64 fails rather than shipping.
+
+What CI cannot tell us is whether the *modem* behaves the same on those machines — that still
+needs someone with the hardware and a SIM to run
+`scripts\check-compatibility.cmd` and open a
 [compatibility report](../../issues/new?template=compatibility-report.yml).
 
 Note that the app locks its own executable while running; `build.cmd` stops it first, otherwise

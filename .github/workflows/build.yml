@@ -1,0 +1,98 @@
+name: Build
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test x64 (.NET ${{ matrix.sdk }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 8.0.x is what global.json asks for; 10.0.x proves the latestMajor roll-forward still
+        # works, which is the only reason a machine with a current SDK can build this at all.
+        sdk: ['8.0.x', '10.0.x']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.sdk }}
+
+      - name: Build
+        run: dotnet build SuperDoc.SmsManager.sln -c Release -p:Platform=x64 --nologo
+
+      - name: Test
+        run: dotnet test Tests\SuperDoc.Sms.Tests.csproj -c Release -p:Platform=x64 --no-build --nologo
+
+  test-arm64:
+    name: Test on ARM64 hardware
+    # A GitHub-hosted Windows ARM64 runner, free for public repositories. The point is that the
+    # tests run natively rather than under x64 emulation - this project ships an ARM64 build for
+    # the Snapdragon X class of laptop and had no way to exercise it otherwise.
+    runs-on: windows-11-arm
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build core and tests for ARM64
+        # Only these two projects. The WinUI app needs XamlCompiler.exe, which is a .NET Framework
+        # x64 binary and would run emulated here; it is cross-built on the x64 runner instead.
+        run: dotnet build Tests\SuperDoc.Sms.Tests.csproj -c Release -p:Platform=ARM64 --nologo
+
+      - name: Test
+        run: dotnet test Tests\SuperDoc.Sms.Tests.csproj -c Release -p:Platform=ARM64 --no-build --nologo
+
+  app:
+    name: Publish app (${{ matrix.platform }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [x64, ARM64]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish
+        run: >
+          dotnet publish WinUI\SuperDoc.SmsManager.csproj
+          -c Release -p:Platform=${{ matrix.platform }}
+          -o publish --nologo
+
+      - name: Check the executable is really ${{ matrix.platform }}
+        shell: pwsh
+        run: |
+          $bytes = [IO.File]::ReadAllBytes('publish/SuperDoc.SmsManager.exe')
+          $peOffset = [BitConverter]::ToInt32($bytes, 0x3C)
+          $machine = [BitConverter]::ToUInt16($bytes, $peOffset + 4)
+          $expected = if ('${{ matrix.platform }}' -eq 'ARM64') { 0xAA64 } else { 0x8664 }
+          Write-Host ('PE machine type: 0x{0:X4}' -f $machine)
+          if ($machine -ne $expected) {
+            # Publishing the wrong architecture is silent otherwise: the file is produced, named
+            # correctly, and simply will not start on the machine it was built for.
+            throw ('Expected 0x{0:X4} for ${{ matrix.platform }}' -f $expected)
+          }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SuperDoc-SMS-Manager-${{ matrix.platform }}
+          path: publish/
+          retention-days: 14
