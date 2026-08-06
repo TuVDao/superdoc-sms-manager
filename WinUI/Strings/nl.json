@@ -95,5 +95,12 @@
   "FontXLarge": "Zeer groot",
   "FontXXLarge": "Enorm",
 
-  "LanguageAuto": "Automatisch"
+  "LanguageAuto": "Automatisch",
+
+  "CheckBalance": "Saldo controleren",
+  "BalanceCodeLabel": "USSD-code",
+  "BalanceChecking": "Provider wordt geraadpleegd…",
+  "BalanceFailed": "Kon het saldo niet lezen: {0}",
+  "BalanceNoCode": "Voer de code in waarmee uw provider het saldo opvraagt, bijvoorbeeld *101#.",
+  "SendRefusedHint": "De provider heeft het bericht geweigerd zonder reden. Meestal is het prepaidsaldo op: ontvangen blijft gratis, dus inkomende berichten komen gewoon binnen."
 }

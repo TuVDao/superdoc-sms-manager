@@ -100,5 +100,12 @@
   "FontXLarge": "特大",
   "FontXXLarge": "最大",
 
-  "LanguageAuto": "自動"
+  "LanguageAuto": "自動",
+
+  "CheckBalance": "残高を確認",
+  "BalanceCodeLabel": "USSD コード",
+  "BalanceChecking": "通信事業者に問い合わせ中…",
+  "BalanceFailed": "残高を取得できませんでした: {0}",
+  "BalanceNoCode": "残高照会に使う通信事業者のコードを入力してください（例: *101#）。",
+  "SendRefusedHint": "通信事業者が理由を示さずに送信を拒否しました。最も多い原因はプリペイド残高切れです。受信は無料のため、着信は通常どおり届きます。"
 }

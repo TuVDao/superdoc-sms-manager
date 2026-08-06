@@ -62,16 +62,33 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
+                <Button Content="{Binding Loc.CheckBalance}"
+                        Click="CheckBalance_Click"
+                        ToolTipService.ToolTip="{Binding Loc.BalanceCodeLabel}" />
                 <Button Content="{Binding Loc.Messages}" Command="{Binding ShowMessagesCommand}" />
                 <Button Content="{Binding Loc.Contacts}" Command="{Binding ShowContactsCommand}" />
             </StackPanel>
         </Grid>
 
-        <TextBlock Grid.Row="1"
-                   Text="{Binding Conversations.StatusText}"
-                   FontSize="{Binding Ui.SmallFontSize}"
-                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                   TextWrapping="Wrap" />
+        <StackPanel Grid.Row="1" Spacing="4">
+            <TextBlock Text="{Binding Conversations.StatusText}"
+                       FontSize="{Binding Ui.SmallFontSize}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       TextWrapping="Wrap" />
+
+            <!-- Why sending is failing, in the carrier's own words. Deliberately not styled as a
+                 dim secondary line: it appears when nothing is going out, and being missed is
+                 the failure mode it exists to prevent. -->
+            <Border Background="#7C2D12"
+                    CornerRadius="6"
+                    Padding="10,6"
+                    Visibility="{Binding HasBalanceNotice, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Text="{Binding BalanceNotice}"
+                           Foreground="#FFE8D5"
+                           TextWrapping="Wrap"
+                           IsTextSelectionEnabled="True" />
+            </Border>
+        </StackPanel>
 
         <!-- ================================ MESSAGES ================================ -->
         <Grid Grid.Row="2"

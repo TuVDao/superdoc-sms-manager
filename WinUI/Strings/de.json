@@ -100,5 +100,12 @@
   "FontXLarge": "Sehr groß",
   "FontXXLarge": "Riesig",
 
-  "LanguageAuto": "Automatisch"
+  "LanguageAuto": "Automatisch",
+
+  "CheckBalance": "Guthaben abfragen",
+  "BalanceCodeLabel": "USSD-Code",
+  "BalanceChecking": "Anbieter wird gefragt…",
+  "BalanceFailed": "Guthaben konnte nicht gelesen werden: {0}",
+  "BalanceNoCode": "Geben Sie den Code ein, mit dem Ihr Anbieter das Guthaben abfragt, zum Beispiel *101#.",
+  "SendRefusedHint": "Der Anbieter hat die Nachricht ohne Angabe eines Grundes abgelehnt. Meist ist das Prepaid-Guthaben aufgebraucht: Empfangen bleibt kostenlos, eingehende Nachrichten kommen also weiterhin an."
 }

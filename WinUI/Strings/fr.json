@@ -100,5 +100,12 @@
   "FontXLarge": "Très grand",
   "FontXXLarge": "Énorme",
 
-  "LanguageAuto": "Automatique"
+  "LanguageAuto": "Automatique",
+
+  "CheckBalance": "Vérifier le solde",
+  "BalanceCodeLabel": "Code USSD",
+  "BalanceChecking": "Interrogation de l'opérateur…",
+  "BalanceFailed": "Impossible de lire le solde : {0}",
+  "BalanceNoCode": "Saisissez le code utilisé par votre opérateur pour consulter le solde, par exemple *101#.",
+  "SendRefusedHint": "L'opérateur a refusé le message sans indiquer de raison. La cause habituelle est un solde prépayé épuisé : la réception reste gratuite, les messages entrants continuent donc d'arriver."
 }

@@ -16,8 +16,13 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private readonly ILogger<MainViewModel> _logger;
     private readonly DispatcherQueue _dispatcher;
     private string _deviceStatusText = string.Empty;
+    private string _balanceNotice = string.Empty;
     private bool _isContactsView;
     private bool _disposed;
+    private DateTimeOffset _lastBalanceEnquiry = DateTimeOffset.MinValue;
+
+    /// <summary>How rarely the account may be queried while sends keep failing.</summary>
+    private static readonly TimeSpan BalanceEnquiryInterval = TimeSpan.FromMinutes(10);
 
     public MainViewModel(SmsManager smsManager, ILogger<MainViewModel> logger, DispatcherQueue dispatcher)
     {
@@ -55,6 +60,13 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                 AddContactForPeerCommand.RaiseCanExecuteChanged();
             }
         };
+
+        CheckBalanceCommand = new AsyncCommand(() => RefreshBalanceAsync(userAsked: true));
+
+        // A refusal the modem cannot explain is nearly always an empty account. Saying so, with
+        // the carrier's own words underneath, is the difference between a five-minute fix and an
+        // afternoon spent suspecting the app.
+        _smsManager.SendRefusedWithoutReason += OnSendRefusedWithoutReason;
 
         _smsManager.MessageReceived += OnSmsReceived;
 
@@ -94,6 +106,76 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         get => _deviceStatusText;
         set => SetField(ref _deviceStatusText, value);
+    }
+
+    public AsyncCommand CheckBalanceCommand { get; }
+
+    /// <summary>
+    /// Why sending is failing, and what the carrier says about the account. Empty most of the
+    /// time; shown prominently when it is not.
+    /// </summary>
+    public string BalanceNotice
+    {
+        get => _balanceNotice;
+        set
+        {
+            if (SetField(ref _balanceNotice, value))
+            {
+                OnPropertyChanged(nameof(HasBalanceNotice));
+            }
+        }
+    }
+
+    public bool HasBalanceNotice => BalanceNotice.Length > 0;
+
+    /// <summary>The USSD code used for the balance enquiry; carrier-specific and user-editable.</summary>
+    public string BalanceUssdCode
+    {
+        get => _smsManager.BalanceUssdCode;
+        set
+        {
+            _smsManager.BalanceUssdCode = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private void OnSendRefusedWithoutReason(object? sender, EventArgs e)
+    {
+        // The queue retries, so one blocked message produces a burst of these. Asking the network
+        // once is informative; asking it every few seconds is abuse of a shared channel.
+        if (DateTimeOffset.UtcNow - _lastBalanceEnquiry < BalanceEnquiryInterval)
+        {
+            return;
+        }
+
+        _lastBalanceEnquiry = DateTimeOffset.UtcNow;
+        _ = RefreshBalanceAsync(userAsked: false);
+    }
+
+    /// <summary>
+    /// Asks the carrier about the account and shows the answer.
+    /// </summary>
+    /// <param name="userAsked">
+    /// True when the user pressed the button, which is the only case where "there is no code for
+    /// this carrier" is worth saying out loud.
+    /// </param>
+    private async Task RefreshBalanceAsync(bool userAsked)
+    {
+        var hint = userAsked ? string.Empty : Loc.SendRefusedHint + " ";
+
+        if (_smsManager.BalanceUssdCode.Length == 0)
+        {
+            RunOnUi(() => BalanceNotice = userAsked ? Loc.BalanceNoCode : hint + Loc.BalanceNoCode);
+            return;
+        }
+
+        RunOnUi(() => BalanceNotice = hint + Loc.BalanceChecking);
+
+        var result = await _smsManager.CheckBalanceAsync();
+
+        RunOnUi(() => BalanceNotice = result.Succeeded
+            ? hint + result.Text
+            : hint + Loc.BalanceFailed(result.Error ?? string.Empty));
     }
 
     public bool IsContactsView
@@ -201,5 +283,6 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         _disposed = true;
         _smsManager.MessageReceived -= OnSmsReceived;
         _smsManager.ReceiveStateChanged -= OnReceiveStateChanged;
+        _smsManager.SendRefusedWithoutReason -= OnSendRefusedWithoutReason;
     }
 }

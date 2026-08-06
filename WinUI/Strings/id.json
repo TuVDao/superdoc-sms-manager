@@ -95,5 +95,12 @@
   "FontXLarge": "Sangat besar",
   "FontXXLarge": "Raksasa",
 
-  "LanguageAuto": "Otomatis"
+  "LanguageAuto": "Otomatis",
+
+  "CheckBalance": "Cek pulsa",
+  "BalanceCodeLabel": "Kode USSD",
+  "BalanceChecking": "Menanyakan operator…",
+  "BalanceFailed": "Tidak bisa membaca pulsa: {0}",
+  "BalanceNoCode": "Masukkan kode yang dipakai operator Anda untuk cek pulsa, misalnya *101#.",
+  "SendRefusedHint": "Operator menolak pesan tanpa memberi alasan. Penyebab paling umum adalah pulsa habis: menerima tetap gratis, jadi pesan masuk tetap sampai seperti biasa."
 }

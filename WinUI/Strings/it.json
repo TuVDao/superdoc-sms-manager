@@ -95,5 +95,12 @@
   "FontXLarge": "Molto grande",
   "FontXXLarge": "Enorme",
 
-  "LanguageAuto": "Automatico"
+  "LanguageAuto": "Automatico",
+
+  "CheckBalance": "Controlla credito",
+  "BalanceCodeLabel": "Codice USSD",
+  "BalanceChecking": "Interrogazione dell'operatore…",
+  "BalanceFailed": "Impossibile leggere il credito: {0}",
+  "BalanceNoCode": "Inserisci il codice che il tuo operatore usa per il saldo, ad esempio *101#.",
+  "SendRefusedHint": "L'operatore ha rifiutato il messaggio senza indicare un motivo. La causa più comune è il credito prepagato esaurito: ricevere resta gratuito, quindi i messaggi in arrivo continuano ad arrivare."
 }

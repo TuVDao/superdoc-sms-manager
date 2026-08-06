@@ -100,5 +100,12 @@
   "FontXLarge": "Muito grande",
   "FontXXLarge": "Enorme",
 
-  "LanguageAuto": "Automático"
+  "LanguageAuto": "Automático",
+
+  "CheckBalance": "Consultar saldo",
+  "BalanceCodeLabel": "Código USSD",
+  "BalanceChecking": "A consultar a operadora…",
+  "BalanceFailed": "Não foi possível ler o saldo: {0}",
+  "BalanceNoCode": "Introduza o código que a sua operadora usa para consultar o saldo, por exemplo *101#.",
+  "SendRefusedHint": "A operadora recusou a mensagem sem indicar um motivo. A causa habitual é o saldo pré-pago esgotado: receber continua gratuito, por isso as mensagens recebidas continuam a chegar."
 }

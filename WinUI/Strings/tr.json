@@ -95,5 +95,12 @@
   "FontXLarge": "Çok büyük",
   "FontXXLarge": "Devasa",
 
-  "LanguageAuto": "Otomatik"
+  "LanguageAuto": "Otomatik",
+
+  "CheckBalance": "Bakiye sorgula",
+  "BalanceCodeLabel": "USSD kodu",
+  "BalanceChecking": "Operatöre soruluyor…",
+  "BalanceFailed": "Bakiye okunamadı: {0}",
+  "BalanceNoCode": "Operatörünüzün bakiye sorgulama kodunu girin, örneğin *101#.",
+  "SendRefusedHint": "Operatör mesajı gerekçe belirtmeden reddetti. En yaygın neden biten ön ödemeli bakiyedir: almak ücretsiz olduğu için gelen mesajlar normal şekilde ulaşmaya devam eder."
 }

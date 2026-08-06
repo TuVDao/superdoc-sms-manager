@@ -100,5 +100,12 @@
   "FontXLarge": "Muy grande",
   "FontXXLarge": "Enorme",
 
-  "LanguageAuto": "Automático"
+  "LanguageAuto": "Automático",
+
+  "CheckBalance": "Consultar saldo",
+  "BalanceCodeLabel": "Código USSD",
+  "BalanceChecking": "Consultando al operador…",
+  "BalanceFailed": "No se pudo leer el saldo: {0}",
+  "BalanceNoCode": "Escribe el código que tu operador usa para consultar el saldo, por ejemplo *101#.",
+  "SendRefusedHint": "El operador rechazó el mensaje sin dar un motivo. La causa habitual es un saldo de prepago agotado: recibir sigue siendo gratuito, así que los mensajes entrantes continúan llegando."
 }

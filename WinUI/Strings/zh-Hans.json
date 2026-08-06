@@ -100,5 +100,12 @@
   "FontXLarge": "特大",
   "FontXXLarge": "超大",
 
-  "LanguageAuto": "自动"
+  "LanguageAuto": "自动",
+
+  "CheckBalance": "查询余额",
+  "BalanceCodeLabel": "USSD 代码",
+  "BalanceChecking": "正在询问运营商…",
+  "BalanceFailed": "无法读取余额：{0}",
+  "BalanceNoCode": "请输入运营商用于查询余额的代码，例如 *101#。",
+  "SendRefusedHint": "运营商拒绝了这条短信且未说明原因。最常见的原因是预付费余额已用尽：接收短信免费，因此来信仍能正常收到。"
 }

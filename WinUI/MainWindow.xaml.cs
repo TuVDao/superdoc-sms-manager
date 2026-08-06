@@ -415,6 +415,63 @@ public sealed partial class MainWindow : Window
     /// Asks before destroying data. Deletion here is permanent - no archive, no undo - so the
     /// dialog spells out the count and says so.
     /// </summary>
+    /// <summary>
+    /// Asks the carrier what the account balance is, letting the user correct the USSD code
+    /// first because it differs per carrier and the app can only guess for a few countries.
+    /// </summary>
+    private async void CheckBalance_Click(object sender, RoutedEventArgs e)
+    {
+        if (_viewModel is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var input = new TextBox
+            {
+                Text = _viewModel.BalanceUssdCode,
+                PlaceholderText = "*101#",
+                Header = _viewModel.Loc.BalanceCodeLabel
+            };
+
+            var dialog = new ContentDialog
+            {
+                XamlRoot = Content.XamlRoot,
+                Title = _viewModel.Loc.CheckBalance,
+                Content = new StackPanel
+                {
+                    Spacing = 10,
+                    Children =
+                    {
+                        new TextBlock
+                        {
+                            Text = _viewModel.Loc.BalanceNoCode,
+                            TextWrapping = TextWrapping.Wrap
+                        },
+                        input
+                    }
+                },
+                PrimaryButtonText = _viewModel.Loc.CheckBalance,
+                CloseButtonText = _viewModel.Loc.Cancel,
+                DefaultButton = ContentDialogButton.Primary
+            };
+
+            if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+            {
+                return;
+            }
+
+            // Saved before the query so a correction survives even if the network is unreachable.
+            _viewModel.BalanceUssdCode = input.Text;
+            _viewModel.CheckBalanceCommand.Execute(null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Could not show the balance dialog.");
+        }
+    }
+
     private async Task<bool> ConfirmDestructiveAsync(string title, string message)
     {
         try
@@ -424,8 +481,10 @@ public sealed partial class MainWindow : Window
                 XamlRoot = Content.XamlRoot,
                 Title = title,
                 Content = new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
-                PrimaryButtonText = "Xoá",
-                CloseButtonText = "Huỷ",
+                // From the language pack, not hard-coded: these two words were Vietnamese in
+                // every one of the nineteen interface languages.
+                PrimaryButtonText = _viewModel?.Loc.Delete ?? "Delete",
+                CloseButtonText = _viewModel?.Loc.Cancel ?? "Cancel",
                 DefaultButton = ContentDialogButton.Close
             };
 

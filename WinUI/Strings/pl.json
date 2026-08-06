@@ -95,5 +95,12 @@
   "FontXLarge": "Bardzo duży",
   "FontXXLarge": "Ogromny",
 
-  "LanguageAuto": "Automatycznie"
+  "LanguageAuto": "Automatycznie",
+
+  "CheckBalance": "Sprawdź saldo",
+  "BalanceCodeLabel": "Kod USSD",
+  "BalanceChecking": "Zapytanie do operatora…",
+  "BalanceFailed": "Nie udało się odczytać salda: {0}",
+  "BalanceNoCode": "Wpisz kod, którym operator sprawdza saldo, na przykład *101#.",
+  "SendRefusedHint": "Operator odrzucił wiadomość bez podania powodu. Zwykle oznacza to wyczerpane środki na koncie: odbieranie pozostaje bezpłatne, więc wiadomości przychodzące nadal docierają."
 }

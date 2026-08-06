@@ -100,5 +100,12 @@
   "FontXLarge": "Extra large",
   "FontXXLarge": "Huge",
 
-  "LanguageAuto": "Automatic"
+  "LanguageAuto": "Automatic",
+
+  "CheckBalance": "Check balance",
+  "BalanceCodeLabel": "USSD code",
+  "BalanceChecking": "Asking the carrier…",
+  "BalanceFailed": "Could not read the balance: {0}",
+  "BalanceNoCode": "Enter the code your carrier uses for a balance enquiry, for example *101#.",
+  "SendRefusedHint": "The carrier refused the message without giving a reason. An empty prepaid balance is the usual cause: receiving stays free, so incoming messages keep arriving normally."
 }

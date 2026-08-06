@@ -100,5 +100,12 @@
   "FontXLarge": "Rất lớn",
   "FontXXLarge": "Cực lớn",
 
-  "LanguageAuto": "Tự động"
+  "LanguageAuto": "Tự động",
+
+  "CheckBalance": "Kiểm tra tài khoản",
+  "BalanceCodeLabel": "Mã USSD",
+  "BalanceChecking": "Đang hỏi nhà mạng…",
+  "BalanceFailed": "Không đọc được số dư: {0}",
+  "BalanceNoCode": "Nhập mã tra cứu số dư của nhà mạng, ví dụ *101#.",
+  "SendRefusedHint": "Nhà mạng từ chối tin nhắn mà không nêu lý do. Nguyên nhân thường gặp nhất là tài khoản đã hết tiền: nhận tin vẫn miễn phí nên tin đến vẫn về bình thường."
 }

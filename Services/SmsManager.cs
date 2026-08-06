@@ -161,6 +161,45 @@ public sealed class SmsManager : IDisposable
 
     public int MarkConversationRead(string peerKey) => _repo.MarkConversationRead(peerKey);
 
+    /// <summary>
+    /// Raised when the modem refused a send and could not say why - the signature of an account
+    /// that has run out of credit.
+    /// </summary>
+    public event EventHandler? SendRefusedWithoutReason;
+
+    /// <summary>
+    /// The USSD code used to ask the carrier for the account balance. Empty when neither the user
+    /// nor <see cref="CarrierBalance.DefaultCodeForCountry"/> has one for this SIM.
+    /// </summary>
+    public string BalanceUssdCode
+    {
+        get
+        {
+            var stored = _repo.GetSetting(CarrierBalance.UssdCodeSetting);
+            return CarrierBalance.IsPlausibleCode(stored)
+                ? stored
+                : CarrierBalance.DefaultCodeForCountry(PhoneNumber.DefaultCountryCode);
+        }
+        set => _repo.SetSetting(CarrierBalance.UssdCodeSetting, value?.Trim() ?? string.Empty);
+    }
+
+    /// <summary>Asks the carrier what the account balance is, over USSD.</summary>
+    public Task<CarrierBalanceResult> CheckBalanceAsync()
+    {
+        if (DemoMode.IsEnabled)
+        {
+            // USSD goes out over the same radio the real copy is using. Demo mode promises not to
+            // touch the modem, and a balance enquiry is still touching it.
+            return Task.FromResult(
+                CarrierBalanceResult.Failed("Demo mode: the modem is not used."));
+        }
+
+        var code = BalanceUssdCode;
+        return code.Length == 0
+            ? Task.FromResult(CarrierBalanceResult.Failed(string.Empty))
+            : new CarrierBalance(_logger).QueryAsync(code);
+    }
+
     public int DeleteMessages(IEnumerable<long> ids) => _repo.DeleteMessages(ids);
 
     public int DeleteConversations(IEnumerable<string> peerKeys) => _repo.DeleteConversations(peerKeys);
@@ -502,6 +541,14 @@ public sealed class SmsManager : IDisposable
             _logger?.LogWarning(
                 "SMS #{Id} rejected by modem (transient={Transient}). {Error}",
                 msg.Id, result.IsErrorTransient, error);
+
+            // A refusal the modem could not explain, with no cause from the network either. The
+            // usual reason is an empty prepaid balance: receiving is free, so only sending stops,
+            // and nothing in the error says so. Whoever is listening can go and ask the carrier.
+            if (result.ModemErrorCode == SmsModemErrorCode.Other && result.NetworkCauseCode == 0)
+            {
+                SendRefusedWithoutReason?.Invoke(this, EventArgs.Empty);
+            }
 
             // Where the modem has identified the failure its judgement is honoured, so the retry
             // budget is not spent on a message the network will never accept. Where it has not

@@ -100,5 +100,12 @@
   "FontXLarge": "아주 크게",
   "FontXXLarge": "최대",
 
-  "LanguageAuto": "자동"
+  "LanguageAuto": "자동",
+
+  "CheckBalance": "잔액 확인",
+  "BalanceCodeLabel": "USSD 코드",
+  "BalanceChecking": "통신사에 문의하는 중…",
+  "BalanceFailed": "잔액을 읽을 수 없습니다: {0}",
+  "BalanceNoCode": "통신사의 잔액 조회 코드를 입력하세요. 예: *101#",
+  "SendRefusedHint": "통신사가 이유를 밝히지 않고 메시지를 거부했습니다. 가장 흔한 원인은 선불 잔액 소진입니다. 수신은 무료이므로 받는 것은 정상적으로 계속됩니다."
 }

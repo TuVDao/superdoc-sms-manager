@@ -103,6 +103,9 @@ and delete `app\`.
 - **Unread messages in bold**, in the thread list and in the thread itself. Arriving is not
   reading: a message that comes in while the window is hidden in the tray stays bold until you
   actually open its thread with the window on screen.
+- **Balance enquiry.** Asks the carrier over USSD and shows its reply verbatim — no parsing, so
+  it works whatever your operator writes and in whatever language. The USSD code is
+  carrier-specific and editable; Vietnam defaults to `*101#`.
 - **Notifications** for incoming messages while the window is hidden.
 - **Delete** single messages, several at once, or whole threads — behind a confirmation dialog.
 - **Emoji picker** in the composer, with a live counter showing characters, segments and
@@ -211,6 +214,29 @@ stayed empty.
 ```csharp
 AppNotificationManager.Default.Register("Your App Name", iconUri);   // this is the fix
 ```
+
+### An empty prepaid account looks exactly like a broken app
+
+Sending stopped working and produced only this:
+
+```
+Send rejected: modem=Other, network=0, transport=0, transient=False
+```
+
+The modem was `Connected` and registered with good signal, incoming messages kept arriving
+normally, and the same build had sent successfully eight minutes earlier. The account had run out
+of credit. Receiving costs nothing, so only the sending half stops — and the modem is told "no"
+without being told why, so it reports `Other` with no cause code.
+
+Two consequences in this app. `SmsModemErrorCode.Other` is now treated as retryable, because it
+means the modem could not classify the failure, not that the message is unacceptable — the
+`IsErrorTransient` flag beside it is a default rather than a finding. And when that error appears,
+the app asks the carrier for the balance over
+`Windows.Networking.NetworkOperators.UssdSession` and shows the reply, rather than leaving the
+user to suspect their own software.
+
+The USSD API works from an unpackaged process, which was not obvious given that
+`cellularMessaging` is denied to a sideloaded package on the same machine.
 
 ### Timestamps must be stored in UTC
 

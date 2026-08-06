@@ -220,6 +220,18 @@ public sealed class Strings : INotifyPropertyChanged
     }
 
     // ---- Shell ----------------------------------------------------------------------
+    public string CheckBalance => Text(nameof(CheckBalance));
+
+    public string BalanceCodeLabel => Text(nameof(BalanceCodeLabel));
+
+    public string BalanceChecking => Text(nameof(BalanceChecking));
+
+    public string BalanceNoCode => Text(nameof(BalanceNoCode));
+
+    public string SendRefusedHint => Text(nameof(SendRefusedHint));
+
+    public string BalanceFailed(string error) => Format("BalanceFailed", error);
+
     public string Messages => Text(nameof(Messages));
     public string Contacts => Text(nameof(Contacts));
     public string FontSizeTooltip => Text(nameof(FontSizeTooltip));
