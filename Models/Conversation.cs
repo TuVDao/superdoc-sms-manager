@@ -14,6 +14,7 @@ public sealed class Conversation : INotifyPropertyChanged
     private bool _lastMessageIsIncoming;
     private int _messageCount;
     private int _failedCount;
+    private int _unreadCount;
     private Contact? _contact;
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -98,6 +99,22 @@ public sealed class Conversation : INotifyPropertyChanged
 
     public bool HasFailed => FailedCount > 0;
 
+    /// <summary>Inbound messages in this thread the user has not seen yet.</summary>
+    public int UnreadCount
+    {
+        get => _unreadCount;
+        set
+        {
+            if (SetField(ref _unreadCount, value))
+            {
+                OnPropertyChanged(nameof(HasUnread));
+            }
+        }
+    }
+
+    /// <summary>Drives the bold weight in the thread list.</summary>
+    public bool HasUnread => UnreadCount > 0;
+
     /// <summary>Today shows a clock, this year a date, older years include the year.</summary>
     public string LastMessageAtDisplay
     {
@@ -125,6 +142,7 @@ public sealed class Conversation : INotifyPropertyChanged
         LastMessageIsIncoming = other.LastMessageIsIncoming;
         MessageCount = other.MessageCount;
         FailedCount = other.FailedCount;
+        UnreadCount = other.UnreadCount;
     }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)

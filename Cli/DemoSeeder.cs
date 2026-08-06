@@ -87,10 +87,11 @@ internal static class DemoSeeder
         Add(repo, "+44 7700 900456", inbound: false, start.AddHours(3), "Sent the revised figures to your inbox.");
         Add(repo, "+44 7700 900456", inbound: true, start.AddHours(4), "Got them, thanks. One question on table 4.");
 
-        Add(repo, "07700 900781", inbound: true, start.AddHours(22), "Site access sorted for tomorrow.");
+        // Left unread, so the screenshot shows the bold weight against the read threads above it.
+        Add(repo, "07700 900781", inbound: true, start.AddHours(22), "Site access sorted for tomorrow.", read: false);
 
         // An alphanumeric sender, which is how carriers and public services actually appear.
-        Add(repo, "VODAFONE", inbound: true, start.AddHours(12), "You have used 80% of your data allowance.");
+        Add(repo, "VODAFONE", inbound: true, start.AddHours(12), "You have used 80% of your data allowance.", read: false);
 
         // A failure, so the retry affordance is visible in the screenshot.
         var failed = new SmsMessage
@@ -113,7 +114,8 @@ internal static class DemoSeeder
         string peer,
         bool inbound,
         DateTimeOffset at,
-        string body)
+        string body,
+        bool read = true)
     {
         var message = new SmsMessage
         {
@@ -122,7 +124,11 @@ internal static class DemoSeeder
             Body = body,
             CreatedAt = at,
             SentAt = at,
-            Status = inbound ? SmsStatus.Received : SmsStatus.Sent
+            Status = inbound ? SmsStatus.Received : SmsStatus.Sent,
+
+            // Most of the demo history reads as already seen; only the threads meant to stand
+            // out are left unread.
+            ReadAt = inbound && !read ? null : at
         };
 
         repo.Insert(message);

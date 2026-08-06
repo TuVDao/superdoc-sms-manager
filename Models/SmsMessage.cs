@@ -32,6 +32,7 @@ public class SmsMessage : INotifyPropertyChanged
     private int _retryCount;
     private string _errorMessage = string.Empty;
     private DateTimeOffset? _nextAttemptAt;
+    private DateTimeOffset? _readAt;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -102,6 +103,28 @@ public class SmsMessage : INotifyPropertyChanged
         set => SetField(ref _nextAttemptAt, value);
     }
 
+    /// <summary>
+    /// When the user actually saw this message; null until then. Only meaningful for inbound
+    /// rows — a message this app sent has never been unread.
+    /// </summary>
+    public DateTimeOffset? ReadAt
+    {
+        get => _readAt;
+        set
+        {
+            if (SetField(ref _readAt, value))
+            {
+                OnPropertyChanged(nameof(IsUnread));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Drives the bold weight in the thread and the thread list. Arriving is not reading: a
+    /// message received while the window was hidden in the tray stays unread until it is shown.
+    /// </summary>
+    public bool IsUnread => IsIncoming && ReadAt is null;
+
     /// <summary>True for a message that arrived from the network rather than one we sent.</summary>
     public bool IsIncoming => !string.IsNullOrEmpty(From);
 
@@ -138,6 +161,7 @@ public class SmsMessage : INotifyPropertyChanged
         RetryCount = other.RetryCount;
         ErrorMessage = other.ErrorMessage;
         NextAttemptAt = other.NextAttemptAt;
+        ReadAt = other.ReadAt;
         PeerKey = other.PeerKey;
     }
 

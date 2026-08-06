@@ -11,7 +11,7 @@ public sealed class SmsRepository : IDisposable
     private readonly ILogger<SmsRepository>? _logger;
 
     private const string SelectColumns =
-        "Id, ToNumber, FromNumber, Body, CreatedAt, SentAt, Status, RetryCount, ErrorMessage, NextAttemptAt, PeerKey";
+        "Id, ToNumber, FromNumber, Body, CreatedAt, SentAt, Status, RetryCount, ErrorMessage, NextAttemptAt, PeerKey, ReadAt";
 
     public SmsRepository(string? dbPath = null, ILogger<SmsRepository>? logger = null)
     {
@@ -78,6 +78,24 @@ public sealed class SmsRepository : IDisposable
             alter.CommandText = "ALTER TABLE SmsMessages ADD COLUMN PeerKey TEXT NOT NULL DEFAULT '';";
             alter.ExecuteNonQuery();
             _logger?.LogInformation("Migrated database: added PeerKey column.");
+        }
+
+        if (!ColumnExists("ReadAt"))
+        {
+            using var alter = _conn.CreateCommand();
+            alter.CommandText = "ALTER TABLE SmsMessages ADD COLUMN ReadAt TEXT;";
+            alter.ExecuteNonQuery();
+
+            // Everything already in the database has been sitting in front of the user, in some
+            // cases for months. Leaving it null would mark the entire history unread and bold
+            // every thread at once, which says nothing.
+            using var seed = _conn.CreateCommand();
+            seed.CommandText = "UPDATE SmsMessages SET ReadAt = CreatedAt;";
+            var rows = seed.ExecuteNonQuery();
+
+            _logger?.LogInformation(
+                "Migrated database: added ReadAt column and marked {Count} existing message(s) as read.",
+                rows);
         }
 
         using var index = _conn.CreateCommand();
@@ -443,6 +461,55 @@ public sealed class SmsRepository : IDisposable
     // ----- Settings ---------------------------------------------------------------------
 
     /// <summary>Reads a stored UI preference, or <paramref name="fallback"/> when unset.</summary>
+    /// <summary>
+    /// Stamps every unread inbound message in one thread as seen.
+    /// </summary>
+    /// <remarks>
+    /// Called when the user opens the thread with the window actually on screen. Receiving a
+    /// message is not reading it: one that arrives while the app sits in the tray has to stay
+    /// unread, or the bold weight would only ever be visible to nobody.
+    /// </remarks>
+    /// <returns>How many messages this marked; zero when there was nothing unread.</returns>
+    public int MarkConversationRead(string peerKey)
+    {
+        if (string.IsNullOrEmpty(peerKey))
+        {
+            return 0;
+        }
+
+        lock (_sync)
+        {
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText = """
+                UPDATE SmsMessages
+                SET ReadAt = $now
+                WHERE PeerKey = $peer AND FromNumber <> '' AND ReadAt IS NULL;
+                """;
+            cmd.Parameters.AddWithValue("$now", Utc(DateTimeOffset.UtcNow)!);
+            cmd.Parameters.AddWithValue("$peer", peerKey);
+
+            var marked = cmd.ExecuteNonQuery();
+            if (marked > 0)
+            {
+                _logger?.LogDebug("Marked {Count} message(s) read in one thread.", marked);
+            }
+
+            return marked;
+        }
+    }
+
+    /// <summary>Unread inbound messages across every thread; drives nothing yet but the tests.</summary>
+    public int CountUnread()
+    {
+        lock (_sync)
+        {
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText =
+                "SELECT COUNT(1) FROM SmsMessages WHERE FromNumber <> '' AND ReadAt IS NULL;";
+            return Convert.ToInt32(cmd.ExecuteScalar() ?? 0);
+        }
+    }
+
     public string GetSetting(string key, string fallback = "")
     {
         lock (_sync)
@@ -504,8 +571,8 @@ public sealed class SmsRepository : IDisposable
             using var cmd = _conn.CreateCommand();
             cmd.CommandText = """
                 INSERT INTO SmsMessages
-                    (ToNumber, FromNumber, Body, CreatedAt, SentAt, Status, RetryCount, ErrorMessage, NextAttemptAt, PeerKey)
-                VALUES ($to, $from, $body, $created, $sent, $status, $retry, $err, $next, $peer);
+                    (ToNumber, FromNumber, Body, CreatedAt, SentAt, Status, RetryCount, ErrorMessage, NextAttemptAt, PeerKey, ReadAt)
+                VALUES ($to, $from, $body, $created, $sent, $status, $retry, $err, $next, $peer, $read);
                 SELECT last_insert_rowid();
                 """;
             BindParameters(cmd, msg);
@@ -531,7 +598,8 @@ public sealed class SmsRepository : IDisposable
                     RetryCount=$retry,
                     ErrorMessage=$err,
                     NextAttemptAt=$next,
-                    PeerKey=$peer
+                    PeerKey=$peer,
+                    ReadAt=$read
                 WHERE Id=$id;
                 """;
             BindParameters(cmd, msg);
@@ -696,7 +764,10 @@ public sealed class SmsRepository : IDisposable
                      ORDER BY x.CreatedAt DESC, x.Id DESC LIMIT 1) AS LastIncoming,
                     MAX(m.CreatedAt) AS LastAt,
                     COUNT(1) AS Total,
-                    SUM(CASE WHEN m.Status = $failed THEN 1 ELSE 0 END) AS Failed
+                    SUM(CASE WHEN m.Status = $failed THEN 1 ELSE 0 END) AS Failed,
+                    -- Inbound only: a non-empty sender is what makes a row incoming, and a
+                    -- message this app sent has never been unread.
+                    SUM(CASE WHEN m.FromNumber <> '' AND m.ReadAt IS NULL THEN 1 ELSE 0 END) AS Unread
                 FROM SmsMessages m
                 WHERE m.PeerKey <> ''
                 GROUP BY m.PeerKey
@@ -718,7 +789,8 @@ public sealed class SmsRepository : IDisposable
                     LastMessageIsIncoming = reader.GetInt32(4) == 1,
                     LastMessageAt = DateTimeOffset.TryParse(reader.GetString(5), out var at) ? at : DateTimeOffset.MinValue,
                     MessageCount = reader.GetInt32(6),
-                    FailedCount = reader.IsDBNull(7) ? 0 : reader.GetInt32(7)
+                    FailedCount = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
+                    UnreadCount = reader.IsDBNull(8) ? 0 : reader.GetInt32(8)
                 });
             }
 
@@ -977,7 +1049,8 @@ public sealed class SmsRepository : IDisposable
         RetryCount = reader.GetInt32(7),
         ErrorMessage = reader.GetString(8),
         NextAttemptAt = ParseTimestamp(reader, 9),
-        PeerKey = reader.IsDBNull(10) ? string.Empty : reader.GetString(10)
+        PeerKey = reader.IsDBNull(10) ? string.Empty : reader.GetString(10),
+        ReadAt = ParseTimestamp(reader, 11)
     };
 
     /// <summary>
@@ -1025,6 +1098,11 @@ public sealed class SmsRepository : IDisposable
         // Derived rather than trusted from the caller, so the grouping key can never drift out
         // of step with the addresses actually stored on the row.
         cmd.Parameters.AddWithValue("$peer", PhoneNumber.ToKey(msg.PeerAddress));
+
+        // An outbound message was never unread, so it is stamped on the way in rather than
+        // relying on every reader to remember to exclude our own messages.
+        var readAt = msg.IsIncoming ? msg.ReadAt : msg.ReadAt ?? msg.CreatedAt;
+        cmd.Parameters.AddWithValue("$read", (object?)Utc(readAt) ?? DBNull.Value);
     }
 
     public void Dispose()

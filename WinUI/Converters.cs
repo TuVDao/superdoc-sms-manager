@@ -1,3 +1,4 @@
+using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
@@ -18,6 +19,32 @@ public sealed class BoolToVisibilityConverter : IValueConverter
         }
 
         return flag ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+        => throw new NotSupportedException();
+}
+
+/// <summary>
+/// Bold when the bound bool says the item is unread, normal weight otherwise.
+/// </summary>
+/// <remarks>
+/// Pass "SemiBold" as the parameter where the read state should still sit above body text — the
+/// thread list titles are already SemiBold, so plain Normal would make a read thread look
+/// demoted rather than simply read.
+/// </remarks>
+public sealed class UnreadToFontWeightConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        if (value is bool unread && unread)
+        {
+            return FontWeights.Bold;
+        }
+
+        return parameter is string s && s.Equals("SemiBold", StringComparison.OrdinalIgnoreCase)
+            ? FontWeights.SemiBold
+            : FontWeights.Normal;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

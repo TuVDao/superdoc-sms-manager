@@ -20,6 +20,7 @@
             <local:SmsStatusToBrushConverter x:Key="StatusBrushConverter" />
             <local:SmsStatusToVisibilityConverter x:Key="RetryVisibilityConverter" />
             <local:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+            <local:UnreadToFontWeightConverter x:Key="UnreadToFontWeight" />
             <local:StringToVisibilityConverter x:Key="StringToVisibility" />
             <local:IncomingToAlignmentConverter x:Key="IncomingToAlignment" />
             <local:IncomingToBrushConverter x:Key="IncomingToBrush" />

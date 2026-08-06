@@ -100,6 +100,9 @@ and delete `app\`.
   instead of retrying five times.
 - **Unicode.** Vietnamese and other non-ASCII text is sent as UCS-2 explicitly rather than
   relying on the driver's interpretation of `Optimal`.
+- **Unread messages in bold**, in the thread list and in the thread itself. Arriving is not
+  reading: a message that comes in while the window is hidden in the tray stays bold until you
+  actually open its thread with the window on screen.
 - **Notifications** for incoming messages while the window is hidden.
 - **Delete** single messages, several at once, or whole threads — behind a confirmation dialog.
 - **Emoji picker** in the composer, with a live counter showing characters, segments and

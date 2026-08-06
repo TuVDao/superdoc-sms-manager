@@ -26,6 +26,11 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
     private string _statusText = string.Empty;
     private bool _isComposingNew;
     private int _refreshInFlight;
+    private bool _windowIsVisible = true;
+    private CancellationTokenSource? _markReadCts;
+
+    /// <summary>How long a thread has to stay open before its messages count as read.</summary>
+    private static readonly TimeSpan MarkReadDwell = TimeSpan.FromSeconds(2);
 
     public ConversationsViewModel(SmsManager smsManager, ILogger logger, DispatcherQueue dispatcher, Strings loc)
     {
@@ -106,6 +111,97 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
         // a fair trade.
         ThreadMessages.Clear();
         LoadThread();
+    }
+
+    /// <summary>
+    /// Whether the window is actually on screen. Set by the view; false while hidden in the tray.
+    /// </summary>
+    /// <remarks>
+    /// The app keeps running in the tray to receive at all, so "the thread is selected" is not
+    /// evidence that anyone saw it — the same thread stays selected all night with the window
+    /// hidden. Without this, every message would be marked read on arrival and the unread weight
+    /// would never appear.
+    /// </remarks>
+    public bool WindowIsVisible
+    {
+        get => _windowIsVisible;
+        set
+        {
+            if (_windowIsVisible == value)
+            {
+                return;
+            }
+
+            _windowIsVisible = value;
+            if (value)
+            {
+                ScheduleMarkRead();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Marks the open thread read after a short dwell.
+    /// </summary>
+    /// <remarks>
+    /// Not immediate on purpose. Opening a thread and clearing the unread state in the same frame
+    /// means the bold weight is never actually seen by the person it is for; the delay is what
+    /// makes "these three are new" readable before it goes away. Mail clients do the same.
+    /// </remarks>
+    private void ScheduleMarkRead()
+    {
+        _markReadCts?.Cancel();
+        _markReadCts?.Dispose();
+        _markReadCts = null;
+
+        var conversation = SelectedConversation;
+        if (!WindowIsVisible || conversation is null || conversation.UnreadCount == 0)
+        {
+            return;
+        }
+
+        var cts = new CancellationTokenSource();
+        _markReadCts = cts;
+
+        _ = MarkReadAfterDwellAsync(conversation, cts.Token);
+    }
+
+    private async Task MarkReadAfterDwellAsync(Conversation conversation, CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(MarkReadDwell, token);
+
+            var marked = await Task.Run(() => _smsManager.MarkConversationRead(conversation.PeerKey), token);
+            if (marked == 0 || token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            RunOnUi(() =>
+            {
+                // The list and the open thread hold separate objects for the same rows, so both
+                // have to be told rather than waiting for the next poll to repaint them.
+                conversation.UnreadCount = 0;
+
+                var now = DateTimeOffset.UtcNow;
+                foreach (var message in ThreadMessages)
+                {
+                    if (message.IsUnread)
+                    {
+                        message.ReadAt = now;
+                    }
+                }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            // The user moved to another thread, or hid the window, before the dwell elapsed.
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to mark a conversation read.");
+        }
     }
 
     /// <summary>Called by the view when the thread's selection changes.</summary>
@@ -236,6 +332,7 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(CanEditRecipient));
                 LoadThread();
                 RaiseSendCanExecute();
+                ScheduleMarkRead();
             }
         }
     }
@@ -409,6 +506,10 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
                 if (selectedKey is not null)
                 {
                     MergeThread(thread);
+
+                    // A message that lands in the thread already on screen arrives unread; it
+                    // has to start its own dwell rather than wait for the next selection change.
+                    ScheduleMarkRead();
                 }
                 else if (DemoMode.IsEnabled && Conversations.Count > 0)
                 {

@@ -118,6 +118,9 @@ public sealed partial class MainWindow : Window
         try
         {
             AppWindow.Hide();
+
+            // Anything arriving from here on is unread, however long the thread stays selected.
+            SetThreadVisibility(false);
             _logger.LogInformation("Window hidden to tray; still receiving SMS.");
         }
         catch (Exception ex)
@@ -132,10 +135,23 @@ public sealed partial class MainWindow : Window
         {
             AppWindow.Show();
             Activate();
+            SetThreadVisibility(true);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Could not restore the window from the tray.");
+        }
+    }
+
+    /// <summary>
+    /// Tells the thread view whether anyone can actually see it, which is what separates a
+    /// message having arrived from it having been read.
+    /// </summary>
+    private void SetThreadVisibility(bool visible)
+    {
+        if (_viewModel is not null)
+        {
+            _viewModel.Conversations.WindowIsVisible = visible;
         }
     }
 

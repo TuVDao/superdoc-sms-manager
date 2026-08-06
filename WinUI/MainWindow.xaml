@@ -109,12 +109,15 @@
                             <Grid ColumnDefinitions="*,Auto" Padding="2,8" ColumnSpacing="8">
                                 <StackPanel Spacing="3">
                                     <TextBlock Text="{Binding Title}"
-                                               FontWeight="SemiBold"
+                                               FontWeight="{Binding HasUnread, Converter={StaticResource UnreadToFontWeight}, ConverterParameter=SemiBold}"
                                                TextTrimming="CharacterEllipsis" />
                                     <TextBlock Text="{Binding Subtitle}"
                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                                Visibility="{Binding Subtitle, Converter={StaticResource StringToVisibility}}" />
+                                    <!-- The preview takes the weight as well as the name: bolding
+                                         the name alone is easy to miss on a list of numbers. -->
                                     <TextBlock Text="{Binding LastMessagePreview}"
+                                               FontWeight="{Binding HasUnread, Converter={StaticResource UnreadToFontWeight}}"
                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                                TextTrimming="CharacterEllipsis"
                                                MaxLines="1" />
@@ -190,6 +193,7 @@
                                             MaxWidth="620">
                                         <StackPanel Spacing="5">
                                             <TextBlock Text="{Binding Body}"
+                                                       FontWeight="{Binding IsUnread, Converter={StaticResource UnreadToFontWeight}}"
                                                        Foreground="White"
                                                        TextWrapping="Wrap"
                                                        IsTextSelectionEnabled="True" />

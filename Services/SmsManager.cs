@@ -159,6 +159,8 @@ public sealed class SmsManager : IDisposable
     public IReadOnlyList<SmsMessage> GetConversationMessages(string peerKey)
         => _repo.GetConversationMessages(peerKey);
 
+    public int MarkConversationRead(string peerKey) => _repo.MarkConversationRead(peerKey);
+
     public int DeleteMessages(IEnumerable<long> ids) => _repo.DeleteMessages(ids);
 
     public int DeleteConversations(IEnumerable<string> peerKeys) => _repo.DeleteConversations(peerKeys);
