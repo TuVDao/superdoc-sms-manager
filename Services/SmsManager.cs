@@ -503,9 +503,12 @@ public sealed class SmsManager : IDisposable
                 "SMS #{Id} rejected by modem (transient={Transient}). {Error}",
                 msg.Id, result.IsErrorTransient, error);
 
-            // The modem already told us whether this is worth trying again; honouring that
-            // avoids spending the whole retry budget on a message the network will never accept.
-            return result.IsErrorTransient
+            // Where the modem has identified the failure its judgement is honoured, so the retry
+            // budget is not spent on a message the network will never accept. Where it has not
+            // (ModemErrorCode.Other), the transient flag is a default rather than a finding.
+            return SmsFailureClassifier.Classify(
+                       result.ModemErrorCode, result.NetworkCauseCode, result.IsErrorTransient)
+                   == SmsSendOutcome.TransientFailure
                 ? SmsSendResult.Transient(error)
                 : SmsSendResult.Permanent(error);
         }
