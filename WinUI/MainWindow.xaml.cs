@@ -31,7 +31,6 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        ResizeToComfortableDefault();
 
         try
         {
@@ -56,6 +55,16 @@ public sealed partial class MainWindow : Window
                 _smsManager,
                 _loggerFactory.CreateLogger<MainViewModel>(),
                 DispatcherQueue);
+
+            ResizeToComfortableDefault();
+
+            AppWindow.Changed += (sender, args) =>
+            {
+                if (args.DidSizeChange && AppWindow.Presenter is OverlappedPresenter p && p.State == OverlappedPresenterState.Restored)
+                {
+                    _viewModel?.Ui.SaveWindowSize(AppWindow.Size.Width, AppWindow.Size.Height);
+                }
+            };
 
             if (Content is FrameworkElement fe)
             {
@@ -260,7 +269,15 @@ public sealed partial class MainWindow : Window
     {
         try
         {
-            AppWindow.Resize(new SizeInt32(1280, 820));
+            int width = _viewModel?.Ui.SavedWindowWidth ?? 980;
+            int height = _viewModel?.Ui.SavedWindowHeight ?? 640;
+            if (width < 600 || height < 400)
+            {
+                width = 980;
+                height = 640;
+            }
+
+            AppWindow.Resize(new SizeInt32(width, height));
         }
         catch (Exception)
         {

@@ -234,6 +234,12 @@ public sealed class Strings : INotifyPropertyChanged
 
     public string Messages => Text(nameof(Messages));
     public string Contacts => Text(nameof(Contacts));
+    public string Settings => Text(nameof(Settings));
+    public string Appearance => Text(nameof(Appearance));
+    public string Language => Text(nameof(Language));
+    public string TextSize => Text(nameof(TextSize));
+    public string ModemStatus => Text(nameof(ModemStatus));
+    public string RecheckModem => Text(nameof(RecheckModem));
     public string FontSizeTooltip => Text(nameof(FontSizeTooltip));
     public string LanguageTooltip => Text(nameof(LanguageTooltip));
     public string ShowList => Text(nameof(ShowList));

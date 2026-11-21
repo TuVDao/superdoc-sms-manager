@@ -8,6 +8,12 @@
 
   "Messages": "Messages",
   "Contacts": "Contacts",
+  "Settings": "Settings",
+  "Appearance": "Appearance",
+  "Language": "Language",
+  "TextSize": "Text size",
+  "ModemStatus": "Cellular Modem",
+  "RecheckModem": "Recheck Modem & SIM",
   "FontSizeTooltip": "Text size",
   "LanguageTooltip": "Language",
   "ShowList": "Show list",

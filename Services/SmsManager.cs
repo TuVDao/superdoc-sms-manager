@@ -671,7 +671,7 @@ public sealed class SmsManager : IDisposable
     }
 
     /// <summary>Forces the next send to re-acquire the modem, keeping any receive registration.</summary>
-    private void ResetDevice()
+    public void ResetDevice()
     {
         if (_device is null)
         {
@@ -681,6 +681,27 @@ public sealed class SmsManager : IDisposable
         _device = null;
         _initDiagnostic = "Modem handle was reset after a failure; it will be re-acquired.";
         _logger?.LogWarning("Dropped the cached modem handle so it can be re-acquired.");
+    }
+
+    /// <summary>
+    /// Drops the cached modem handle and re-queries Windows for the WWAN modem and SIM card.
+    /// Useful when the SIM card is inserted while the app is running.
+    /// </summary>
+    public async Task ResetAndReinitializeAsync()
+    {
+        await _initGate.WaitAsync();
+        try
+        {
+            _device = null;
+            _canReceive = false;
+            _initDiagnostic = "Re-querying modem and SIM card...";
+        }
+        finally
+        {
+            _initGate.Release();
+        }
+
+        await EnsureInitializedAsync();
     }
 
     /// <summary>

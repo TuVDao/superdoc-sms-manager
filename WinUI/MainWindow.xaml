@@ -27,7 +27,7 @@
               Margin="0,0,135,0"
               VerticalAlignment="Center">
 
-            <!-- Sidebar toggle button -->
+            <!-- Sidebar toggle button (visible in Messages & Contacts view) -->
             <Button Command="{Binding ToggleLeftPanelCommand}"
                     ToolTipService.ToolTip="{Binding Ui.TogglePanelTooltip}"
                     VerticalAlignment="Center"
@@ -65,10 +65,10 @@
                 </Border>
             </StackPanel>
 
-            <!-- Navigation & Actions bar aligned to the right -->
-            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <!-- Navigation switcher & quick action aligned to the right -->
+            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
 
-                <!-- Windows 11 View Switcher Tabs -->
+                <!-- Windows 11 View Switcher Tabs: Messages, Contacts, Settings -->
                 <Border CornerRadius="8"
                         Background="{ThemeResource SubtleFillColorSecondaryBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -100,6 +100,19 @@
                                 <TextBlock Text="{Binding Loc.Contacts}" FontWeight="Medium" />
                             </StackPanel>
                         </Button>
+
+                        <!-- Settings Tab -->
+                        <Button Command="{Binding ShowSettingsCommand}"
+                                Background="{Binding IsSettingsView, Converter={StaticResource BoolToNavBackground}}"
+                                Foreground="{Binding IsSettingsView, Converter={StaticResource BoolToNavForeground}}"
+                                BorderThickness="0"
+                                CornerRadius="6"
+                                Padding="10,5">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <FontIcon Glyph="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" />
+                                <TextBlock Text="{Binding Loc.Settings}" FontWeight="Medium" />
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </Border>
 
@@ -113,42 +126,6 @@
                         <TextBlock Text="{Binding Loc.CheckBalance}" />
                     </StackPanel>
                 </Button>
-
-                <!-- Language dropdown - drops down below the control -->
-                <local:CustomComboBox ItemsSource="{Binding Ui.LanguageOptions}"
-                                      SelectedItem="{Binding Ui.SelectedLanguageOption, Mode=TwoWay}"
-                                      ToolTipService.ToolTip="{Binding Loc.LanguageTooltip}"
-                                      MinWidth="105"
-                                      CornerRadius="6">
-                    <local:CustomComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <FontIcon Glyph="&#xE774;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                          FontSize="11"
-                                          Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <TextBlock Text="{Binding Name}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </local:CustomComboBox.ItemTemplate>
-                </local:CustomComboBox>
-
-                <!-- Text size dropdown - drops down below the control -->
-                <local:CustomComboBox ItemsSource="{Binding Ui.FontSizeOptions}"
-                                      SelectedItem="{Binding Ui.SelectedFontSizeOption, Mode=TwoWay}"
-                                      ToolTipService.ToolTip="{Binding Loc.FontSizeTooltip}"
-                                      MinWidth="95"
-                                      CornerRadius="6">
-                    <local:CustomComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <FontIcon Glyph="&#xE8D2;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                          FontSize="11"
-                                          Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <TextBlock Text="{Binding Name}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </local:CustomComboBox.ItemTemplate>
-                </local:CustomComboBox>
             </StackPanel>
         </Grid>
 
@@ -387,7 +364,7 @@
                     </Grid>
 
                     <!-- ================= ACTIVE THREAD VIEW ================= -->
-                    <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto"
+                    <Grid RowDefinitions="Auto,Auto,*,Auto,Auto"
                           RowSpacing="8"
                           Visibility="{Binding Conversations.HasSelection, Converter={StaticResource BoolToVisibility}}">
 
@@ -496,34 +473,17 @@
                             </ListView.ItemTemplate>
                         </ListView>
 
-                        <!-- Drag to resize the composer -->
-                        <local:SizerBorder Grid.Row="3"
-                                           IsHorizontalDrag="False"
-                                           Height="12"
-                                           Background="Transparent"
-                                           PointerPressed="ComposerSizer_PointerPressed"
-                                           PointerMoved="ComposerSizer_PointerMoved"
-                                           PointerReleased="ComposerSizer_PointerReleased"
-                                           PointerCaptureLost="ComposerSizer_PointerReleased"
-                                           ToolTipService.ToolTip="{Binding Loc.ComposerSizerTooltip}">
-                            <Rectangle Height="2"
-                                       VerticalAlignment="Center"
-                                       Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                        </local:SizerBorder>
-
-                        <!-- Composer section -->
-                        <Grid Grid.Row="4"
-                              RowDefinitions="Auto,*"
-                              RowSpacing="6"
-                              Height="{Binding Ui.ComposerHeight}">
-
+                        <!-- Auto-growing Dynamic Composer section -->
+                        <StackPanel Grid.Row="3" Spacing="6" Margin="0,4,0,0">
+                            <!-- New recipient box if composing a new conversation -->
                             <TextBox PlaceholderText="{Binding Loc.RecipientPlaceholder}"
                                      Header="{Binding Loc.RecipientHeader}"
                                      CornerRadius="8"
                                      Text="{Binding Conversations.NewRecipient, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      Visibility="{Binding Conversations.CanEditRecipient, Converter={StaticResource BoolToVisibility}}" />
 
-                            <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                            <!-- Input row: Emoji, Auto-growing text box, Send button -->
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
                                 <!-- Emoji Picker Button -->
                                 <Button VerticalAlignment="Bottom"
                                         Height="36"
@@ -565,19 +525,21 @@
                                     </Button.Flyout>
                                 </Button>
 
-                                <!-- Message input box -->
+                                <!-- Message input box: Starts compact and dynamically expands as text is added -->
                                 <TextBox x:Name="MessageBox"
                                          Grid.Column="1"
                                          CornerRadius="8"
                                          PlaceholderText="{Binding Loc.MessagePlaceholder}"
                                          AcceptsReturn="True"
                                          TextWrapping="Wrap"
-                                         VerticalAlignment="Stretch"
-                                         VerticalContentAlignment="Top"
+                                         MinHeight="38"
+                                         MaxHeight="140"
+                                         VerticalAlignment="Bottom"
+                                         VerticalContentAlignment="Center"
                                          ScrollViewer.VerticalScrollBarVisibility="Auto"
                                          Text="{Binding Conversations.MessageBody, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                                <!-- Send button with icon & proper sizing -->
+                                <!-- Send button with icon & matching height -->
                                 <Button Grid.Column="2"
                                         VerticalAlignment="Bottom"
                                         Height="36"
@@ -591,12 +553,12 @@
                                     </StackPanel>
                                 </Button>
                             </Grid>
-                        </Grid>
+                        </StackPanel>
 
                         <!-- Counter and warning -->
-                        <StackPanel Grid.Row="5"
+                        <StackPanel Grid.Row="4"
                                     Spacing="1"
-                                    Margin="0,4,0,0">
+                                    Margin="0,2,0,0">
                             <TextBlock Text="{Binding Conversations.ComposerCounter}"
                                        FontSize="{Binding Ui.CounterFontSize}"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -848,6 +810,160 @@
                     </ScrollViewer>
                 </Grid>
             </Border>
+        </Grid>
+
+        <!-- ================================ SETTINGS VIEW ================================ -->
+        <Grid Grid.Row="2"
+              Visibility="{Binding IsSettingsView, Converter={StaticResource BoolToVisibility}}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="16" MaxWidth="720" HorizontalAlignment="Left" Margin="4,0,16,16">
+
+                    <!-- Settings Header -->
+                    <StackPanel Spacing="4" Margin="0,0,0,8">
+                        <TextBlock Text="{Binding Loc.Settings}" FontSize="24" FontWeight="SemiBold" />
+                        <TextBlock Text="Manage app language, text sizing, and cellular modem connectivity."
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <!-- Section 1: Appearance & Reading -->
+                    <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="20">
+                        <StackPanel Spacing="18">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <FontIcon Glyph="&#xE790;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Foreground="{ThemeResource AccentFillColorDefaultBrush}" />
+                                <TextBlock Text="{Binding Loc.Appearance}" FontSize="16" FontWeight="SemiBold" />
+                            </StackPanel>
+
+                            <!-- Language Setting Row -->
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16" VerticalAlignment="Center">
+                                <StackPanel Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Loc.Language}" FontWeight="Medium" />
+                                    <TextBlock Text="Choose the interface language for the application"
+                                               FontSize="12"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+                                <local:CustomComboBox Grid.Column="1"
+                                                      ItemsSource="{Binding Ui.LanguageOptions}"
+                                                      SelectedItem="{Binding Ui.SelectedLanguageOption, Mode=TwoWay}"
+                                                      ToolTipService.ToolTip="{Binding Loc.LanguageTooltip}"
+                                                      MinWidth="160"
+                                                      CornerRadius="8">
+                                    <local:CustomComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <FontIcon Glyph="&#xE774;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                          FontSize="12"
+                                                          Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Text="{Binding Name}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </local:CustomComboBox.ItemTemplate>
+                                </local:CustomComboBox>
+                            </Grid>
+
+                            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                            <!-- Text Size Setting Row -->
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16" VerticalAlignment="Center">
+                                <StackPanel Spacing="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Loc.TextSize}" FontWeight="Medium" />
+                                    <TextBlock Text="Adjust reading text scale across messages and contacts"
+                                               FontSize="12"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+                                <local:CustomComboBox Grid.Column="1"
+                                                      ItemsSource="{Binding Ui.FontSizeOptions}"
+                                                      SelectedItem="{Binding Ui.SelectedFontSizeOption, Mode=TwoWay}"
+                                                      ToolTipService.ToolTip="{Binding Loc.FontSizeTooltip}"
+                                                      MinWidth="160"
+                                                      CornerRadius="8">
+                                    <local:CustomComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <FontIcon Glyph="&#xE8D2;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                                          FontSize="12"
+                                                          Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Text="{Binding Name}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </local:CustomComboBox.ItemTemplate>
+                                </local:CustomComboBox>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Section 2: Cellular Modem & SIM Card -->
+                    <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="20">
+                        <StackPanel Spacing="16">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <FontIcon Glyph="&#xE88A;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Foreground="{ThemeResource AccentFillColorDefaultBrush}" />
+                                <TextBlock Text="{Binding Loc.ModemStatus}" FontSize="16" FontWeight="SemiBold" />
+                            </StackPanel>
+
+                            <Border CornerRadius="8"
+                                    Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    Padding="14,10">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Current Status:" FontWeight="Medium" FontSize="13" />
+                                    <TextBlock Text="{Binding DeviceStatusText}"
+                                               FontSize="13"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <TextBlock Text="Hot-plugging tip: If you inserted a SIM card while the laptop was running, Windows cellular drivers often need a service refresh to detect the tray. Click below to re-query the modem without rebooting."
+                                       FontSize="12"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       TextWrapping="Wrap" />
+
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Button Style="{StaticResource AccentButtonStyle}"
+                                        Height="36"
+                                        CornerRadius="8"
+                                        Command="{Binding RecheckModemCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE72C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
+                                        <TextBlock Text="{Binding Loc.RecheckModem}" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Height="36"
+                                        CornerRadius="8"
+                                        Click="CheckBalance_Click">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE8C7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
+                                        <TextBlock Text="{Binding Loc.CheckBalance}" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Section 3: About -->
+                    <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="20">
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="SUPERDOC SMS Manager" FontWeight="SemiBold" FontSize="14" />
+                            <TextBlock Text="Native WinUI 3 Desktop Application for Windows WWAN cellular modems."
+                                       FontSize="12"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
         </Grid>
     </Grid>
 </Window>

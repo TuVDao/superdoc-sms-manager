@@ -27,6 +27,11 @@ public sealed class UiSettings : INotifyPropertyChanged
     /// </summary>
     private const string ComposerHeightKey = "ui.composerHeight.v2";
     private const string LanguageKey = "ui.language";
+    private const string WindowWidthKey = "ui.windowWidth";
+    private const string WindowHeightKey = "ui.windowHeight";
+
+    private const double DefaultWindowWidth = 980;
+    private const double DefaultWindowHeight = 640;
 
     /// <summary>Roomier than the WinUI default of 14: the previous UI read as cramped.</summary>
     private const double DefaultFontSize = 15;
@@ -145,6 +150,20 @@ public sealed class UiSettings : INotifyPropertyChanged
         }
     }
 
+    public int SavedWindowWidth { get; private set; } = (int)DefaultWindowWidth;
+    public int SavedWindowHeight { get; private set; } = (int)DefaultWindowHeight;
+
+    public void SaveWindowSize(int width, int height)
+    {
+        if (width >= 600 && height >= 400)
+        {
+            SavedWindowWidth = width;
+            SavedWindowHeight = height;
+            Save(WindowWidthKey, width);
+            Save(WindowHeightKey, height);
+        }
+    }
+
     /// <summary>Secondary text. Kept close to the body size so it stays comfortably readable.</summary>
     public double SmallFontSize => Math.Max(11, FontSize - 2);
 
@@ -242,6 +261,8 @@ public sealed class UiSettings : INotifyPropertyChanged
             _fontSize = ReadDouble(FontSizeKey, DefaultFontSize, 11, 28);
             _leftPanelWidth = ReadDouble(PanelWidthKey, DefaultPanelWidth, 180, 640);
             _composerHeight = ReadDouble(ComposerHeightKey, DefaultComposerHeight, 90, 600);
+            SavedWindowWidth = (int)ReadDouble(WindowWidthKey, DefaultWindowWidth, 600, 3840);
+            SavedWindowHeight = (int)ReadDouble(WindowHeightKey, DefaultWindowHeight, 400, 2160);
         }
         catch (Exception ex)
         {

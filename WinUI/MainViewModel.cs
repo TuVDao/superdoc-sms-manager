@@ -17,7 +17,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private readonly DispatcherQueue _dispatcher;
     private string _deviceStatusText = string.Empty;
     private string _balanceNotice = string.Empty;
-    private bool _isContactsView;
+    private string _activeView = "Messages";
     private bool _disposed;
     private DateTimeOffset _lastBalanceEnquiry = DateTimeOffset.MinValue;
 
@@ -44,8 +44,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             Conversations.RefreshLocalisedText();
         };
 
-        ShowMessagesCommand = new DelegateCommand(() => IsContactsView = false);
-        ShowContactsCommand = new DelegateCommand(() => IsContactsView = true);
+        ShowMessagesCommand = new DelegateCommand(() => SelectView("Messages"));
+        ShowContactsCommand = new DelegateCommand(() => SelectView("Contacts"));
+        ShowSettingsCommand = new DelegateCommand(() => SelectView("Settings"));
+        RecheckModemCommand = new AsyncCommand(RecheckModemAsync);
         ToggleLeftPanelCommand = new DelegateCommand(Ui.ToggleLeftPanel);
         AddContactForPeerCommand = new DelegateCommand(AddContactForCurrentPeer, () =>
             Conversations.SelectedConversation is { HasContact: false });
@@ -99,6 +101,10 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public DelegateCommand ShowMessagesCommand { get; }
 
     public DelegateCommand ShowContactsCommand { get; }
+
+    public DelegateCommand ShowSettingsCommand { get; }
+
+    public AsyncCommand RecheckModemCommand { get; }
 
     public DelegateCommand AddContactForPeerCommand { get; }
 
@@ -181,23 +187,39 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             : hint + Loc.BalanceFailed(result.Error ?? string.Empty));
     }
 
+    public bool IsMessagesView => _activeView == "Messages";
+
     public bool IsContactsView
     {
-        get => _isContactsView;
-        set
+        get => _activeView == "Contacts";
+        set => SelectView(value ? "Contacts" : "Messages");
+    }
+
+    public bool IsSettingsView => _activeView == "Settings";
+
+    public void SelectView(string view)
+    {
+        if (SetField(ref _activeView, view, nameof(IsMessagesView)))
         {
-            if (SetField(ref _isContactsView, value))
+            OnPropertyChanged(nameof(IsContactsView));
+            OnPropertyChanged(nameof(IsSettingsView));
+            if (view == "Contacts")
             {
-                OnPropertyChanged(nameof(IsMessagesView));
-                if (value)
-                {
-                    _ = ContactBook.RefreshAsync();
-                }
+                _ = ContactBook.RefreshAsync();
+            }
+            else if (view == "Settings")
+            {
+                _ = LoadDeviceStatusAsync();
             }
         }
     }
 
-    public bool IsMessagesView => !IsContactsView;
+    private async Task RecheckModemAsync()
+    {
+        RunOnUi(() => DeviceStatusText = "Resetting and re-querying modem...");
+        await _smsManager.ResetAndReinitializeAsync();
+        await LoadDeviceStatusAsync();
+    }
 
     /// <summary>Jumps to the address book with the open thread's number already filled in.</summary>
     private void AddContactForCurrentPeer()
