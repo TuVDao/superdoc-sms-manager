@@ -240,6 +240,10 @@ public sealed class Strings : INotifyPropertyChanged
     public string TextSize => Text(nameof(TextSize));
     public string ModemStatus => Text(nameof(ModemStatus));
     public string RecheckModem => Text(nameof(RecheckModem));
+    public string FixSimHotplug => Text(nameof(FixSimHotplug));
+    public string FixSimTooltip => Text(nameof(FixSimTooltip));
+    public string ModemResetConfirmTitle => Text(nameof(ModemResetConfirmTitle));
+    public string ModemResetConfirmMessage => Text(nameof(ModemResetConfirmMessage));
     public string FontSizeTooltip => Text(nameof(FontSizeTooltip));
     public string LanguageTooltip => Text(nameof(LanguageTooltip));
     public string ShowList => Text(nameof(ShowList));
@@ -258,6 +262,11 @@ public sealed class Strings : INotifyPropertyChanged
     public string MessagePlaceholder => Text(nameof(MessagePlaceholder));
     public string Send => Text(nameof(Send));
     public string Retry => Text(nameof(Retry));
+    public string Copy => Text(nameof(Copy));
+    public string SelectText => Text(nameof(SelectText));
+    public string EditPending => Text(nameof(EditPending));
+    public string CancelPending => Text(nameof(CancelPending));
+    public string MessageCopied => Text(nameof(MessageCopied));
     public string ErrorBadge => Text(nameof(ErrorBadge));
     public string PanelSizerTooltip => Text(nameof(PanelSizerTooltip));
     public string ComposerSizerTooltip => Text(nameof(ComposerSizerTooltip));

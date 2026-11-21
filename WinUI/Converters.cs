@@ -138,3 +138,17 @@ public sealed class BoolToNavForegroundConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, string language)
         => throw new NotSupportedException();
 }
+
+public sealed class BoolToModemBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        var isReady = value is bool b && b;
+        return isReady
+            ? new SolidColorBrush(Color.FromArgb(255, 34, 197, 94))
+            : new SolidColorBrush(Color.FromArgb(255, 156, 163, 175));
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+        => throw new NotSupportedException();
+}

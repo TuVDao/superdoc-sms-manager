@@ -27,6 +27,7 @@
             <local:SmsStatusToTextConverter x:Key="StatusToText" />
             <local:BoolToNavBackgroundConverter x:Key="BoolToNavBackground" />
             <local:BoolToNavForegroundConverter x:Key="BoolToNavForeground" />
+            <local:BoolToModemBrushConverter x:Key="BoolToModemBrush" />
 
             <!--
               The thread is a ListView so messages can be ticked and deleted, but a bubble must

@@ -11,6 +11,7 @@ using SuperDoc.Sms.Services;
 using SuperDoc.Sms.Storage;
 using Windows.Graphics;
 using Windows.UI;
+using Windows.ApplicationModel.DataTransfer;
 
 namespace SuperDoc.Sms.WinUI;
 
@@ -72,6 +73,7 @@ public sealed partial class MainWindow : Window
             }
 
             _viewModel.Conversations.ConfirmAsync = ConfirmDestructiveAsync;
+            _viewModel.ConfirmActionAsync = ConfirmDestructiveAsync;
 
             // Arabic and other right-to-left languages need the whole layout mirrored, not just
             // translated text: panels, bubble alignment and scroll bars all flip with this.
@@ -345,6 +347,86 @@ public sealed partial class MainWindow : Window
         if (id is not null)
         {
             await _viewModel.Conversations.RetryAsync(id.Value);
+        }
+    }
+
+    private void CopyMessage_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: SmsMessage msg })
+        {
+            try
+            {
+                var package = new DataPackage();
+                package.SetText(msg.Body);
+                Clipboard.SetContent(package);
+                if (_viewModel is not null)
+                {
+                    _viewModel.Conversations.StatusText = _viewModel.Loc.MessageCopied;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to copy message text to clipboard.");
+            }
+        }
+    }
+
+    private async void SelectTextMessage_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: SmsMessage msg } && Content?.XamlRoot is not null)
+        {
+            var box = new TextBox
+            {
+                Text = msg.Body,
+                IsReadOnly = true,
+                TextWrapping = TextWrapping.Wrap,
+                AcceptsReturn = true,
+                MinHeight = 100,
+                MaxHeight = 350
+            };
+            box.SelectAll();
+
+            var dialog = new ContentDialog
+            {
+                Title = _viewModel?.Loc.SelectText ?? "Select Text",
+                Content = box,
+                CloseButtonText = "Close",
+                XamlRoot = Content.XamlRoot
+            };
+            await dialog.ShowAsync();
+        }
+    }
+
+    private async void EditPendingMessage_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: SmsMessage msg } && _viewModel is not null)
+        {
+            await _viewModel.Conversations.EditPendingMessageAsync(msg.Id, msg.Body);
+            MessageBox?.Focus(FocusState.Programmatic);
+        }
+    }
+
+    private async void CancelPendingMessage_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: SmsMessage msg } && _viewModel is not null)
+        {
+            await _viewModel.Conversations.CancelPendingMessageAsync(msg.Id);
+        }
+    }
+
+    private async void RetryContextMessage_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: SmsMessage msg } && _viewModel is not null)
+        {
+            await _viewModel.Conversations.RetryAsync(msg.Id);
+        }
+    }
+
+    private async void DeleteMessage_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: SmsMessage msg } && _viewModel is not null)
+        {
+            await _viewModel.Conversations.DeleteMessageAsync(msg.Id);
         }
     }
 

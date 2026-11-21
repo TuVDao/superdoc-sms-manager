@@ -113,5 +113,15 @@
   "BalanceChecking": "Asking the carrier…",
   "BalanceFailed": "Could not read the balance: {0}",
   "BalanceNoCode": "Enter your carrier's balance USSD code (e.g. *804# for Ethio Telecom, *704# for Safaricom).",
-  "SendRefusedHint": "The carrier refused the message without giving a reason. An empty prepaid balance is the usual cause: receiving stays free, so incoming messages keep arriving normally."
+  "SendRefusedHint": "The carrier refused the message without giving a reason. An empty prepaid balance is the usual cause: receiving stays free, so incoming messages keep arriving normally.",
+
+  "Copy": "Copy message",
+  "SelectText": "Select text",
+  "EditPending": "Edit message",
+  "CancelPending": "Cancel sending",
+  "MessageCopied": "Message copied to clipboard",
+  "FixSimHotplug": "⚡ Fix Hot-Plug SIM / Reset Hardware",
+  "FixSimTooltip": "Power-cycles Intel XMM LTE modem hardware and restarts WWAN service as Administrator",
+  "ModemResetConfirmTitle": "Reset Cellular Modem Hardware?",
+  "ModemResetConfirmMessage": "This will restart the internal cellular LTE modem and network services using Administrator permissions. Cellular and network connections may briefly cycle during the reset. Do you wish to proceed?"
 }

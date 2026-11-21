@@ -267,6 +267,68 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
         }
     }
 
+    public async Task DeleteMessageAsync(long id)
+    {
+        var confirmed = ConfirmAsync is null || await ConfirmAsync(
+            _loc.DeleteMessagesTitle,
+            _loc.ConfirmDeleteMessages(1));
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            var deleted = await Task.Run(() => _smsManager.DeleteMessage(id));
+            StatusText = _loc.DeletedMessages(deleted ? 1 : 0);
+
+            var key = SelectedConversation?.PeerKey;
+            await RefreshAsync();
+
+            if (key is not null && Conversations.All(c => c.PeerKey != key))
+            {
+                SelectedConversation = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete message #{Id}.", id);
+            StatusText = _loc.DeleteFailed(ex.Message);
+        }
+    }
+
+    public async Task CancelPendingMessageAsync(long id)
+    {
+        try
+        {
+            await Task.Run(() => _smsManager.DeleteMessage(id));
+            StatusText = "Pending message cancelled.";
+            await RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to cancel pending message #{Id}.", id);
+            StatusText = _loc.DeleteFailed(ex.Message);
+        }
+    }
+
+    public async Task EditPendingMessageAsync(long id, string body)
+    {
+        try
+        {
+            await Task.Run(() => _smsManager.DeleteMessage(id));
+            MessageBody = body;
+            StatusText = "Message restored to draft.";
+            await RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to edit pending message #{Id}.", id);
+            StatusText = _loc.DeleteFailed(ex.Message);
+        }
+    }
+
     private async Task DeleteSelectedConversationsAsync()
     {
         var keys = _selectedConversationKeys.ToList();
