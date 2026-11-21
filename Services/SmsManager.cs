@@ -204,8 +204,15 @@ public sealed class SmsManager : IDisposable
         }
 
         var code = BalanceUssdCode;
-        return code.Length == 0
-            ? Task.FromResult(CarrierBalanceResult.Failed(string.Empty))
+        if (string.IsNullOrEmpty(code))
+        {
+            code = CarrierBalance.DefaultCodeForCountry(
+                PhoneNumber.DefaultCountryCode,
+                _device?.AccountPhoneNumber ?? _device?.SmscAddress);
+        }
+
+        return string.IsNullOrEmpty(code)
+            ? Task.FromResult(CarrierBalanceResult.Failed("No USSD balance code configured. Please specify a balance code (e.g. *704# for Safaricom or *804# for Ethio Telecom)."))
             : new CarrierBalance(_logger).QueryAsync(code);
     }
 
@@ -287,19 +294,29 @@ public sealed class SmsManager : IDisposable
             return;
         }
 
-        if (CallingCodes.IsKnownCode(_repo.GetSetting(SmsRepository.CountryCodeSetting)))
+        var source = _repo.GetSetting(SmsRepository.CountryCodeSetting + ".source");
+        if (string.Equals(source, "user", StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
 
         try
         {
-            var fromSmsc = CallingCodes.FromInternationalNumber(_device.SmscAddress);
-            var code = fromSmsc.Length > 0
-                ? fromSmsc
-                : CallingCodes.FromInternationalNumber(_device.AccountPhoneNumber);
+            var smsc = _device.SmscAddress ?? string.Empty;
+            string code;
+            if (smsc.StartsWith("+251", StringComparison.Ordinal) || smsc.StartsWith("251", StringComparison.Ordinal))
+            {
+                code = "251";
+            }
+            else
+            {
+                var fromSmsc = CallingCodes.FromInternationalNumber(smsc);
+                code = fromSmsc.Length > 0
+                    ? fromSmsc
+                    : CallingCodes.FromInternationalNumber(_device.AccountPhoneNumber);
+            }
 
-            if (code.Length > 0)
+            if (code.Length > 0 && !string.Equals(_repo.GetSetting(SmsRepository.CountryCodeSetting), code, StringComparison.Ordinal))
             {
                 _repo.ApplyCountryCode(code, "SIM");
             }

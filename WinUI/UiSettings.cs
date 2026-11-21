@@ -238,6 +238,30 @@ public sealed class UiSettings : INotifyPropertyChanged
 
     public void ToggleLeftPanel() => IsLeftPanelVisible = !IsLeftPanelVisible;
 
+    private const string NavExpandedKey = "ui.isNavExpanded";
+    private bool _isNavExpanded;
+
+    /// <summary>Whether the Windows 11 left navigation rail is expanded with text labels or compact with icons only.</summary>
+    public bool IsNavExpanded
+    {
+        get => _isNavExpanded;
+        set
+        {
+            if (SetField(ref _isNavExpanded, value))
+            {
+                OnPropertyChanged(nameof(NavRailWidth));
+                OnPropertyChanged(nameof(NavLabelsVisibility));
+                Save(NavExpandedKey, value ? 1.0 : 0.0);
+            }
+        }
+    }
+
+    public double NavRailWidth => IsNavExpanded ? 180 : 52;
+
+    public Visibility NavLabelsVisibility => IsNavExpanded ? Visibility.Visible : Visibility.Collapsed;
+
+    public void ToggleNavExpansion() => IsNavExpanded = !IsNavExpanded;
+
     /// <summary>
     /// Translates the setting written by the earlier enum-based version ("Vietnamese", "English",
     /// "Auto") into a language code. Without this an existing install would silently revert to
@@ -261,6 +285,7 @@ public sealed class UiSettings : INotifyPropertyChanged
             _fontSize = ReadDouble(FontSizeKey, DefaultFontSize, 11, 28);
             _leftPanelWidth = ReadDouble(PanelWidthKey, DefaultPanelWidth, 180, 640);
             _composerHeight = ReadDouble(ComposerHeightKey, DefaultComposerHeight, 90, 600);
+            _isNavExpanded = ReadDouble(NavExpandedKey, 0.0, 0.0, 1.0) > 0.5;
             SavedWindowWidth = (int)ReadDouble(WindowWidthKey, DefaultWindowWidth, 600, 3840);
             SavedWindowHeight = (int)ReadDouble(WindowHeightKey, DefaultWindowHeight, 400, 2160);
         }

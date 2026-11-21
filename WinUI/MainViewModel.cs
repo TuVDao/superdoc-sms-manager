@@ -54,6 +54,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         ShowMessagesCommand = new DelegateCommand(() => SelectView("Messages"));
         ShowContactsCommand = new DelegateCommand(() => SelectView("Contacts"));
         ShowSettingsCommand = new DelegateCommand(() => SelectView("Settings"));
+        ToggleNavCommand = new DelegateCommand(Ui.ToggleNavExpansion);
+        DismissBalanceNoticeCommand = new DelegateCommand(() => BalanceNotice = string.Empty);
         RecheckModemCommand = new AsyncCommand(RecheckModemAsync);
         RestartModemHardwareCommand = new AsyncCommand(RestartModemHardwareAsync);
         ToggleLeftPanelCommand = new DelegateCommand(Ui.ToggleLeftPanel);
@@ -111,6 +113,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public DelegateCommand ShowContactsCommand { get; }
 
     public DelegateCommand ShowSettingsCommand { get; }
+    public DelegateCommand ToggleNavCommand { get; }
+    public DelegateCommand DismissBalanceNoticeCommand { get; }
 
     public AsyncCommand RecheckModemCommand { get; }
     public AsyncCommand RestartModemHardwareCommand { get; }

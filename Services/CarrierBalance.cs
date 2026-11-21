@@ -43,11 +43,19 @@ public sealed class CarrierBalance(ILogger? logger = null)
     /// </remarks>
     public static string DefaultCodeForCountry(string? countryCallingCode, string? subscriberOrSmsc = null)
     {
+        // First check subscriber or SMSC directly for known Ethiopian carriers
+        if (IsSafaricomEthiopia(subscriberOrSmsc))
+        {
+            return "*704#";
+        }
+
+        if (IsEthioTelecom(subscriberOrSmsc))
+        {
+            return "*804#";
+        }
+
         if (string.Equals(countryCallingCode, "251", StringComparison.Ordinal))
         {
-            // In Ethiopia:
-            // Safaricom Ethiopia: mobile prefix 07... or +2517... -> *704#
-            // Ethio Telecom: mobile prefix 09... or +2519... (or default) -> *804#
             return IsSafaricomEthiopia(subscriberOrSmsc) ? "*704#" : "*804#";
         }
 
@@ -168,6 +176,11 @@ public sealed class CarrierBalance(ILogger? logger = null)
             var text = reply.Message?.PayloadAsText?.Trim() ?? string.Empty;
             if (text.Length == 0)
             {
+                if (reply.ResultCode is UssdResultCode.NoActionRequired or UssdResultCode.ActionRequired)
+                {
+                    return CarrierBalanceResult.Ok("USSD request sent. The carrier will display your balance or send a summary message via SMS shortly.");
+                }
+
                 return CarrierBalanceResult.Failed($"The network replied with no text ({reply.ResultCode}).");
             }
 
