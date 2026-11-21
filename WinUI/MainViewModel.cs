@@ -51,11 +51,24 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             Conversations.RefreshLocalisedText();
         };
 
+        var initialView = Environment.GetEnvironmentVariable("SUPERDOC_SMS_VIEW");
+        if (!string.IsNullOrEmpty(initialView))
+        {
+            _activeView = initialView;
+        }
+
         ShowMessagesCommand = new DelegateCommand(() => SelectView("Messages"));
         ShowContactsCommand = new DelegateCommand(() => SelectView("Contacts"));
         ShowSettingsCommand = new DelegateCommand(() => SelectView("Settings"));
         ToggleNavCommand = new DelegateCommand(Ui.ToggleNavExpansion);
         DismissBalanceNoticeCommand = new DelegateCommand(() => BalanceNotice = string.Empty);
+        SetBalanceUssdCodeCommand = new DelegateCommand<string>(code =>
+        {
+            if (!string.IsNullOrWhiteSpace(code))
+            {
+                BalanceUssdCode = code;
+            }
+        });
         RecheckModemCommand = new AsyncCommand(RecheckModemAsync);
         RestartModemHardwareCommand = new AsyncCommand(RestartModemHardwareAsync);
         ToggleLeftPanelCommand = new DelegateCommand(Ui.ToggleLeftPanel);
@@ -115,6 +128,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public DelegateCommand ShowSettingsCommand { get; }
     public DelegateCommand ToggleNavCommand { get; }
     public DelegateCommand DismissBalanceNoticeCommand { get; }
+    public DelegateCommand<string> SetBalanceUssdCodeCommand { get; }
 
     public AsyncCommand RecheckModemCommand { get; }
     public AsyncCommand RestartModemHardwareCommand { get; }
@@ -171,7 +185,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     }
 
     /// <summary>Quick USSD presets for the current country / carrier (e.g. Ethio Telecom, Safaricom).</summary>
-    public IReadOnlyList<(string Label, string Code)> UssdPresets => _smsManager.GetUssdPresets();
+    public IReadOnlyList<UssdPreset> UssdPresets => _smsManager.GetUssdPresets();
 
     private void OnSendRefusedWithoutReason(object? sender, EventArgs e)
     {

@@ -22,22 +22,13 @@
         <!-- Extends into window frame; leaves 135px on right for native Windows caption buttons -->
         <Grid x:Name="AppTitleBar"
               Height="44"
-              ColumnDefinitions="Auto,Auto,*,Auto"
+              ColumnDefinitions="Auto,Auto,*"
               ColumnSpacing="10"
               Margin="0,0,135,0"
               VerticalAlignment="Center">
 
-            <!-- Sidebar toggle button (visible in Messages & Contacts view) -->
-            <Button Command="{Binding ToggleLeftPanelCommand}"
-                    ToolTipService.ToolTip="{Binding Ui.TogglePanelTooltip}"
-                    VerticalAlignment="Center"
-                    CornerRadius="6"
-                    Padding="8,6">
-                <FontIcon Glyph="&#xE700;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
-            </Button>
-
             <!-- Brand title & compact status badge -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                 <TextBlock Text="SUPERDOC SMS Manager"
                            FontSize="{Binding Ui.TitleFontSize}"
                            FontWeight="SemiBold"
@@ -85,57 +76,7 @@
                 </Button>
             </StackPanel>
 
-            <!-- Navigation switcher tabs aligned to the right, before caption buttons -->
-            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="0,0,135,0">
-
-                <!-- Windows 11 View Switcher Tabs: Messages, Contacts, Settings -->
-                <Border CornerRadius="8"
-                        Background="{ThemeResource SubtleFillColorSecondaryBrush}"
-                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                        BorderThickness="1"
-                        Padding="2">
-                    <StackPanel Orientation="Horizontal" Spacing="2">
-                        <!-- Messages Tab -->
-                        <Button Command="{Binding ShowMessagesCommand}"
-                                Background="{Binding IsMessagesView, Converter={StaticResource BoolToNavBackground}}"
-                                Foreground="{Binding IsMessagesView, Converter={StaticResource BoolToNavForeground}}"
-                                BorderThickness="0"
-                                CornerRadius="6"
-                                Padding="10,5">
-                            <StackPanel Orientation="Horizontal" Spacing="5">
-                                <FontIcon Glyph="&#xE8BD;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" />
-                                <TextBlock Text="{Binding Loc.Messages}" FontWeight="Medium" />
-                            </StackPanel>
-                        </Button>
-
-                        <!-- Contacts Tab -->
-                        <Button Command="{Binding ShowContactsCommand}"
-                                Background="{Binding IsContactsView, Converter={StaticResource BoolToNavBackground}}"
-                                Foreground="{Binding IsContactsView, Converter={StaticResource BoolToNavForeground}}"
-                                BorderThickness="0"
-                                CornerRadius="6"
-                                Padding="10,5">
-                            <StackPanel Orientation="Horizontal" Spacing="5">
-                                <FontIcon Glyph="&#xE779;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" />
-                                <TextBlock Text="{Binding Loc.Contacts}" FontWeight="Medium" />
-                            </StackPanel>
-                        </Button>
-
-                        <!-- Settings Tab -->
-                        <Button Command="{Binding ShowSettingsCommand}"
-                                Background="{Binding IsSettingsView, Converter={StaticResource BoolToNavBackground}}"
-                                Foreground="{Binding IsSettingsView, Converter={StaticResource BoolToNavForeground}}"
-                                BorderThickness="0"
-                                CornerRadius="6"
-                                Padding="10,5">
-                            <StackPanel Orientation="Horizontal" Spacing="5">
-                                <FontIcon Glyph="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" />
-                                <TextBlock Text="{Binding Loc.Settings}" FontWeight="Medium" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
+            <!-- Column 2 is empty draggable window space! No navigation tabs here, zero collision with caption buttons! -->
         </Grid>
 
         <!-- Status & Notices -->
@@ -145,46 +86,150 @@
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                        TextWrapping="Wrap" />
 
-            <!-- Balance notice warning banner -->
+            <!-- Balance notice warning banner with dismiss button -->
             <Border Background="#7C2D12"
                     BorderBrush="#9A3412"
                     BorderThickness="1"
                     CornerRadius="8"
                     Padding="12,8"
                     Visibility="{Binding HasBalanceNotice, Converter={StaticResource BoolToVisibility}}">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon Glyph="&#xE7BA;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Foreground="#FFE8D5" />
-                    <TextBlock Text="{Binding BalanceNotice}"
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                    <FontIcon Glyph="&#xE7BA;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Foreground="#FFE8D5" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding BalanceNotice}"
                                Foreground="#FFE8D5"
                                TextWrapping="Wrap"
+                               VerticalAlignment="Center"
                                IsTextSelectionEnabled="True" />
-                </StackPanel>
+                    <Button Grid.Column="2"
+                            Command="{Binding DismissBalanceNoticeCommand}"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Padding="6,4"
+                            VerticalAlignment="Center"
+                            ToolTipService.ToolTip="{Binding Loc.Cancel}">
+                        <FontIcon Glyph="&#xE711;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="11" Foreground="#FFE8D5" />
+                    </Button>
+                </Grid>
             </Border>
         </StackPanel>
 
-        <!-- ================================ MESSAGES VIEW ================================ -->
-        <Grid Grid.Row="2"
-              ColumnDefinitions="Auto,Auto,*"
-              Visibility="{Binding IsMessagesView, Converter={StaticResource BoolToVisibility}}">
-
-            <!-- Left Panel (Thread list card with Mica layered surface) -->
-            <Border Width="{Binding Ui.LeftPanelWidth}"
+        <!-- ================================ MAIN CONTENT WITH NAVIGATION RAIL ================================ -->
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,*">
+            <!-- Windows 11 Collapsible Navigation Rail -->
+            <Border Width="{Binding Ui.NavRailWidth}"
                     Background="{ThemeResource LayerFillColorDefaultBrush}"
                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     BorderThickness="1"
                     CornerRadius="8"
-                    Padding="10"
-                    Visibility="{Binding Ui.IsLeftPanelVisible, Converter={StaticResource BoolToVisibility}}">
-                <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="8">
-
-                    <!-- + New message button -->
-                    <Button Style="{StaticResource AccentButtonStyle}"
+                    Padding="4,8"
+                    Margin="0,0,10,0">
+                <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+                    <!-- Hamburger toggle button -->
+                    <Button Command="{Binding ToggleNavCommand}"
+                            ToolTipService.ToolTip="Navigation"
                             HorizontalAlignment="Stretch"
                             Height="38"
-                            CornerRadius="8"
-                            Command="{Binding Conversations.NewConversationCommand}">
-                        <TextBlock Text="{Binding Loc.NewMessage}" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                            CornerRadius="6"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Padding="0">
+                        <Grid ColumnDefinitions="44,*" ColumnSpacing="4">
+                            <FontIcon Glyph="&#xE700;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="Menu" FontWeight="SemiBold" VerticalAlignment="Center" Visibility="{Binding Ui.NavLabelsVisibility}" />
+                        </Grid>
                     </Button>
+
+                    <!-- Messages Nav Button -->
+                    <Button Grid.Row="1"
+                            Command="{Binding ShowMessagesCommand}"
+                            ToolTipService.ToolTip="{Binding Loc.Messages}"
+                            HorizontalAlignment="Stretch"
+                            Height="40"
+                            CornerRadius="6"
+                            Margin="0,2"
+                            Background="{Binding IsMessagesView, Converter={StaticResource BoolToNavBackground}}"
+                            Foreground="{Binding IsMessagesView, Converter={StaticResource BoolToNavForeground}}"
+                            BorderThickness="0"
+                            Padding="0">
+                        <Grid ColumnDefinitions="44,*" ColumnSpacing="4">
+                            <FontIcon Glyph="&#xE8BD;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="{Binding Loc.Messages}" FontWeight="Medium" VerticalAlignment="Center" Visibility="{Binding Ui.NavLabelsVisibility}" TextTrimming="CharacterEllipsis" />
+                        </Grid>
+                    </Button>
+
+                    <!-- Contacts Nav Button -->
+                    <Button Grid.Row="2"
+                            Command="{Binding ShowContactsCommand}"
+                            ToolTipService.ToolTip="{Binding Loc.Contacts}"
+                            HorizontalAlignment="Stretch"
+                            Height="40"
+                            CornerRadius="6"
+                            Margin="0,2"
+                            Background="{Binding IsContactsView, Converter={StaticResource BoolToNavBackground}}"
+                            Foreground="{Binding IsContactsView, Converter={StaticResource BoolToNavForeground}}"
+                            BorderThickness="0"
+                            Padding="0">
+                        <Grid ColumnDefinitions="44,*" ColumnSpacing="4">
+                            <FontIcon Glyph="&#xE779;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="{Binding Loc.Contacts}" FontWeight="Medium" VerticalAlignment="Center" Visibility="{Binding Ui.NavLabelsVisibility}" TextTrimming="CharacterEllipsis" />
+                        </Grid>
+                    </Button>
+
+                    <!-- Settings Nav Button (bottom pinned) -->
+                    <Button Grid.Row="4"
+                            Command="{Binding ShowSettingsCommand}"
+                            ToolTipService.ToolTip="{Binding Loc.Settings}"
+                            HorizontalAlignment="Stretch"
+                            Height="40"
+                            CornerRadius="6"
+                            Margin="0,2"
+                            Background="{Binding IsSettingsView, Converter={StaticResource BoolToNavBackground}}"
+                            Foreground="{Binding IsSettingsView, Converter={StaticResource BoolToNavForeground}}"
+                            BorderThickness="0"
+                            Padding="0">
+                        <Grid ColumnDefinitions="44,*" ColumnSpacing="4">
+                            <FontIcon Glyph="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="{Binding Loc.Settings}" FontWeight="Medium" VerticalAlignment="Center" Visibility="{Binding Ui.NavLabelsVisibility}" TextTrimming="CharacterEllipsis" />
+                        </Grid>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <!-- Main Views Host in Column 1 -->
+            <Grid Grid.Column="1">
+                <!-- ================================ MESSAGES VIEW ================================ -->
+                <Grid ColumnDefinitions="Auto,Auto,*"
+                      Visibility="{Binding IsMessagesView, Converter={StaticResource BoolToVisibility}}">
+
+                    <!-- Left Panel (Thread list card with Mica layered surface) -->
+                    <Border Width="{Binding Ui.LeftPanelWidth}"
+                            Background="{ThemeResource LayerFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="10"
+                            Visibility="{Binding Ui.IsLeftPanelVisible, Converter={StaticResource BoolToVisibility}}">
+                        <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="8">
+
+                            <!-- + New message button & panel collapse toggle -->
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                <Button Style="{StaticResource AccentButtonStyle}"
+                                        HorizontalAlignment="Stretch"
+                                        Height="38"
+                                        CornerRadius="8"
+                                        Command="{Binding Conversations.NewConversationCommand}">
+                                    <TextBlock Text="{Binding Loc.NewMessage}" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                </Button>
+                                <Button Command="{Binding ToggleLeftPanelCommand}"
+                                        ToolTipService.ToolTip="{Binding Ui.TogglePanelTooltip}"
+                                        Height="38"
+                                        Width="38"
+                                        CornerRadius="8"
+                                        Padding="0">
+                                    <FontIcon Glyph="&#xE8A0;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
+                                </Button>
+                            </Grid>
 
                     <!-- Search box with magnifying glass icon -->
                     <Grid Grid.Row="1">
@@ -378,9 +423,21 @@
                           Visibility="{Binding Conversations.HasSelection, Converter={StaticResource BoolToVisibility}}">
 
                         <!-- Thread header with avatar, title, subtitle & action buttons -->
-                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                        <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="12">
+                            <!-- Show thread list button if hidden -->
+                            <Button Command="{Binding ToggleLeftPanelCommand}"
+                                    ToolTipService.ToolTip="{Binding Ui.TogglePanelTooltip}"
+                                    Height="36"
+                                    Width="36"
+                                    CornerRadius="6"
+                                    Padding="0"
+                                    VerticalAlignment="Center"
+                                    Visibility="{Binding Ui.IsLeftPanelVisible, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}">
+                                <FontIcon Glyph="&#xE8A0;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
+                            </Button>
+
                             <!-- Avatar circle -->
-                            <Border Width="40" Height="40" CornerRadius="20"
+                            <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20"
                                     Background="{ThemeResource AccentFillColorTertiaryBrush}"
                                     VerticalAlignment="Center">
                                 <Grid>
@@ -402,7 +459,7 @@
                                 </Grid>
                             </Border>
 
-                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Conversations.ThreadTitle}"
                                            FontSize="{Binding Ui.HeaderFontSize}"
                                            FontWeight="SemiBold"
@@ -414,7 +471,7 @@
                                            TextTrimming="CharacterEllipsis" />
                             </StackPanel>
 
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                 <Button Command="{Binding Conversations.DeleteSelectedMessagesCommand}"
                                         CornerRadius="6"
                                         Visibility="{Binding Conversations.HasSelectedMessages, Converter={StaticResource BoolToVisibility}}">
@@ -638,8 +695,7 @@
         </Grid>
 
         <!-- ================================ CONTACTS VIEW ================================ -->
-        <Grid Grid.Row="2"
-              ColumnDefinitions="Auto,Auto,*"
+        <Grid ColumnDefinitions="Auto,Auto,*"
               Visibility="{Binding IsContactsView, Converter={StaticResource BoolToVisibility}}">
 
             <!-- Left Panel (Contact list card with Mica layered surface) -->
@@ -652,14 +708,24 @@
                     Visibility="{Binding Ui.IsLeftPanelVisible, Converter={StaticResource BoolToVisibility}}">
                 <Grid RowDefinitions="Auto,*" RowSpacing="8">
 
-                    <!-- + Add contact button -->
-                    <Button Style="{StaticResource AccentButtonStyle}"
-                            HorizontalAlignment="Stretch"
-                            Height="38"
-                            CornerRadius="8"
-                            Command="{Binding ContactBook.NewContactCommand}">
-                        <TextBlock Text="{Binding Loc.AddContact}" FontWeight="SemiBold" HorizontalAlignment="Center" />
-                    </Button>
+                    <!-- + Add contact button & toggle button -->
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                        <Button Style="{StaticResource AccentButtonStyle}"
+                                HorizontalAlignment="Stretch"
+                                Height="38"
+                                CornerRadius="8"
+                                Command="{Binding ContactBook.NewContactCommand}">
+                            <TextBlock Text="{Binding Loc.AddContact}" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        </Button>
+                        <Button Command="{Binding ToggleLeftPanelCommand}"
+                                ToolTipService.ToolTip="{Binding Ui.TogglePanelTooltip}"
+                                Height="38"
+                                Width="38"
+                                CornerRadius="8"
+                                Padding="0">
+                            <FontIcon Glyph="&#xE8A0;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
+                        </Button>
+                    </Grid>
 
                     <!-- Contact list -->
                     <ListView Grid.Row="1"
@@ -877,10 +943,9 @@
         </Grid>
 
         <!-- ================================ SETTINGS VIEW ================================ -->
-        <Grid Grid.Row="2"
-              Visibility="{Binding IsSettingsView, Converter={StaticResource BoolToVisibility}}">
+        <Grid Visibility="{Binding IsSettingsView, Converter={StaticResource BoolToVisibility}}">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <StackPanel Spacing="16" MaxWidth="720" HorizontalAlignment="Left" Margin="4,0,16,16">
+                <StackPanel Spacing="16" MaxWidth="960" HorizontalAlignment="Stretch" Margin="4,0,16,16">
 
                     <!-- Settings Header -->
                     <StackPanel Spacing="4" Margin="0,0,0,8">
@@ -1020,6 +1085,58 @@
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
+
+                            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                            <!-- Carrier USSD Code Configuration -->
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Carrier USSD Balance Code" FontWeight="Medium" />
+                                <TextBlock Text="The USSD dialling code used to check prepaid balance and packages from your mobile network operator."
+                                           FontSize="12"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           TextWrapping="Wrap" />
+
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                    <TextBox Text="{Binding BalanceUssdCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             PlaceholderText="e.g. *704# (Safaricom) or *804# (Ethio Telecom)"
+                                             CornerRadius="8" />
+                                    <Button Grid.Column="1"
+                                            Command="{Binding CheckBalanceCommand}"
+                                            Height="36"
+                                            CornerRadius="8"
+                                            Style="{StaticResource AccentButtonStyle}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xE8C7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
+                                            <TextBlock Text="{Binding Loc.CheckBalance}" FontWeight="SemiBold" />
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+
+                                <!-- Quick Presets -->
+                                <StackPanel Spacing="6" Margin="0,4,0,0">
+                                    <TextBlock Text="Quick Presets:" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <ItemsControl ItemsSource="{Binding UssdPresets}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal" Spacing="8" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Content="{Binding Label}"
+                                                        Command="{Binding DataContext.SetBalanceUssdCodeCommand, ElementName=RootGrid}"
+                                                        CommandParameter="{Binding Code}"
+                                                        CornerRadius="6"
+                                                        Padding="10,5"
+                                                        FontSize="12"
+                                                        Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                                        BorderThickness="1" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </StackPanel>
                         </StackPanel>
                     </Border>
 
@@ -1038,6 +1155,8 @@
                     </Border>
                 </StackPanel>
             </ScrollViewer>
+        </Grid>
+            </Grid>
         </Grid>
     </Grid>
 </Window>

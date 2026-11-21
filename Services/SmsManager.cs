@@ -187,7 +187,7 @@ public sealed class SmsManager : IDisposable
     }
 
     /// <summary>Returns quick presets for USSD codes for the current SIM / carrier.</summary>
-    public IReadOnlyList<(string Label, string Code)> GetUssdPresets()
+    public IReadOnlyList<UssdPreset> GetUssdPresets()
         => CarrierBalance.GetPresetsForCountry(
             PhoneNumber.DefaultCountryCode,
             _device?.AccountPhoneNumber ?? _device?.SmscAddress);

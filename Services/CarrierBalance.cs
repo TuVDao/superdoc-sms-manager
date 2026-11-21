@@ -11,6 +11,9 @@ public readonly record struct CarrierBalanceResult(bool Succeeded, string Text, 
     public static CarrierBalanceResult Failed(string error) => new(false, string.Empty, error);
 }
 
+/// <summary>A carrier USSD preset option for quick balance and package enquiries.</summary>
+public sealed record UssdPreset(string Label, string Code);
+
 /// <summary>
 /// Asks the carrier for the account balance over USSD.
 /// </summary>
@@ -100,33 +103,33 @@ public sealed class CarrierBalance(ILogger? logger = null)
     }
 
     /// <summary>Preset USSD shortcuts for known carriers in the region.</summary>
-    public static IReadOnlyList<(string Label, string Code)> GetPresetsForCountry(string? countryCallingCode, string? subscriberOrSmsc = null)
+    public static IReadOnlyList<UssdPreset> GetPresetsForCountry(string? countryCallingCode, string? subscriberOrSmsc = null)
     {
-        if (string.Equals(countryCallingCode, "251", StringComparison.Ordinal))
+        if (IsSafaricomEthiopia(subscriberOrSmsc))
         {
-            if (IsSafaricomEthiopia(subscriberOrSmsc))
-            {
-                return
-                [
-                    ("Safaricom Balance (*704#)", "*704#"),
-                    ("Safaricom Services / Packages (*777#)", "*777#"),
-                    ("Ethio Telecom Balance (*804#)", "*804#"),
-                    ("Ethio Telecom Telebirr / Packages (*999#)", "*999#")
-                ];
-            }
-
             return
             [
-                ("Ethio Telecom Balance (*804#)", "*804#"),
-                ("Ethio Telecom Telebirr / Packages (*999#)", "*999#"),
-                ("Safaricom Balance (*704#)", "*704#"),
-                ("Safaricom Services / Packages (*777#)", "*777#")
+                new("Safaricom Balance (*704#)", "*704#"),
+                new("Safaricom Packages & Services (*777#)", "*777#"),
+                new("Ethio Telecom Balance (*804#)", "*804#"),
+                new("Ethio Telecom Packages & Telebirr (*999#)", "*999#")
+            ];
+        }
+
+        if (IsEthioTelecom(subscriberOrSmsc) || string.Equals(countryCallingCode, "251", StringComparison.Ordinal))
+        {
+            return
+            [
+                new("Ethio Telecom Balance (*804#)", "*804#"),
+                new("Ethio Telecom Packages & Telebirr (*999#)", "*999#"),
+                new("Safaricom Balance (*704#)", "*704#"),
+                new("Safaricom Packages & Services (*777#)", "*777#")
             ];
         }
 
         if (string.Equals(countryCallingCode, "84", StringComparison.Ordinal))
         {
-            return [("Tra cứu số dư (*101#)", "*101#")];
+            return [new("Tra cứu số dư (*101#)", "*101#")];
         }
 
         return [];
