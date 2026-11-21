@@ -169,7 +169,7 @@ public sealed class SmsManager : IDisposable
 
     /// <summary>
     /// The USSD code used to ask the carrier for the account balance. Empty when neither the user
-    /// nor <see cref="CarrierBalance.DefaultCodeForCountry"/> has one for this SIM.
+    /// nor <see cref="CarrierBalance.DefaultCodeForCountry(string?, string?)"/> has one for this SIM.
     /// </summary>
     public string BalanceUssdCode
     {
@@ -178,10 +178,18 @@ public sealed class SmsManager : IDisposable
             var stored = _repo.GetSetting(CarrierBalance.UssdCodeSetting);
             return CarrierBalance.IsPlausibleCode(stored)
                 ? stored
-                : CarrierBalance.DefaultCodeForCountry(PhoneNumber.DefaultCountryCode);
+                : CarrierBalance.DefaultCodeForCountry(
+                    PhoneNumber.DefaultCountryCode,
+                    _device?.AccountPhoneNumber ?? _device?.SmscAddress);
         }
         set => _repo.SetSetting(CarrierBalance.UssdCodeSetting, value?.Trim() ?? string.Empty);
     }
+
+    /// <summary>Returns quick presets for USSD codes for the current SIM / carrier.</summary>
+    public IReadOnlyList<(string Label, string Code)> GetUssdPresets()
+        => CarrierBalance.GetPresetsForCountry(
+            PhoneNumber.DefaultCountryCode,
+            _device?.AccountPhoneNumber ?? _device?.SmscAddress);
 
     /// <summary>Asks the carrier what the account balance is, over USSD.</summary>
     public Task<CarrierBalanceResult> CheckBalanceAsync()

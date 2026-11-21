@@ -33,7 +33,7 @@ public sealed class CarrierBalance(ILogger? logger = null)
     public const string UssdCodeSetting = "carrier.balanceUssd";
 
     /// <summary>
-    /// A balance-enquiry code for a country, or empty when none is known.
+    /// A balance-enquiry code for a country and optional subscriber/SMSC number hint, or empty when none is known.
     /// </summary>
     /// <remarks>
     /// Deliberately tiny. A balance code belongs to a carrier, not a country, and dialling a
@@ -41,18 +41,94 @@ public sealed class CarrierBalance(ILogger? logger = null)
     /// across a country's networks and are known to be read-only enquiries belong here;
     /// everything else is left for the user to fill in.
     /// </remarks>
-    public static string DefaultCodeForCountry(string? countryCallingCode) => countryCallingCode switch
+    public static string DefaultCodeForCountry(string? countryCallingCode, string? subscriberOrSmsc = null)
     {
-        // Viettel, MobiFone and VinaPhone all use *101# for a balance enquiry.
-        "84" => "*101#",
-        _ => string.Empty
-    };
+        if (string.Equals(countryCallingCode, "251", StringComparison.Ordinal))
+        {
+            // In Ethiopia:
+            // Safaricom Ethiopia: mobile prefix 07... or +2517... -> *704#
+            // Ethio Telecom: mobile prefix 09... or +2519... (or default) -> *804#
+            return IsSafaricomEthiopia(subscriberOrSmsc) ? "*704#" : "*804#";
+        }
+
+        return countryCallingCode switch
+        {
+            // Viettel, MobiFone and VinaPhone all use *101# for a balance enquiry.
+            "84" => "*101#",
+            _ => string.Empty
+        };
+    }
+
+    /// <summary>Backward-compatible overload without subscriber hint.</summary>
+    public static string DefaultCodeForCountry(string? countryCallingCode)
+        => DefaultCodeForCountry(countryCallingCode, null);
+
+    /// <summary>True if the address, phone number or SMSC belongs to Safaricom Ethiopia (07... or +2517...).</summary>
+    public static bool IsSafaricomEthiopia(string? numberOrSmsc)
+    {
+        if (string.IsNullOrWhiteSpace(numberOrSmsc))
+        {
+            return false;
+        }
+
+        var digits = new string(numberOrSmsc.Where(char.IsDigit).ToArray());
+        return digits.StartsWith("07", StringComparison.Ordinal)
+            || digits.StartsWith("2517", StringComparison.Ordinal)
+            || (digits.Length == 9 && digits.StartsWith("7", StringComparison.Ordinal));
+    }
+
+    /// <summary>True if the address, phone number or SMSC belongs to Ethio Telecom (09... or +2519...).</summary>
+    public static bool IsEthioTelecom(string? numberOrSmsc)
+    {
+        if (string.IsNullOrWhiteSpace(numberOrSmsc))
+        {
+            return false;
+        }
+
+        var digits = new string(numberOrSmsc.Where(char.IsDigit).ToArray());
+        return digits.StartsWith("09", StringComparison.Ordinal)
+            || digits.StartsWith("2519", StringComparison.Ordinal)
+            || (digits.Length == 9 && digits.StartsWith("9", StringComparison.Ordinal));
+    }
+
+    /// <summary>Preset USSD shortcuts for known carriers in the region.</summary>
+    public static IReadOnlyList<(string Label, string Code)> GetPresetsForCountry(string? countryCallingCode, string? subscriberOrSmsc = null)
+    {
+        if (string.Equals(countryCallingCode, "251", StringComparison.Ordinal))
+        {
+            if (IsSafaricomEthiopia(subscriberOrSmsc))
+            {
+                return
+                [
+                    ("Safaricom Balance (*704#)", "*704#"),
+                    ("Safaricom Services / Packages (*777#)", "*777#"),
+                    ("Ethio Telecom Balance (*804#)", "*804#"),
+                    ("Ethio Telecom Telebirr / Packages (*999#)", "*999#")
+                ];
+            }
+
+            return
+            [
+                ("Ethio Telecom Balance (*804#)", "*804#"),
+                ("Ethio Telecom Telebirr / Packages (*999#)", "*999#"),
+                ("Safaricom Balance (*704#)", "*704#"),
+                ("Safaricom Services / Packages (*777#)", "*777#")
+            ];
+        }
+
+        if (string.Equals(countryCallingCode, "84", StringComparison.Ordinal))
+        {
+            return [("Tra cứu số dư (*101#)", "*101#")];
+        }
+
+        return [];
+    }
 
     /// <summary>True when the value looks like a USSD code and not something else entirely.</summary>
     public static bool IsPlausibleCode(string? code)
     {
         var trimmed = code?.Trim();
-        if (string.IsNullOrEmpty(trimmed) || trimmed.Length > 24)
+        if (string.IsNullOrEmpty(trimmed) || trimmed.Length > 34)
         {
             return false;
         }

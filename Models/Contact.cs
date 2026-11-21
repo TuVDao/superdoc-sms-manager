@@ -91,17 +91,22 @@ public sealed class Contact : INotifyPropertyChanged
     public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
-    /// Vietnamese name order: title, then family name, then given name. Falls back to whichever
-    /// part exists, and finally to the number, so a half-filled contact still shows something
-    /// usable rather than an empty row.
+    /// Formats the contact name. For countries with family-name-first order (e.g. Vietnam '84'),
+    /// formats Title + FamilyName + GivenName. For Ethiopia ('251') and Western order, formats
+    /// Title + GivenName + Father's Name / FamilyName (e.g. 'Abebe Bikila'). Falls back to whichever
+    /// part exists, and finally to the phone number.
     /// </summary>
     public string DisplayName
     {
         get
         {
+            var parts = Models.PhoneNumber.DefaultCountryCode == "84"
+                ? new[] { Title, FamilyName, GivenName }
+                : new[] { Title, GivenName, FamilyName };
+
             var full = string.Join(
                 ' ',
-                new[] { Title, FamilyName, GivenName }.Where(p => !string.IsNullOrWhiteSpace(p)));
+                parts.Where(p => !string.IsNullOrWhiteSpace(p)));
 
             return full.Length > 0 ? full : DisplayPhone;
         }

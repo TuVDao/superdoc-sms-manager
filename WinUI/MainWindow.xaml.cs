@@ -428,30 +428,63 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            var defaultCode = _viewModel.BalanceUssdCode;
             var input = new TextBox
             {
-                Text = _viewModel.BalanceUssdCode,
-                PlaceholderText = "*101#",
+                Text = defaultCode,
+                PlaceholderText = string.IsNullOrEmpty(defaultCode) ? "*804# or *704#" : defaultCode,
                 Header = _viewModel.Loc.BalanceCodeLabel
             };
+
+            var contentStack = new StackPanel
+            {
+                Spacing = 10,
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text = _viewModel.Loc.BalanceNoCode,
+                        TextWrapping = TextWrapping.Wrap
+                    },
+                    input
+                }
+            };
+
+            var presets = _viewModel.UssdPresets;
+            if (presets.Count > 0)
+            {
+                contentStack.Children.Add(new TextBlock
+                {
+                    Text = "Carrier Shortcuts:",
+                    FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                    Margin = new Thickness(0, 4, 0, 0)
+                });
+
+                var presetPanel = new StackPanel
+                {
+                    Spacing = 6
+                };
+
+                foreach (var (label, code) in presets)
+                {
+                    var btn = new Button
+                    {
+                        Content = label,
+                        HorizontalAlignment = HorizontalAlignment.Stretch,
+                        HorizontalContentAlignment = HorizontalAlignment.Left
+                    };
+                    btn.Click += (_, _) => input.Text = code;
+                    presetPanel.Children.Add(btn);
+                }
+
+                contentStack.Children.Add(presetPanel);
+            }
 
             var dialog = new ContentDialog
             {
                 XamlRoot = Content.XamlRoot,
                 Title = _viewModel.Loc.CheckBalance,
-                Content = new StackPanel
-                {
-                    Spacing = 10,
-                    Children =
-                    {
-                        new TextBlock
-                        {
-                            Text = _viewModel.Loc.BalanceNoCode,
-                            TextWrapping = TextWrapping.Wrap
-                        },
-                        input
-                    }
-                },
+                Content = contentStack,
                 PrimaryButtonText = _viewModel.Loc.CheckBalance,
                 CloseButtonText = _viewModel.Loc.Cancel,
                 DefaultButton = ContentDialogButton.Primary

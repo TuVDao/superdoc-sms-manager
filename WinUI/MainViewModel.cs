@@ -139,6 +139,9 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    /// <summary>Quick USSD presets for the current country / carrier (e.g. Ethio Telecom, Safaricom).</summary>
+    public IReadOnlyList<(string Label, string Code)> UssdPresets => _smsManager.GetUssdPresets();
+
     private void OnSendRefusedWithoutReason(object? sender, EventArgs e)
     {
         // The queue retries, so one blocked message produces a burst of these. Asking the network
