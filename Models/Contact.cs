@@ -26,6 +26,7 @@ public sealed class Contact : INotifyPropertyChanged
             if (SetField(ref _title, value))
             {
                 OnPropertyChanged(nameof(DisplayName));
+                OnPropertyChanged(nameof(Initials));
             }
         }
     }
@@ -39,6 +40,7 @@ public sealed class Contact : INotifyPropertyChanged
             if (SetField(ref _familyName, value))
             {
                 OnPropertyChanged(nameof(DisplayName));
+                OnPropertyChanged(nameof(Initials));
             }
         }
     }
@@ -52,6 +54,7 @@ public sealed class Contact : INotifyPropertyChanged
             if (SetField(ref _givenName, value))
             {
                 OnPropertyChanged(nameof(DisplayName));
+                OnPropertyChanged(nameof(Initials));
             }
         }
     }
@@ -109,6 +112,32 @@ public sealed class Contact : INotifyPropertyChanged
                 parts.Where(p => !string.IsNullOrWhiteSpace(p)));
 
             return full.Length > 0 ? full : DisplayPhone;
+        }
+    }
+
+    /// <summary>Two-letter avatar initials or single letter / glyph.</summary>
+    public string Initials
+    {
+        get
+        {
+            var text = DisplayName.Trim();
+            if (string.IsNullOrEmpty(text))
+            {
+                return "\uE77B";
+            }
+
+            if (char.IsLetter(text[0]))
+            {
+                var parts = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length >= 2 && char.IsLetter(parts[0][0]) && char.IsLetter(parts[1][0]))
+                {
+                    return $"{char.ToUpperInvariant(parts[0][0])}{char.ToUpperInvariant(parts[1][0])}";
+                }
+
+                return char.ToUpperInvariant(text[0]).ToString();
+            }
+
+            return "\uE77B";
         }
     }
 

@@ -1,3 +1,4 @@
+using Microsoft.UI;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
@@ -103,6 +104,36 @@ public sealed class SmsStatusToTextConverter : IValueConverter
                 SmsStatus.Failed => Strings.Current.StatusFailed,
                 _ => string.Empty
             };
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+        => throw new NotSupportedException();
+}
+
+/// <summary>Active tab styling: accent background when true, transparent when false.</summary>
+public sealed class BoolToNavBackgroundConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        var isActive = value is bool b && b;
+        return isActive
+            ? new SolidColorBrush(Color.FromArgb(255, 0, 103, 192))
+            : new SolidColorBrush(Colors.Transparent);
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+        => throw new NotSupportedException();
+}
+
+/// <summary>Active tab styling: white text when active, secondary text when inactive.</summary>
+public sealed class BoolToNavForegroundConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        var isActive = value is bool b && b;
+        return isActive
+            ? new SolidColorBrush(Colors.White)
+            : new SolidColorBrush(Color.FromArgb(255, 209, 213, 219));
+    }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)
         => throw new NotSupportedException();

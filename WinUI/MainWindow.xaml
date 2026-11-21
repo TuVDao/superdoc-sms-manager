@@ -5,7 +5,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="using:SuperDoc.Sms.WinUI"
-
     mc:Ignorable="d"
     Title="SUPERDOC SMS Manager">
 
@@ -18,436 +17,771 @@
     <Grid x:Name="RootGrid"
           Padding="16"
           RowDefinitions="Auto,Auto,*"
-          RowSpacing="10">
+          RowSpacing="12">
 
         <!-- ================================ HEADER ================================ -->
-        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" VerticalAlignment="Center">
+            <!-- Sidebar toggle button -->
             <Button Command="{Binding ToggleLeftPanelCommand}"
-                    Content="&#x2261;"
                     ToolTipService.ToolTip="{Binding Ui.TogglePanelTooltip}"
-                    VerticalAlignment="Top"
-                    Padding="12,6" />
+                    VerticalAlignment="Center"
+                    CornerRadius="8"
+                    Padding="10,8">
+                <FontIcon Glyph="&#xE700;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
+            </Button>
 
-            <StackPanel Grid.Column="1" Spacing="3">
+            <!-- Brand title & modern status pill -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
                 <TextBlock Text="SUPERDOC SMS Manager"
                            FontSize="{Binding Ui.TitleFontSize}"
-                           FontWeight="SemiBold" />
-                <TextBlock Text="{Binding DeviceStatusText}"
-                           FontSize="{Binding Ui.SmallFontSize}"
-                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                           TextWrapping="Wrap" />
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+
+                <!-- Modem status pill badge -->
+                <Border CornerRadius="12"
+                        Background="#252528"
+                        BorderBrush="#38383C"
+                        BorderThickness="1"
+                        Padding="10,4"
+                        VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE88A;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                  FontSize="11"
+                                  Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{Binding DeviceStatusText}"
+                                   FontSize="{Binding Ui.SmallFontSize}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </Border>
             </StackPanel>
 
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
-                <!-- ItemTemplate rather than ToString: the labels have to repaint when the
-                     language changes, and ToString is only read once per container. -->
-                <ComboBox ItemsSource="{Binding Ui.LanguageOptions}"
-                          SelectedItem="{Binding Ui.SelectedLanguageOption, Mode=TwoWay}"
-                          ToolTipService.ToolTip="{Binding Loc.LanguageTooltip}"
-                          MinWidth="130">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Name}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
+            <!-- Navigation & Actions bar -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
 
-                <ComboBox ItemsSource="{Binding Ui.FontSizeOptions}"
-                          SelectedItem="{Binding Ui.SelectedFontSizeOption, Mode=TwoWay}"
-                          ToolTipService.ToolTip="{Binding Loc.FontSizeTooltip}"
-                          MinWidth="130">
-                    <ComboBox.ItemTemplate>
+                <!-- Windows 11 / Phone Link View Switcher Tabs -->
+                <Border CornerRadius="8"
+                        Background="#202023"
+                        BorderBrush="#333336"
+                        BorderThickness="1"
+                        Padding="3">
+                    <StackPanel Orientation="Horizontal" Spacing="2">
+                        <!-- Messages Tab -->
+                        <Button Command="{Binding ShowMessagesCommand}"
+                                Background="{Binding IsMessagesView, Converter={StaticResource BoolToNavBackground}}"
+                                Foreground="{Binding IsMessagesView, Converter={StaticResource BoolToNavForeground}}"
+                                BorderThickness="0"
+                                CornerRadius="6"
+                                Padding="12,6">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE8BD;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
+                                <TextBlock Text="{Binding Loc.Messages}" FontWeight="Medium" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Contacts Tab -->
+                        <Button Command="{Binding ShowContactsCommand}"
+                                Background="{Binding IsContactsView, Converter={StaticResource BoolToNavBackground}}"
+                                Foreground="{Binding IsContactsView, Converter={StaticResource BoolToNavForeground}}"
+                                BorderThickness="0"
+                                CornerRadius="6"
+                                Padding="12,6">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE779;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
+                                <TextBlock Text="{Binding Loc.Contacts}" FontWeight="Medium" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- Check balance button -->
+                <Button Click="CheckBalance_Click"
+                        ToolTipService.ToolTip="{Binding Loc.BalanceCodeLabel}"
+                        CornerRadius="8"
+                        Padding="10,6">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE8C7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" />
+                        <TextBlock Text="{Binding Loc.CheckBalance}" />
+                    </StackPanel>
+                </Button>
+
+                <!-- Language dropdown - opens strictly BELOW the button -->
+                <local:CustomComboBox ItemsSource="{Binding Ui.LanguageOptions}"
+                                      SelectedItem="{Binding Ui.SelectedLanguageOption, Mode=TwoWay}"
+                                      ToolTipService.ToolTip="{Binding Loc.LanguageTooltip}"
+                                      MinWidth="140"
+                                      CornerRadius="8">
+                    <local:CustomComboBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Name}" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE774;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                          FontSize="12"
+                                          Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock Text="{Binding Name}" />
+                            </StackPanel>
                         </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
-                <Button Content="{Binding Loc.CheckBalance}"
-                        Click="CheckBalance_Click"
-                        ToolTipService.ToolTip="{Binding Loc.BalanceCodeLabel}" />
-                <Button Content="{Binding Loc.Messages}" Command="{Binding ShowMessagesCommand}" />
-                <Button Content="{Binding Loc.Contacts}" Command="{Binding ShowContactsCommand}" />
+                    </local:CustomComboBox.ItemTemplate>
+                </local:CustomComboBox>
+
+                <!-- Text size dropdown - opens strictly BELOW the button -->
+                <local:CustomComboBox ItemsSource="{Binding Ui.FontSizeOptions}"
+                                      SelectedItem="{Binding Ui.SelectedFontSizeOption, Mode=TwoWay}"
+                                      ToolTipService.ToolTip="{Binding Loc.FontSizeTooltip}"
+                                      MinWidth="130"
+                                      CornerRadius="8">
+                    <local:CustomComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE8D2;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                          FontSize="12"
+                                          Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock Text="{Binding Name}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </local:CustomComboBox.ItemTemplate>
+                </local:CustomComboBox>
             </StackPanel>
         </Grid>
 
+        <!-- Status & Notices -->
         <StackPanel Grid.Row="1" Spacing="4">
             <TextBlock Text="{Binding Conversations.StatusText}"
                        FontSize="{Binding Ui.SmallFontSize}"
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                        TextWrapping="Wrap" />
 
-            <!-- Why sending is failing, in the carrier's own words. Deliberately not styled as a
-                 dim secondary line: it appears when nothing is going out, and being missed is
-                 the failure mode it exists to prevent. -->
+            <!-- Balance notice warning banner -->
             <Border Background="#7C2D12"
-                    CornerRadius="6"
-                    Padding="10,6"
+                    BorderBrush="#9A3412"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12,8"
                     Visibility="{Binding HasBalanceNotice, Converter={StaticResource BoolToVisibility}}">
-                <TextBlock Text="{Binding BalanceNotice}"
-                           Foreground="#FFE8D5"
-                           TextWrapping="Wrap"
-                           IsTextSelectionEnabled="True" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE7BA;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Foreground="#FFE8D5" />
+                    <TextBlock Text="{Binding BalanceNotice}"
+                               Foreground="#FFE8D5"
+                               TextWrapping="Wrap"
+                               IsTextSelectionEnabled="True" />
+                </StackPanel>
             </Border>
         </StackPanel>
 
-        <!-- ================================ MESSAGES ================================ -->
+        <!-- ================================ MESSAGES VIEW ================================ -->
         <Grid Grid.Row="2"
               ColumnDefinitions="Auto,Auto,*"
               Visibility="{Binding IsMessagesView, Converter={StaticResource BoolToVisibility}}">
 
-            <!-- Thread list -->
-            <Grid RowDefinitions="Auto,Auto,Auto,*"
-                  RowSpacing="8"
-                  Width="{Binding Ui.LeftPanelWidth}"
-                  Visibility="{Binding Ui.IsLeftPanelVisible, Converter={StaticResource BoolToVisibility}}">
+            <!-- Left Panel (Thread list card) -->
+            <Border Width="{Binding Ui.LeftPanelWidth}"
+                    Background="#1C1C1E"
+                    BorderBrush="#333336"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="10"
+                    Visibility="{Binding Ui.IsLeftPanelVisible, Converter={StaticResource BoolToVisibility}}">
+                <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="8">
 
-                <Button Content="{Binding Loc.NewMessage}"
-                        HorizontalAlignment="Stretch"
-                        Command="{Binding Conversations.NewConversationCommand}" />
+                    <!-- + New message button -->
+                    <Button Style="{StaticResource AccentButtonStyle}"
+                            HorizontalAlignment="Stretch"
+                            Height="38"
+                            CornerRadius="8"
+                            Command="{Binding Conversations.NewConversationCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                            <FontIcon Glyph="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
+                            <TextBlock Text="{Binding Loc.NewMessage}" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Button>
 
-                <TextBox Grid.Row="1"
-                         PlaceholderText="{Binding Loc.SearchPlaceholder}"
-                         Text="{Binding Conversations.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <!-- Search box with magnifying glass icon -->
+                    <Grid Grid.Row="1">
+                        <TextBox CornerRadius="8"
+                                 Padding="32,6,10,6"
+                                 PlaceholderText="{Binding Loc.SearchPlaceholder}"
+                                 Text="{Binding Conversations.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <FontIcon Glyph="&#xE721;"
+                                  FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                  FontSize="13"
+                                  HorizontalAlignment="Left"
+                                  VerticalAlignment="Center"
+                                  Margin="10,0,0,0"
+                                  Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                  IsHitTestVisible="False" />
+                    </Grid>
 
-                <Button Grid.Row="2"
-                        HorizontalAlignment="Stretch"
-                        Margin="0,0,0,8"
-                        Content="{Binding Conversations.DeleteConversationsLabel}"
-                        Command="{Binding Conversations.DeleteSelectedConversationsCommand}"
-                        Visibility="{Binding Conversations.HasSelectedConversations, Converter={StaticResource BoolToVisibility}}" />
+                    <!-- Delete conversations button -->
+                    <Button Grid.Row="2"
+                            HorizontalAlignment="Stretch"
+                            CornerRadius="8"
+                            Margin="0,0,0,4"
+                            Command="{Binding Conversations.DeleteSelectedConversationsCommand}"
+                            Visibility="{Binding Conversations.HasSelectedConversations, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                            <FontIcon Glyph="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" Foreground="#FF6B6B" />
+                            <TextBlock Text="{Binding Conversations.DeleteConversationsLabel}" />
+                        </StackPanel>
+                    </Button>
 
-                <ListView Grid.Row="3"
-                          ItemsSource="{Binding Conversations.Conversations}"
-                          SelectedItem="{Binding Conversations.SelectedConversation, Mode=TwoWay}"
-                          SelectionChanged="ConversationList_SelectionChanged"
-                          SelectionMode="Extended">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <Grid ColumnDefinitions="*,Auto" Padding="2,8" ColumnSpacing="8">
-                                <StackPanel Spacing="3">
-                                    <TextBlock Text="{Binding Title}"
-                                               FontWeight="{Binding HasUnread, Converter={StaticResource UnreadToFontWeight}, ConverterParameter=SemiBold}"
-                                               TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Text="{Binding Subtitle}"
-                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                               Visibility="{Binding Subtitle, Converter={StaticResource StringToVisibility}}" />
-                                    <!-- The preview takes the weight as well as the name: bolding
-                                         the name alone is easy to miss on a list of numbers. -->
-                                    <TextBlock Text="{Binding LastMessagePreview}"
-                                               FontWeight="{Binding HasUnread, Converter={StaticResource UnreadToFontWeight}}"
-                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                               TextTrimming="CharacterEllipsis"
-                                               MaxLines="1" />
-                                </StackPanel>
-
-                                <StackPanel Grid.Column="1" Spacing="4" HorizontalAlignment="Right">
-                                    <TextBlock Text="{Binding LastMessageAtDisplay}"
-                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                               HorizontalAlignment="Right" />
-                                    <Border Background="#DC2626"
-                                            CornerRadius="9"
-                                            Padding="8,2"
-                                            HorizontalAlignment="Right"
-                                            Visibility="{Binding HasFailed, Converter={StaticResource BoolToVisibility}}">
-                                        <TextBlock Text="{Binding DataContext.Loc.ErrorBadge, ElementName=RootGrid}" Foreground="White" />
+                    <!-- Thread list -->
+                    <ListView Grid.Row="3"
+                              ItemsSource="{Binding Conversations.Conversations}"
+                              SelectedItem="{Binding Conversations.SelectedConversation, Mode=TwoWay}"
+                              SelectionChanged="ConversationList_SelectionChanged"
+                              SelectionMode="Extended">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="Auto,*,Auto" Padding="4,8" ColumnSpacing="12">
+                                    <!-- Avatar circle with contact initials or phone glyph -->
+                                    <Border Width="40" Height="40" CornerRadius="20"
+                                            Background="#2B2B30"
+                                            BorderBrush="#3D3D44"
+                                            BorderThickness="1"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Initials}"
+                                                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets, Segoe UI"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="13"
+                                                   Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" />
                                     </Border>
-                                </StackPanel>
-                            </Grid>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-            </Grid>
+
+                                    <!-- Conversation text -->
+                                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Title}"
+                                                   FontWeight="{Binding HasUnread, Converter={StaticResource UnreadToFontWeight}, ConverterParameter=SemiBold}"
+                                                   FontSize="14"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Subtitle}"
+                                                   FontSize="12"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                   Visibility="{Binding Subtitle, Converter={StaticResource StringToVisibility}}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding LastMessagePreview}"
+                                                   FontSize="12"
+                                                   FontWeight="{Binding HasUnread, Converter={StaticResource UnreadToFontWeight}}"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   MaxLines="1" />
+                                    </StackPanel>
+
+                                    <!-- Time & Unread / Error badge -->
+                                    <StackPanel Grid.Column="2" Spacing="6" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding LastMessageAtDisplay}"
+                                                   FontSize="11"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                   HorizontalAlignment="Right" />
+
+                                        <!-- Unread count pill badge -->
+                                        <Border Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                                CornerRadius="9"
+                                                MinWidth="20"
+                                                Height="18"
+                                                Padding="6,0"
+                                                HorizontalAlignment="Right"
+                                                Visibility="{Binding HasUnread, Converter={StaticResource BoolToVisibility}}">
+                                            <TextBlock Text="{Binding UnreadCount}"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="White"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center" />
+                                        </Border>
+
+                                        <!-- Error badge -->
+                                        <Border Background="#DC2626"
+                                                CornerRadius="9"
+                                                Padding="6,2"
+                                                HorizontalAlignment="Right"
+                                                Visibility="{Binding HasFailed, Converter={StaticResource BoolToVisibility}}">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <FontIcon Glyph="&#xE783;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="10" Foreground="White" />
+                                                <TextBlock Text="{Binding DataContext.Loc.ErrorBadge, ElementName=RootGrid}" FontSize="11" Foreground="White" />
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Border>
 
             <!-- Drag to resize the thread list -->
             <local:SizerBorder Grid.Column="1"
-                    IsHorizontalDrag="True"
-                    Width="10"
-                    Background="Transparent"
-                    PointerPressed="PanelSizer_PointerPressed"
-                    PointerMoved="PanelSizer_PointerMoved"
-                    PointerReleased="PanelSizer_PointerReleased"
-                    PointerCaptureLost="PanelSizer_PointerReleased"
-                    ToolTipService.ToolTip="{Binding Loc.PanelSizerTooltip}"
-                    Visibility="{Binding Ui.IsLeftPanelVisible, Converter={StaticResource BoolToVisibility}}">
+                               IsHorizontalDrag="True"
+                               Width="10"
+                               Background="Transparent"
+                               PointerPressed="PanelSizer_PointerPressed"
+                               PointerMoved="PanelSizer_PointerMoved"
+                               PointerReleased="PanelSizer_PointerReleased"
+                               PointerCaptureLost="PanelSizer_PointerReleased"
+                               ToolTipService.ToolTip="{Binding Loc.PanelSizerTooltip}"
+                               Visibility="{Binding Ui.IsLeftPanelVisible, Converter={StaticResource BoolToVisibility}}">
                 <Rectangle Width="2"
                            HorizontalAlignment="Center"
                            Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
             </local:SizerBorder>
 
-            <!-- Thread detail -->
-            <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto,Auto,Auto" RowSpacing="8" Margin="8,0,0,0">
+            <!-- Right Panel (Thread detail card) -->
+            <Border Grid.Column="2"
+                    Background="#1C1C1E"
+                    BorderBrush="#333336"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="16"
+                    Margin="8,0,0,0">
 
-                <Grid ColumnDefinitions="*,Auto">
-                    <StackPanel Spacing="3">
-                        <TextBlock Text="{Binding Conversations.ThreadTitle}"
-                                   FontSize="{Binding Ui.HeaderFontSize}"
-                                   FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding Conversations.ThreadSubtitle}"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                        <Button Content="{Binding Conversations.DeleteMessagesLabel}"
-                                Command="{Binding Conversations.DeleteSelectedMessagesCommand}"
-                                Visibility="{Binding Conversations.HasSelectedMessages, Converter={StaticResource BoolToVisibility}}" />
-                        <Button Content="{Binding Loc.SaveToContacts}"
-                                Command="{Binding AddContactForPeerCommand}" />
-                    </StackPanel>
-                </Grid>
+                <Grid>
+                    <!-- ================= EMPTY STATE PLACEHOLDER ================= -->
+                    <!-- Shown when no conversation is selected, replacing the harsh empty void -->
+                    <Grid Visibility="{Binding Conversations.HasSelection, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16" MaxWidth="440">
+                            <Border Width="84" Height="84" CornerRadius="42"
+                                    Background="#26262A"
+                                    BorderBrush="#38383D"
+                                    BorderThickness="1"
+                                    HorizontalAlignment="Center">
+                                <FontIcon Glyph="&#xE8BD;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                          FontSize="38"
+                                          Foreground="{ThemeResource AccentFillColorDefaultBrush}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+                            </Border>
 
-                <ListView x:Name="ThreadList"
-                          Grid.Row="1"
-                          Padding="4"
-                          ItemsSource="{Binding Conversations.ThreadMessages}"
-                          ItemContainerStyle="{StaticResource ThreadBubbleItemStyle}"
-                          SelectionMode="Extended"
-                          SelectionChanged="ThreadList_SelectionChanged">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                                <Grid Padding="0,5" HorizontalAlignment="{Binding IsIncoming, Converter={StaticResource IncomingToAlignment}}">
-                                    <Border Background="{Binding IsIncoming, Converter={StaticResource IncomingToBrush}}"
-                                            CornerRadius="12"
-                                            Padding="14,10"
-                                            MaxWidth="620">
-                                        <StackPanel Spacing="5">
-                                            <TextBlock Text="{Binding Body}"
-                                                       FontWeight="{Binding IsUnread, Converter={StaticResource UnreadToFontWeight}}"
-                                                       Foreground="White"
-                                                       TextWrapping="Wrap"
-                                                       IsTextSelectionEnabled="True" />
-                                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                                <TextBlock Text="{Binding TimestampDisplay}"
-                                                           Foreground="#E8E8E8" />
-                                                <TextBlock Text="{Binding Status, Converter={StaticResource StatusToText}}"
-                                                           Foreground="#E8E8E8" />
-                                                <Button Content="{Binding DataContext.Loc.Retry, ElementName=RootGrid}"
-                                                        Padding="10,2"
-                                                        Click="RetryButton_Click"
-                                                        Tag="{Binding Id}"
-                                                        Visibility="{Binding Status, Converter={StaticResource RetryVisibilityConverter}}" />
-                                            </StackPanel>
-                                            <TextBlock Text="{Binding ErrorMessage}"
-                                                       Foreground="#FFD4D4"
-                                                       TextWrapping="Wrap"
-                                                       Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}" />
-                                        </StackPanel>
-                                    </Border>
-                                </Grid>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
+                            <StackPanel Spacing="6" HorizontalAlignment="Center">
+                                <TextBlock Text="{Binding Loc.SelectConversation}"
+                                           FontSize="20"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" />
+                                <TextBlock Text="Select a conversation from the left to read and send messages, or start a new chat."
+                                           FontSize="13"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           TextWrapping="Wrap"
+                                           TextAlignment="Center"
+                                           HorizontalAlignment="Center" />
+                            </StackPanel>
 
-                <!-- Drag to resize the composer. Inverted: dragging up makes it taller. -->
-                <local:SizerBorder Grid.Row="2"
-                        IsHorizontalDrag="False"
-                        Height="12"
-                        Background="Transparent"
-                        PointerPressed="ComposerSizer_PointerPressed"
-                        PointerMoved="ComposerSizer_PointerMoved"
-                        PointerReleased="ComposerSizer_PointerReleased"
-                        PointerCaptureLost="ComposerSizer_PointerReleased"
-                        ToolTipService.ToolTip="{Binding Loc.ComposerSizerTooltip}"
-                        Visibility="{Binding Conversations.HasSelection, Converter={StaticResource BoolToVisibility}}">
-                    <Rectangle Height="2"
-                               VerticalAlignment="Center"
-                               Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                </local:SizerBorder>
-
-                <Grid Grid.Row="3"
-                      RowDefinitions="Auto,*"
-                      RowSpacing="6"
-                      Height="{Binding Ui.ComposerHeight}"
-                      Visibility="{Binding Conversations.HasSelection, Converter={StaticResource BoolToVisibility}}">
-
-                    <TextBox PlaceholderText="{Binding Loc.RecipientPlaceholder}"
-                             Header="{Binding Loc.RecipientHeader}"
-                             Text="{Binding Conversations.NewRecipient, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                             Visibility="{Binding Conversations.CanEditRecipient, Converter={StaticResource BoolToVisibility}}" />
-
-                    <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                        <Button VerticalAlignment="Top"
-                                Padding="10,6"
-                                FontSize="18"
-                                Content="🙂"
-                                ToolTipService.ToolTip="{Binding Loc.EmojiTooltip}">
-                            <Button.Flyout>
-                                <Flyout>
-                                    <ScrollViewer Height="280" Width="360" VerticalScrollBarVisibility="Auto">
-                                        <ItemsControl x:Name="EmojiGroups" ItemsSource="{Binding EmojiGroups}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <StackPanel Margin="0,0,0,10">
-                                                        <TextBlock Text="{Binding Name}"
-                                                                   FontWeight="SemiBold"
-                                                                   Margin="2,0,0,4"
-                                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                                        <GridView ItemsSource="{Binding Emoji}"
-                                                                  SelectionMode="None"
-                                                                  IsItemClickEnabled="True"
-                                                                  ItemClick="Emoji_ItemClick">
-                                                            <GridView.ItemTemplate>
-                                                                <DataTemplate>
-                                                                    <TextBlock Text="{Binding}"
-                                                                               FontSize="22"
-                                                                               Margin="4"
-                                                                               HorizontalAlignment="Center" />
-                                                                </DataTemplate>
-                                                            </GridView.ItemTemplate>
-                                                        </GridView>
-                                                    </StackPanel>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </ScrollViewer>
-                                </Flyout>
-                            </Button.Flyout>
-                        </Button>
-
-                        <TextBox x:Name="MessageBox"
-                                 Grid.Column="1"
-                                 PlaceholderText="{Binding Loc.MessagePlaceholder}"
-                                 AcceptsReturn="True"
-                                 TextWrapping="Wrap"
-                                 VerticalAlignment="Stretch"
-                                 VerticalContentAlignment="Top"
-                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                 Text="{Binding Conversations.MessageBody, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-
-                        <Button Grid.Column="2"
-                                Content="{Binding Loc.Send}"
-                                MinWidth="100"
-                                VerticalAlignment="Stretch"
-                                Style="{StaticResource AccentButtonStyle}"
-                                Command="{Binding Conversations.SendCommand}" />
+                            <Button Command="{Binding Conversations.NewConversationCommand}"
+                                    Style="{StaticResource AccentButtonStyle}"
+                                    HorizontalAlignment="Center"
+                                    Padding="18,8"
+                                    CornerRadius="8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
+                                    <TextBlock Text="{Binding Loc.NewMessage}" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
                     </Grid>
 
-                </Grid>
+                    <!-- ================= ACTIVE THREAD VIEW ================= -->
+                    <Grid RowDefinitions="Auto,Auto,*,Auto,Auto,Auto"
+                          RowSpacing="8"
+                          Visibility="{Binding Conversations.HasSelection, Converter={StaticResource BoolToVisibility}}">
 
-                <!--
-                  The counter lives outside the composer's fixed-height grid on purpose. Inside
-                  it, the warning's own height was subtracted from the text box, so turning on
-                  Unicode text visibly shrank the field you were typing in. Out here the input
-                  keeps the full height the user dragged for, and the counter simply sits below.
-                -->
-                <StackPanel Grid.Row="4"
-                            Spacing="1"
-                            Margin="0,4,0,0"
-                            Visibility="{Binding Conversations.HasSelection, Converter={StaticResource BoolToVisibility}}">
-                    <TextBlock Text="{Binding Conversations.ComposerCounter}"
-                               FontSize="{Binding Ui.CounterFontSize}"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    <TextBlock Text="{Binding Loc.UnicodeWarning}"
-                               FontSize="{Binding Ui.CounterFontSize}"
-                               TextWrapping="Wrap"
-                               Foreground="{ThemeResource SystemFillColorCautionBrush}"
-                               Visibility="{Binding Conversations.ShowUnicodeWarning, Converter={StaticResource BoolToVisibility}}" />
-                </StackPanel>
-            </Grid>
+                        <!-- Thread header with avatar, title, subtitle & action buttons -->
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                            <!-- Avatar circle -->
+                            <Border Width="40" Height="40" CornerRadius="20"
+                                    Background="#2B2B30"
+                                    BorderBrush="#3D3D44"
+                                    BorderThickness="1"
+                                    VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Conversations.SelectedConversation.Initials}"
+                                           FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets, Segoe UI"
+                                           FontWeight="SemiBold"
+                                           FontSize="13"
+                                           Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            </Border>
+
+                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Conversations.ThreadTitle}"
+                                           FontSize="{Binding Ui.HeaderFontSize}"
+                                           FontWeight="SemiBold"
+                                           TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Conversations.ThreadSubtitle}"
+                                           FontSize="{Binding Ui.SmallFontSize}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           Visibility="{Binding Conversations.ThreadSubtitle, Converter={StaticResource StringToVisibility}}"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <Button Command="{Binding Conversations.DeleteSelectedMessagesCommand}"
+                                        CornerRadius="6"
+                                        Visibility="{Binding Conversations.HasSelectedMessages, Converter={StaticResource BoolToVisibility}}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" Foreground="#FF6B6B" />
+                                        <TextBlock Text="{Binding Conversations.DeleteMessagesLabel}" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding AddContactForPeerCommand}"
+                                        CornerRadius="6">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE779;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
+                                        <TextBlock Text="{Binding Loc.SaveToContacts}" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Subtle divider under header -->
+                        <Rectangle Grid.Row="1" Height="1" Fill="#333336" Margin="-16,4,-16,0" />
+
+                        <!-- Messages list -->
+                        <ListView x:Name="ThreadList"
+                                  Grid.Row="2"
+                                  Padding="4,8"
+                                  ItemsSource="{Binding Conversations.ThreadMessages}"
+                                  ItemContainerStyle="{StaticResource ThreadBubbleItemStyle}"
+                                  SelectionMode="Extended"
+                                  SelectionChanged="ThreadList_SelectionChanged">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Padding="0,6" HorizontalAlignment="{Binding IsIncoming, Converter={StaticResource IncomingToAlignment}}">
+                                        <Border Background="{Binding IsIncoming, Converter={StaticResource IncomingToBrush}}"
+                                                CornerRadius="14"
+                                                Padding="14,10"
+                                                MaxWidth="640">
+                                            <StackPanel Spacing="5">
+                                                <TextBlock Text="{Binding Body}"
+                                                           FontWeight="{Binding IsUnread, Converter={StaticResource UnreadToFontWeight}}"
+                                                           Foreground="White"
+                                                           TextWrapping="Wrap"
+                                                           IsTextSelectionEnabled="True" />
+                                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                                    <TextBlock Text="{Binding TimestampDisplay}"
+                                                               Foreground="#E0E0E0"
+                                                               FontSize="12" />
+                                                    <TextBlock Text="{Binding Status, Converter={StaticResource StatusToText}}"
+                                                               Foreground="#E0E0E0"
+                                                               FontSize="12" />
+                                                    <Button Content="{Binding DataContext.Loc.Retry, ElementName=RootGrid}"
+                                                            Padding="10,2"
+                                                            CornerRadius="4"
+                                                            Click="RetryButton_Click"
+                                                            Tag="{Binding Id}"
+                                                            Visibility="{Binding Status, Converter={StaticResource RetryVisibilityConverter}}" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding ErrorMessage}"
+                                                           Foreground="#FFD4D4"
+                                                           TextWrapping="Wrap"
+                                                           Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibility}}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+
+                        <!-- Drag to resize the composer -->
+                        <local:SizerBorder Grid.Row="3"
+                                           IsHorizontalDrag="False"
+                                           Height="12"
+                                           Background="Transparent"
+                                           PointerPressed="ComposerSizer_PointerPressed"
+                                           PointerMoved="ComposerSizer_PointerMoved"
+                                           PointerReleased="ComposerSizer_PointerReleased"
+                                           PointerCaptureLost="ComposerSizer_PointerReleased"
+                                           ToolTipService.ToolTip="{Binding Loc.ComposerSizerTooltip}">
+                            <Rectangle Height="2"
+                                       VerticalAlignment="Center"
+                                       Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                        </local:SizerBorder>
+
+                        <!-- Composer section -->
+                        <Grid Grid.Row="4"
+                              RowDefinitions="Auto,*"
+                              RowSpacing="6"
+                              Height="{Binding Ui.ComposerHeight}">
+
+                            <TextBox PlaceholderText="{Binding Loc.RecipientPlaceholder}"
+                                     Header="{Binding Loc.RecipientHeader}"
+                                     CornerRadius="8"
+                                     Text="{Binding Conversations.NewRecipient, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     Visibility="{Binding Conversations.CanEditRecipient, Converter={StaticResource BoolToVisibility}}" />
+
+                            <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                <!-- Emoji Picker Button -->
+                                <Button VerticalAlignment="Top"
+                                        Padding="10,8"
+                                        CornerRadius="8"
+                                        ToolTipService.ToolTip="{Binding Loc.EmojiTooltip}">
+                                    <FontIcon Glyph="&#xE76E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16" />
+                                    <Button.Flyout>
+                                        <Flyout>
+                                            <ScrollViewer Height="280" Width="360" VerticalScrollBarVisibility="Auto">
+                                                <ItemsControl x:Name="EmojiGroups" ItemsSource="{Binding EmojiGroups}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel Margin="0,0,0,10">
+                                                                <TextBlock Text="{Binding Name}"
+                                                                           FontWeight="SemiBold"
+                                                                           Margin="2,0,0,4"
+                                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                                <GridView ItemsSource="{Binding Emoji}"
+                                                                          SelectionMode="None"
+                                                                          IsItemClickEnabled="True"
+                                                                          ItemClick="Emoji_ItemClick">
+                                                                    <GridView.ItemTemplate>
+                                                                        <DataTemplate>
+                                                                            <TextBlock Text="{Binding}"
+                                                                                       FontSize="22"
+                                                                                       Margin="4"
+                                                                                       HorizontalAlignment="Center" />
+                                                                        </DataTemplate>
+                                                                    </GridView.ItemTemplate>
+                                                                </GridView>
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </ScrollViewer>
+                                        </Flyout>
+                                    </Button.Flyout>
+                                </Button>
+
+                                <!-- Message input box -->
+                                <TextBox x:Name="MessageBox"
+                                         Grid.Column="1"
+                                         CornerRadius="8"
+                                         PlaceholderText="{Binding Loc.MessagePlaceholder}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalAlignment="Stretch"
+                                         VerticalContentAlignment="Top"
+                                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                         Text="{Binding Conversations.MessageBody, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <!-- Send button with icon -->
+                                <Button Grid.Column="2"
+                                        MinWidth="110"
+                                        CornerRadius="8"
+                                        VerticalAlignment="Stretch"
+                                        Style="{StaticResource AccentButtonStyle}"
+                                        Command="{Binding Conversations.SendCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                        <FontIcon Glyph="&#xE724;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
+                                        <TextBlock Text="{Binding Loc.Send}" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Grid>
+
+                        <!-- Counter and warning -->
+                        <StackPanel Grid.Row="5"
+                                    Spacing="1"
+                                    Margin="0,4,0,0">
+                            <TextBlock Text="{Binding Conversations.ComposerCounter}"
+                                       FontSize="{Binding Ui.CounterFontSize}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="{Binding Loc.UnicodeWarning}"
+                                       FontSize="{Binding Ui.CounterFontSize}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                       Visibility="{Binding Conversations.ShowUnicodeWarning, Converter={StaticResource BoolToVisibility}}" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
         </Grid>
 
-        <!-- ================================ CONTACTS ================================ -->
+        <!-- ================================ CONTACTS VIEW ================================ -->
         <Grid Grid.Row="2"
               ColumnDefinitions="Auto,Auto,*"
               Visibility="{Binding IsContactsView, Converter={StaticResource BoolToVisibility}}">
 
-            <Grid RowDefinitions="Auto,*"
-                  RowSpacing="8"
-                  Width="{Binding Ui.LeftPanelWidth}"
-                  Visibility="{Binding Ui.IsLeftPanelVisible, Converter={StaticResource BoolToVisibility}}">
-
-                <Button Content="{Binding Loc.AddContact}"
-                        HorizontalAlignment="Stretch"
-                        Command="{Binding ContactBook.NewContactCommand}" />
-
-                <ListView Grid.Row="1"
-                          ItemsSource="{Binding ContactBook.Contacts}"
-                          SelectedItem="{Binding ContactBook.SelectedContact, Mode=TwoWay}"
-                          SelectionMode="Single">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Padding="2,8" Spacing="3">
-                                <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding DisplayPhone}"
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                <TextBlock Text="{Binding Note}"
-                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                           TextTrimming="CharacterEllipsis"
-                                           Visibility="{Binding Note, Converter={StaticResource StringToVisibility}}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-            </Grid>
-
-            <local:SizerBorder Grid.Column="1"
-                    IsHorizontalDrag="True"
-                    Width="10"
-                    Background="Transparent"
-                    PointerPressed="PanelSizer_PointerPressed"
-                    PointerMoved="PanelSizer_PointerMoved"
-                    PointerReleased="PanelSizer_PointerReleased"
-                    PointerCaptureLost="PanelSizer_PointerReleased"
-                    ToolTipService.ToolTip="{Binding Loc.PanelSizerTooltip}"
+            <!-- Left Panel (Contact list card) -->
+            <Border Width="{Binding Ui.LeftPanelWidth}"
+                    Background="#1C1C1E"
+                    BorderBrush="#333336"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="10"
                     Visibility="{Binding Ui.IsLeftPanelVisible, Converter={StaticResource BoolToVisibility}}">
+                <Grid RowDefinitions="Auto,*" RowSpacing="8">
+
+                    <!-- + Add contact button -->
+                    <Button Style="{StaticResource AccentButtonStyle}"
+                            HorizontalAlignment="Stretch"
+                            Height="38"
+                            CornerRadius="8"
+                            Command="{Binding ContactBook.NewContactCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                            <FontIcon Glyph="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
+                            <TextBlock Text="{Binding Loc.AddContact}" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Contact list -->
+                    <ListView Grid.Row="1"
+                              ItemsSource="{Binding ContactBook.Contacts}"
+                              SelectedItem="{Binding ContactBook.SelectedContact, Mode=TwoWay}"
+                              SelectionMode="Single">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="Auto,*" Padding="4,8" ColumnSpacing="12">
+                                    <!-- Avatar circle with contact initials -->
+                                    <Border Width="38" Height="38" CornerRadius="19"
+                                            Background="#2B2B30"
+                                            BorderBrush="#3D3D44"
+                                            BorderThickness="1"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Initials}"
+                                                   FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets, Segoe UI"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="13"
+                                                   Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center" />
+                                    </Border>
+
+                                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="14" />
+                                        <TextBlock Text="{Binding DisplayPhone}"
+                                                   FontSize="12"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock Text="{Binding Note}"
+                                                   FontSize="12"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Visibility="{Binding Note, Converter={StaticResource StringToVisibility}}" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Border>
+
+            <!-- Drag to resize contacts panel -->
+            <local:SizerBorder Grid.Column="1"
+                               IsHorizontalDrag="True"
+                               Width="10"
+                               Background="Transparent"
+                               PointerPressed="PanelSizer_PointerPressed"
+                               PointerMoved="PanelSizer_PointerMoved"
+                               PointerReleased="PanelSizer_PointerReleased"
+                               PointerCaptureLost="PanelSizer_PointerReleased"
+                               ToolTipService.ToolTip="{Binding Loc.PanelSizerTooltip}"
+                               Visibility="{Binding Ui.IsLeftPanelVisible, Converter={StaticResource BoolToVisibility}}">
                 <Rectangle Width="2"
                            HorizontalAlignment="Center"
                            Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
             </local:SizerBorder>
 
-            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" Margin="8,0,0,0">
-                <StackPanel Spacing="12"
-                            MaxWidth="560"
-                            HorizontalAlignment="Left"
-                            Visibility="{Binding ContactBook.IsEditing, Converter={StaticResource BoolToVisibility}}">
+            <!-- Right Panel (Contact editor card) -->
+            <Border Grid.Column="2"
+                    Background="#1C1C1E"
+                    BorderBrush="#333336"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="20"
+                    Margin="8,0,0,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="14"
+                                MaxWidth="580"
+                                HorizontalAlignment="Left"
+                                Visibility="{Binding ContactBook.IsEditing, Converter={StaticResource BoolToVisibility}}">
 
-                    <TextBlock Text="{Binding Loc.ContactInfo}"
-                               FontSize="{Binding Ui.HeaderFontSize}"
-                               FontWeight="SemiBold" />
+                        <!-- Contact Header -->
+                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,0,0,8">
+                            <Border Width="42" Height="42" CornerRadius="21"
+                                    Background="#2B2B30"
+                                    BorderBrush="#3D3D44"
+                                    BorderThickness="1">
+                                <FontIcon Glyph="&#xE779;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                          FontSize="18"
+                                          Foreground="{ThemeResource TextFillColorPrimaryBrush}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Spacing="2" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Loc.ContactInfo}"
+                                           FontSize="{Binding Ui.HeaderFontSize}"
+                                           FontWeight="SemiBold" />
+                                <TextBlock Text="Manage contact name and phone number"
+                                           FontSize="12"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                        </StackPanel>
 
-                    <TextBox Header="{Binding Loc.ContactTitle}"
-                             PlaceholderText="{Binding Loc.ContactTitlePlaceholder}"
-                             Text="{Binding ContactBook.Editor.Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Header="{Binding Loc.ContactTitle}"
+                                 PlaceholderText="{Binding Loc.ContactTitlePlaceholder}"
+                                 CornerRadius="8"
+                                 Text="{Binding ContactBook.Editor.Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                    <TextBox Header="{Binding Loc.FamilyName}"
-                             PlaceholderText="{Binding Loc.FamilyNamePlaceholder}"
-                             Text="{Binding ContactBook.Editor.FamilyName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Header="{Binding Loc.FamilyName}"
+                                 PlaceholderText="{Binding Loc.FamilyNamePlaceholder}"
+                                 CornerRadius="8"
+                                 Text="{Binding ContactBook.Editor.FamilyName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                    <TextBox Header="{Binding Loc.GivenName}"
-                             PlaceholderText="{Binding Loc.GivenNamePlaceholder}"
-                             Text="{Binding ContactBook.Editor.GivenName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Header="{Binding Loc.GivenName}"
+                                 PlaceholderText="{Binding Loc.GivenNamePlaceholder}"
+                                 CornerRadius="8"
+                                 Text="{Binding ContactBook.Editor.GivenName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                    <TextBox Header="{Binding Loc.PhoneNumber}"
-                             PlaceholderText="{Binding Loc.PhonePlaceholder}"
-                             Text="{Binding ContactBook.Editor.PhoneNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Header="{Binding Loc.PhoneNumber}"
+                                 PlaceholderText="{Binding Loc.PhonePlaceholder}"
+                                 CornerRadius="8"
+                                 Text="{Binding ContactBook.Editor.PhoneNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                    <TextBox Header="{Binding Loc.Address}"
-                             PlaceholderText="{Binding Loc.AddressPlaceholder}"
-                             AcceptsReturn="True"
-                             TextWrapping="Wrap"
-                             Height="80"
-                             Text="{Binding ContactBook.Editor.Address, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Header="{Binding Loc.Address}"
+                                 PlaceholderText="{Binding Loc.AddressPlaceholder}"
+                                 CornerRadius="8"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 Height="80"
+                                 Text="{Binding ContactBook.Editor.Address, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                    <TextBox Header="{Binding Loc.Note}"
-                             PlaceholderText="{Binding Loc.NotePlaceholder}"
-                             AcceptsReturn="True"
-                             TextWrapping="Wrap"
-                             Height="120"
-                             Text="{Binding ContactBook.Editor.Note, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Header="{Binding Loc.Note}"
+                                 PlaceholderText="{Binding Loc.NotePlaceholder}"
+                                 CornerRadius="8"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 Height="110"
+                                 Text="{Binding ContactBook.Editor.Note, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Content="{Binding Loc.Save}"
-                                MinWidth="100"
-                                Style="{StaticResource AccentButtonStyle}"
-                                Command="{Binding ContactBook.SaveCommand}" />
-                        <Button Content="{Binding Loc.Delete}" Command="{Binding ContactBook.DeleteCommand}" />
-                        <Button Content="{Binding Loc.Cancel}" Command="{Binding ContactBook.CancelCommand}" />
+                        <!-- Action buttons with icons -->
+                        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0">
+                            <Button Style="{StaticResource AccentButtonStyle}"
+                                    MinWidth="110"
+                                    Height="36"
+                                    CornerRadius="8"
+                                    Command="{Binding ContactBook.SaveCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE74E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
+                                    <TextBlock Text="{Binding Loc.Save}" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button MinWidth="90"
+                                    Height="36"
+                                    CornerRadius="8"
+                                    Command="{Binding ContactBook.DeleteCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" Foreground="#FF6B6B" />
+                                    <TextBlock Text="{Binding Loc.Delete}" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Content="{Binding Loc.Cancel}"
+                                    MinWidth="90"
+                                    Height="36"
+                                    CornerRadius="8"
+                                    Command="{Binding ContactBook.CancelCommand}" />
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding ContactBook.StatusText}"
+                                   TextWrapping="Wrap"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   Visibility="{Binding ContactBook.StatusText, Converter={StaticResource StringToVisibility}}" />
                     </StackPanel>
-
-                    <TextBlock Text="{Binding ContactBook.StatusText}"
-                               TextWrapping="Wrap"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               Visibility="{Binding ContactBook.StatusText, Converter={StaticResource StringToVisibility}}" />
-                </StackPanel>
-            </ScrollViewer>
+                </ScrollViewer>
+            </Border>
         </Grid>
     </Grid>
 </Window>

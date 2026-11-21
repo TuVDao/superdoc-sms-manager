@@ -36,6 +36,7 @@ public sealed class Conversation : INotifyPropertyChanged
                 OnPropertyChanged(nameof(Title));
                 OnPropertyChanged(nameof(Subtitle));
                 OnPropertyChanged(nameof(HasContact));
+                OnPropertyChanged(nameof(Initials));
             }
         }
     }
@@ -47,6 +48,32 @@ public sealed class Conversation : INotifyPropertyChanged
     public string Subtitle => Contact is null ? string.Empty : PeerDisplay;
 
     public bool HasContact => Contact is not null;
+
+    /// <summary>Contact initials or phone icon for avatar badge.</summary>
+    public string Initials
+    {
+        get
+        {
+            if (Contact is not null)
+            {
+                return Contact.Initials;
+            }
+
+            var text = PeerDisplay.Trim();
+            if (!string.IsNullOrEmpty(text) && char.IsLetter(text[0]))
+            {
+                var parts = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length >= 2 && char.IsLetter(parts[0][0]) && char.IsLetter(parts[1][0]))
+                {
+                    return $"{char.ToUpperInvariant(parts[0][0])}{char.ToUpperInvariant(parts[1][0])}";
+                }
+
+                return char.ToUpperInvariant(text[0]).ToString();
+            }
+
+            return "\uE717";
+        }
+    }
 
     public string LastMessagePreview
     {

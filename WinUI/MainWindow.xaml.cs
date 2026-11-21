@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -8,6 +10,7 @@ using SuperDoc.Sms.Models;
 using SuperDoc.Sms.Services;
 using SuperDoc.Sms.Storage;
 using Windows.Graphics;
+using Windows.UI;
 
 namespace SuperDoc.Sms.WinUI;
 
@@ -38,6 +41,7 @@ public sealed partial class MainWindow : Window
 
             // After the logger exists, so a missing icon actually gets reported.
             ApplyWindowIcon();
+            ConfigureTitleBarAndTheme();
 
             _repo = new SmsRepository(logger: _loggerFactory.CreateLogger<SmsRepository>());
             _smsManager = new SmsManager(
@@ -189,6 +193,61 @@ public sealed partial class MainWindow : Window
         {
             // Cosmetic only; never stop the window opening over an icon.
             _logger.LogWarning(ex, "Could not set the window icon.");
+        }
+    }
+
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
+    private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+    private const int DWMWA_CAPTION_COLOR = 35;
+    private const int DWMWA_TEXT_COLOR = 36;
+
+    /// <summary>
+    /// Enforces dark title bar on Windows 10 and 11, matching the window's dark theme
+    /// instead of leaving the light default system frame.
+    /// </summary>
+    private void ConfigureTitleBarAndTheme()
+    {
+        try
+        {
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            int darkMode = 1;
+            DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int));
+            DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ref darkMode, sizeof(int));
+
+            // Windows 11 DWM caption color (0x00202020: 0x00BBGGRR)
+            int darkCaptionColor = 0x00202020;
+            DwmSetWindowAttribute(hwnd, DWMWA_CAPTION_COLOR, ref darkCaptionColor, sizeof(int));
+            int lightTextColor = 0x00FFFFFF;
+            DwmSetWindowAttribute(hwnd, DWMWA_TEXT_COLOR, ref lightTextColor, sizeof(int));
+
+            if (AppWindowTitleBar.IsCustomizationSupported())
+            {
+                var titleBar = AppWindow.TitleBar;
+                var darkBg = Windows.UI.Color.FromArgb(255, 32, 32, 32);
+                var lightText = Microsoft.UI.Colors.White;
+                var dimText = Windows.UI.Color.FromArgb(255, 170, 170, 170);
+
+                titleBar.BackgroundColor = darkBg;
+                titleBar.ForegroundColor = lightText;
+                titleBar.InactiveBackgroundColor = darkBg;
+                titleBar.InactiveForegroundColor = dimText;
+
+                titleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
+                titleBar.ButtonForegroundColor = lightText;
+                titleBar.ButtonHoverBackgroundColor = Windows.UI.Color.FromArgb(255, 48, 48, 48);
+                titleBar.ButtonHoverForegroundColor = lightText;
+                titleBar.ButtonPressedBackgroundColor = Windows.UI.Color.FromArgb(255, 64, 64, 64);
+                titleBar.ButtonPressedForegroundColor = lightText;
+                titleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+                titleBar.ButtonInactiveForegroundColor = dimText;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not configure title bar theme.");
         }
     }
 
