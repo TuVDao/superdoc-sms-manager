@@ -31,6 +31,7 @@
   "StatusPending": "Menunggu",
   "StatusSending": "Mengirim",
   "StatusSent": "Terkirim",
+  "StatusDelivered": "Terkirim (Diterima)",
   "StatusFailed": "Gagal",
   "AddContact": "+ Tambah kontak",
   "ContactInfo": "Detail kontak",

@@ -31,6 +31,7 @@
   "StatusPending": "In wachtrij",
   "StatusSending": "Wordt verzonden",
   "StatusSent": "Verzonden",
+  "StatusDelivered": "Afgeleverd",
   "StatusFailed": "Mislukt",
   "AddContact": "+ Contact toevoegen",
   "ContactInfo": "Contactgegevens",

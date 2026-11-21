@@ -13,7 +13,12 @@ public enum SmsStatus
     /// <summary>
     /// An inbound message from the modem. Appended last so existing rows keep their stored values.
     /// </summary>
-    Received
+    Received,
+
+    /// <summary>
+    /// Delivery report received from the cellular network confirming receipt by the remote device.
+    /// </summary>
+    Delivered
 }
 
 /// <summary>

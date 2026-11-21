@@ -31,6 +31,7 @@
   "StatusPending": "Ausstehend",
   "StatusSending": "Wird gesendet",
   "StatusSent": "Gesendet",
+  "StatusDelivered": "Zugestellt",
   "StatusFailed": "Fehlgeschlagen",
   "AddContact": "+ Kontakt hinzufügen",
   "ContactInfo": "Kontaktdaten",

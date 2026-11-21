@@ -708,6 +708,34 @@ public sealed class SmsRepository : IDisposable
         }
     }
 
+    /// <summary>Finds the most recent sent message to a recipient, used for matching delivery status reports.</summary>
+    public SmsMessage? GetLatestSentMessageTo(string recipient)
+    {
+        var trimmed = recipient?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            return null;
+        }
+
+        var key = PhoneNumber.ToKey(trimmed);
+        lock (_sync)
+        {
+            using var cmd = _conn.CreateCommand();
+            cmd.CommandText = $"""
+                SELECT {SelectColumns}
+                FROM SmsMessages
+                WHERE Status = $sentStatus AND (ToNumber = $raw OR PeerKey = $key)
+                ORDER BY CreatedAt DESC, Id DESC
+                LIMIT 1;
+                """;
+            cmd.Parameters.AddWithValue("$sentStatus", (int)SmsStatus.Sent);
+            cmd.Parameters.AddWithValue("$raw", trimmed);
+            cmd.Parameters.AddWithValue("$key", key);
+            using var reader = cmd.ExecuteReader();
+            return reader.Read() ? Read(reader) : null;
+        }
+    }
+
     /// <summary>Moves a failed message back into the queue for an immediate attempt.</summary>
     public bool RetryFailed(long id)
     {

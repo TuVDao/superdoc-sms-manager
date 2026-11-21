@@ -574,6 +574,22 @@ public sealed class SmsManager : IDisposable
     {
         try
         {
+            if (args.MessageType == SmsMessageType.Status)
+            {
+                var statusMsg = args.StatusMessage;
+                if (statusMsg is not null)
+                {
+                    var recipient = !string.IsNullOrWhiteSpace(statusMsg.To) ? statusMsg.To : statusMsg.From;
+                    _logger?.LogInformation("Delivery status report received for {Recipient}: status={Status}", recipient, statusMsg.Status);
+                    // 3GPP TS 23.040: status values 0..31 represent successful delivery to recipient
+                    if (statusMsg.Status < 32 && !string.IsNullOrWhiteSpace(recipient))
+                    {
+                        MarkLatestSentMessageAsDelivered(recipient);
+                    }
+                }
+                return;
+            }
+
             var text = args.TextMessage;
             if (text is null || string.IsNullOrWhiteSpace(text.Body))
             {
@@ -599,6 +615,26 @@ public sealed class SmsManager : IDisposable
         catch (Exception ex)
         {
             _logger?.LogError(ex, "Failed to persist incoming SMS.");
+        }
+    }
+
+    /// <summary>Updates the latest sent message to Delivered when an SMS delivery receipt is acknowledged.</summary>
+    public void MarkLatestSentMessageAsDelivered(string recipient)
+    {
+        try
+        {
+            var msg = _repo.GetLatestSentMessageTo(recipient);
+            if (msg is not null && msg.Status == SmsStatus.Sent)
+            {
+                msg.Status = SmsStatus.Delivered;
+                _repo.Update(msg);
+                _logger?.LogInformation("Marked SMS #{Id} to {Recipient} as Delivered.", msg.Id, recipient);
+                MessageReceived?.Invoke(this, msg);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Could not update delivery status for {Recipient}", recipient);
         }
     }
 

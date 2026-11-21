@@ -31,6 +31,7 @@
   "StatusPending": "等待中",
   "StatusSending": "发送中",
   "StatusSent": "已发送",
+  "StatusDelivered": "已送达",
   "StatusFailed": "发送失败",
   "AddContact": "+ 添加联系人",
   "ContactInfo": "联系人信息",

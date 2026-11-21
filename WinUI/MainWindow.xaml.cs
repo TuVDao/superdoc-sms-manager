@@ -464,7 +464,7 @@ public sealed partial class MainWindow : Window
 
     private void ExitMessageSelection()
     {
-        ThreadList.SelectionMode = ListViewSelectionMode.Single;
+        ThreadList.SelectionMode = ListViewSelectionMode.None;
         ThreadList.SelectedItems.Clear();
         _viewModel?.Conversations.SetSelectedMessages([]);
     }
@@ -519,6 +519,7 @@ public sealed partial class MainWindow : Window
         if (sender is FrameworkElement { DataContext: SmsMessage msg } && _viewModel is not null)
         {
             await _viewModel.Conversations.DeleteMessageAsync(msg.Id);
+            ExitMessageSelection();
         }
     }
 
@@ -585,6 +586,7 @@ public sealed partial class MainWindow : Window
         if (sender is FrameworkElement { DataContext: Conversation conv } && _viewModel is not null)
         {
             await _viewModel.Conversations.DeleteSingleConversationAsync(conv);
+            ExitConversationSelection();
         }
     }
 
@@ -815,7 +817,13 @@ public sealed partial class MainWindow : Window
     }
 
     private void ThreadList_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        => _viewModel?.Conversations.SetSelectedMessages(ThreadList.SelectedItems.OfType<SmsMessage>());
+    {
+        _viewModel?.Conversations.SetSelectedMessages(ThreadList.SelectedItems.OfType<SmsMessage>());
+        if (ThreadList.SelectionMode == ListViewSelectionMode.Multiple && ThreadList.SelectedItems.Count == 0)
+        {
+            ThreadList.SelectionMode = ListViewSelectionMode.None;
+        }
+    }
 
     private void ConversationList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {

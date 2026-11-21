@@ -177,6 +177,24 @@ public sealed class CarrierBalance(ILogger? logger = null)
             var reply = await session.SendMessageAndGetReplyAsync(new UssdMessage(code.Trim()));
 
             var text = reply.Message?.PayloadAsText?.Trim() ?? string.Empty;
+
+            // If another local client had the modem locked, wait briefly and retry once
+            if (reply.ResultCode == UssdResultCode.OtherLocalClient && text.Length == 0)
+            {
+                _logger?.LogInformation("Balance enquiry returned OtherLocalClient; resetting session and retrying in 600ms...");
+                try { session?.Close(); } catch { }
+                await Task.Delay(600);
+                try
+                {
+                    session = UssdSession.CreateFromNetworkAccountId(accounts[0]);
+                    reply = await session.SendMessageAndGetReplyAsync(new UssdMessage(code.Trim()));
+                    text = reply.Message?.PayloadAsText?.Trim() ?? string.Empty;
+                }
+                catch (Exception retryEx)
+                {
+                    _logger?.LogWarning(retryEx, "Balance enquiry retry failed.");
+                }
+            }
             if (text.Length == 0)
             {
                 if (reply.ResultCode is UssdResultCode.NoActionRequired or UssdResultCode.ActionRequired or UssdResultCode.OtherLocalClient)

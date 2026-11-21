@@ -40,6 +40,7 @@
   "StatusPending": "Pending",
   "StatusSending": "Sending",
   "StatusSent": "Sent",
+  "StatusDelivered": "Delivered",
   "StatusFailed": "Failed",
 
   "AddContact": "+ Add contact",

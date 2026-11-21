@@ -111,6 +111,7 @@ public sealed class SmsStatusToTextConverter : IValueConverter
                 SmsStatus.Pending => Strings.Current.StatusPending,
                 SmsStatus.Sending => Strings.Current.StatusSending,
                 SmsStatus.Sent => Strings.Current.StatusSent,
+                SmsStatus.Delivered => Strings.Current.StatusDelivered,
                 SmsStatus.Failed => Strings.Current.StatusFailed,
                 _ => string.Empty
             };

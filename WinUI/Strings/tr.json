@@ -31,6 +31,7 @@
   "StatusPending": "Bekliyor",
   "StatusSending": "Gönderiliyor",
   "StatusSent": "Gönderildi",
+  "StatusDelivered": "İletildi",
   "StatusFailed": "Başarısız",
   "AddContact": "+ Kişi ekle",
   "ContactInfo": "Kişi bilgileri",

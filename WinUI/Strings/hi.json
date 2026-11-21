@@ -31,6 +31,7 @@
   "StatusPending": "प्रतीक्षारत",
   "StatusSending": "भेजा जा रहा है",
   "StatusSent": "भेजा गया",
+  "StatusDelivered": "वितरित",
   "StatusFailed": "विफल",
   "AddContact": "+ संपर्क जोड़ें",
   "ContactInfo": "संपर्क विवरण",

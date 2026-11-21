@@ -277,6 +277,7 @@ public sealed class Strings : INotifyPropertyChanged
     public string StatusPending => Text(nameof(StatusPending));
     public string StatusSending => Text(nameof(StatusSending));
     public string StatusSent => Text(nameof(StatusSent));
+    public string StatusDelivered => Text(nameof(StatusDelivered));
     public string StatusFailed => Text(nameof(StatusFailed));
 
     // ---- Contacts -------------------------------------------------------------------

@@ -31,6 +31,7 @@
   "StatusPending": "В очереди",
   "StatusSending": "Отправляется",
   "StatusSent": "Отправлено",
+  "StatusDelivered": "Доставлено",
   "StatusFailed": "Ошибка",
   "AddContact": "+ Добавить контакт",
   "ContactInfo": "Данные контакта",

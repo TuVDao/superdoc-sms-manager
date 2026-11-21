@@ -31,6 +31,7 @@
   "StatusPending": "รอดำเนินการ",
   "StatusSending": "กำลังส่ง",
   "StatusSent": "ส่งแล้ว",
+  "StatusDelivered": "ส่งถึงแล้ว",
   "StatusFailed": "ล้มเหลว",
   "AddContact": "+ เพิ่มรายชื่อ",
   "ContactInfo": "ข้อมูลผู้ติดต่อ",

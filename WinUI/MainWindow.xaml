@@ -94,13 +94,14 @@
                 <Button Command="{Binding ToggleNavCommand}"
                         ToolTipService.ToolTip="Navigation"
                         HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
                         Height="36"
                         CornerRadius="6"
                         Background="Transparent"
                         BorderThickness="0"
                         Margin="0,0,0,6"
                         Padding="0">
-                    <Grid ColumnDefinitions="40,*" Height="36">
+                    <Grid HorizontalAlignment="Stretch" ColumnDefinitions="40,*" Height="36">
                         <FontIcon Glyph="&#xE700;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16"
                                   Width="16" Height="16"
                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -113,6 +114,7 @@
                         Command="{Binding ShowMessagesCommand}"
                         ToolTipService.ToolTip="{Binding Loc.Messages}"
                         HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
                         Height="36"
                         CornerRadius="6"
                         Margin="0,2"
@@ -120,7 +122,7 @@
                         Foreground="{Binding IsMessagesView, Converter={StaticResource BoolToNavForeground}}"
                         BorderThickness="0"
                         Padding="0">
-                    <Grid ColumnDefinitions="40,*" Height="36">
+                    <Grid HorizontalAlignment="Stretch" ColumnDefinitions="40,*" Height="36">
                         <Border Width="3" Height="16" CornerRadius="1.5"
                                 Background="{ThemeResource AccentFillColorDefaultBrush}"
                                 VerticalAlignment="Center"
@@ -138,6 +140,7 @@
                         Command="{Binding ShowContactsCommand}"
                         ToolTipService.ToolTip="{Binding Loc.Contacts}"
                         HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
                         Height="36"
                         CornerRadius="6"
                         Margin="0,2"
@@ -145,7 +148,7 @@
                         Foreground="{Binding IsContactsView, Converter={StaticResource BoolToNavForeground}}"
                         BorderThickness="0"
                         Padding="0">
-                    <Grid ColumnDefinitions="40,*" Height="36">
+                    <Grid HorizontalAlignment="Stretch" ColumnDefinitions="40,*" Height="36">
                         <Border Width="3" Height="16" CornerRadius="1.5"
                                 Background="{ThemeResource AccentFillColorDefaultBrush}"
                                 VerticalAlignment="Center"
@@ -163,6 +166,7 @@
                         Command="{Binding ShowSettingsCommand}"
                         ToolTipService.ToolTip="{Binding Loc.Settings}"
                         HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
                         Height="36"
                         CornerRadius="6"
                         Margin="0,2"
@@ -170,7 +174,7 @@
                         Foreground="{Binding IsSettingsView, Converter={StaticResource BoolToNavForeground}}"
                         BorderThickness="0"
                         Padding="0">
-                    <Grid ColumnDefinitions="40,*" Height="36">
+                    <Grid HorizontalAlignment="Stretch" ColumnDefinitions="40,*" Height="36">
                         <Border Width="3" Height="16" CornerRadius="1.5"
                                 Background="{ThemeResource AccentFillColorDefaultBrush}"
                                 VerticalAlignment="Center"
@@ -325,7 +329,8 @@
                                       ItemsSource="{Binding Conversations.Conversations}"
                                       SelectedItem="{Binding Conversations.SelectedConversation, Mode=TwoWay}"
                                       SelectionChanged="ConversationList_SelectionChanged"
-                                      SelectionMode="Extended">
+                                      SelectionMode="Extended"
+                                      ItemContainerStyle="{StaticResource ModernListItemStyle}">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <Grid ColumnDefinitions="Auto,*,Auto" Padding="4,8" ColumnSpacing="12">
@@ -586,19 +591,19 @@
                                 <!-- Subtle divider under header -->
                                 <Rectangle Grid.Row="1" Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="-16,4,-16,0" />
 
-                                <!-- Messages list -->
+                                <!-- Messages list (SelectionMode="None" by default so clicking beside a bubble never selects it) -->
                                 <ListView x:Name="ThreadList"
                                           Grid.Row="2"
                                           Padding="4,8"
                                           ItemsSource="{Binding Conversations.ThreadMessages}"
                                           ItemContainerStyle="{StaticResource ThreadBubbleItemStyle}"
                                           SelectionChanged="ThreadList_SelectionChanged"
-                                          SelectionMode="Extended">
+                                          SelectionMode="None">
                                     <ListView.ItemTemplate>
                                         <DataTemplate>
                                             <Grid Padding="0,6" HorizontalAlignment="{Binding IsIncoming, Converter={StaticResource IncomingToAlignment}}">
                                                 <Border Background="{Binding IsIncoming, Converter={StaticResource IncomingToBrush}}"
-                                                        CornerRadius="14"
+                                                        CornerRadius="16"
                                                         Padding="14,10"
                                                         MaxWidth="640">
                                                     <Border.ContextFlyout>
@@ -946,7 +951,8 @@
                                       ItemsSource="{Binding ContactBook.Contacts}"
                                       SelectedItem="{Binding ContactBook.SelectedContact, Mode=TwoWay}"
                                       SelectionChanged="ContactList_SelectionChanged"
-                                      SelectionMode="Extended">
+                                      SelectionMode="Extended"
+                                      ItemContainerStyle="{StaticResource ModernListItemStyle}">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <Grid ColumnDefinitions="Auto,*" Padding="4,8" ColumnSpacing="12">

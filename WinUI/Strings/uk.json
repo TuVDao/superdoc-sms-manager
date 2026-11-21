@@ -31,6 +31,7 @@
   "StatusPending": "У черзі",
   "StatusSending": "Надсилання",
   "StatusSent": "Надіслано",
+  "StatusDelivered": "Доставлено",
   "StatusFailed": "Помилка",
   "AddContact": "+ Додати контакт",
   "ContactInfo": "Дані контакту",

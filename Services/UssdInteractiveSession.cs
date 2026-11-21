@@ -52,6 +52,26 @@ public sealed class UssdInteractiveSession : IDisposable
             var reply = await _session.SendMessageAndGetReplyAsync(new UssdMessage(trimmed));
             var text = reply.Message?.PayloadAsText?.Trim() ?? string.Empty;
 
+            // If another local client had the modem locked, wait briefly and retry once
+            if (reply.ResultCode == UssdResultCode.OtherLocalClient && text.Length == 0)
+            {
+                _logger?.LogInformation("USSD turn returned OtherLocalClient; resetting session and retrying in 600ms...");
+                Close();
+                await Task.Delay(600);
+
+                try
+                {
+                    _session = UssdSession.CreateFromNetworkAccountId(_currentNetworkAccountId);
+                    reply = await _session.SendMessageAndGetReplyAsync(new UssdMessage(trimmed));
+                    text = reply.Message?.PayloadAsText?.Trim() ?? string.Empty;
+                    _logger?.LogInformation("USSD retry returned {ResultCode}, {Length} chars.", reply.ResultCode, text.Length);
+                }
+                catch (Exception retryEx)
+                {
+                    _logger?.LogWarning(retryEx, "USSD retry attempt failed.");
+                }
+            }
+
             _logger?.LogInformation(
                 "USSD turn '{Input}' returned code {ResultCode}, {Length} chars.",
                 trimmed, reply.ResultCode, text.Length);
