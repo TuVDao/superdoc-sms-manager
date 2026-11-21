@@ -35,6 +35,9 @@ public sealed partial class MainWindow : Window
 
         try
         {
+            ExtendsContentIntoTitleBar = true;
+            SetTitleBar(AppTitleBar);
+
             // Owned by App; this window borrows it and must not dispose it.
             _loggerFactory = (Application.Current as App)?.LoggerFactory ?? NullLoggerFactory.Instance;
             _logger = _loggerFactory.CreateLogger<MainWindow>();
@@ -217,32 +220,17 @@ public sealed partial class MainWindow : Window
             DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int));
             DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ref darkMode, sizeof(int));
 
-            // Windows 11 DWM caption color (0x00202020: 0x00BBGGRR)
-            int darkCaptionColor = 0x00202020;
-            DwmSetWindowAttribute(hwnd, DWMWA_CAPTION_COLOR, ref darkCaptionColor, sizeof(int));
-            int lightTextColor = 0x00FFFFFF;
-            DwmSetWindowAttribute(hwnd, DWMWA_TEXT_COLOR, ref lightTextColor, sizeof(int));
-
             if (AppWindowTitleBar.IsCustomizationSupported())
             {
                 var titleBar = AppWindow.TitleBar;
-                var darkBg = Windows.UI.Color.FromArgb(255, 32, 32, 32);
-                var lightText = Microsoft.UI.Colors.White;
-                var dimText = Windows.UI.Color.FromArgb(255, 170, 170, 170);
-
-                titleBar.BackgroundColor = darkBg;
-                titleBar.ForegroundColor = lightText;
-                titleBar.InactiveBackgroundColor = darkBg;
-                titleBar.InactiveForegroundColor = dimText;
-
-                titleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
-                titleBar.ButtonForegroundColor = lightText;
-                titleBar.ButtonHoverBackgroundColor = Windows.UI.Color.FromArgb(255, 48, 48, 48);
-                titleBar.ButtonHoverForegroundColor = lightText;
-                titleBar.ButtonPressedBackgroundColor = Windows.UI.Color.FromArgb(255, 64, 64, 64);
-                titleBar.ButtonPressedForegroundColor = lightText;
-                titleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
-                titleBar.ButtonInactiveForegroundColor = dimText;
+                titleBar.ButtonBackgroundColor = Colors.Transparent;
+                titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+                titleBar.ButtonForegroundColor = Colors.White;
+                titleBar.ButtonHoverBackgroundColor = Color.FromArgb(40, 255, 255, 255);
+                titleBar.ButtonHoverForegroundColor = Colors.White;
+                titleBar.ButtonPressedBackgroundColor = Color.FromArgb(70, 255, 255, 255);
+                titleBar.ButtonPressedForegroundColor = Colors.White;
+                titleBar.ButtonInactiveForegroundColor = Color.FromArgb(160, 255, 255, 255);
             }
         }
         catch (Exception ex)

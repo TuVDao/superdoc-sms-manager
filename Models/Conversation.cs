@@ -49,7 +49,7 @@ public sealed class Conversation : INotifyPropertyChanged
 
     public bool HasContact => Contact is not null;
 
-    /// <summary>Contact initials or phone icon for avatar badge.</summary>
+    /// <summary>Contact initials or empty for avatar badge.</summary>
     public string Initials
     {
         get
@@ -71,9 +71,11 @@ public sealed class Conversation : INotifyPropertyChanged
                 return char.ToUpperInvariant(text[0]).ToString();
             }
 
-            return "\uE717";
+            return string.Empty;
         }
     }
+
+    public bool HasInitials => !string.IsNullOrEmpty(Initials);
 
     public string LastMessagePreview
     {

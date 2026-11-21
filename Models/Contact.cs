@@ -115,7 +115,7 @@ public sealed class Contact : INotifyPropertyChanged
         }
     }
 
-    /// <summary>Two-letter avatar initials or single letter / glyph.</summary>
+    /// <summary>Two-letter avatar initials or single letter.</summary>
     public string Initials
     {
         get
@@ -123,7 +123,7 @@ public sealed class Contact : INotifyPropertyChanged
             var text = DisplayName.Trim();
             if (string.IsNullOrEmpty(text))
             {
-                return "\uE77B";
+                return string.Empty;
             }
 
             if (char.IsLetter(text[0]))
@@ -137,9 +137,11 @@ public sealed class Contact : INotifyPropertyChanged
                 return char.ToUpperInvariant(text[0]).ToString();
             }
 
-            return "\uE77B";
+            return string.Empty;
         }
     }
+
+    public bool HasInitials => !string.IsNullOrEmpty(Initials);
 
     public Contact Clone() => new()
     {
