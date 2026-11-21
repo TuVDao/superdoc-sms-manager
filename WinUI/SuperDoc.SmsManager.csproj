@@ -18,7 +18,8 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <WindowsPackageType>None</WindowsPackageType>
     <Platforms>x64;ARM64</Platforms>
-    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifiers Condition="'$(Platform)' == 'ARM64'">win-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifiers Condition="'$(Platform)' != 'ARM64'">win-x64</RuntimeIdentifiers>
     <PlatformTarget>$(Platform)</PlatformTarget>
     <UseXamlCompilerExecutable>true</UseXamlCompilerExecutable>
     <!-- Gives the executable itself an icon in Explorer, the taskbar and Alt+Tab. The MSIX
