@@ -51,6 +51,21 @@ public sealed class ContactsViewModel : INotifyPropertyChanged
 
     public bool HasSelectedContacts => SelectedContactCount > 0;
 
+    private bool _isSelectionMode;
+    public bool IsSelectionMode
+    {
+        get => _isSelectionMode;
+        set
+        {
+            if (SetField(ref _isSelectionMode, value))
+            {
+                OnPropertyChanged(nameof(ShowDeleteBar));
+            }
+        }
+    }
+
+    public bool ShowDeleteBar => (IsSelectionMode && HasSelectedContacts) || SelectedContactCount > 1;
+
     public string DeleteContactsLabel => SelectedContactCount == 1 ? "Delete 1 contact" : $"Delete {SelectedContactCount} contacts";
 
     public AsyncCommand DeleteSelectedContactsCommand { get; }
@@ -67,6 +82,7 @@ public sealed class ContactsViewModel : INotifyPropertyChanged
         }
         OnPropertyChanged(nameof(SelectedContactCount));
         OnPropertyChanged(nameof(HasSelectedContacts));
+        OnPropertyChanged(nameof(ShowDeleteBar));
         OnPropertyChanged(nameof(DeleteContactsLabel));
         DeleteSelectedContactsCommand.RaiseCanExecuteChanged();
     }
@@ -98,8 +114,11 @@ public sealed class ContactsViewModel : INotifyPropertyChanged
             });
 
             _selectedContactIds.Clear();
+            _isSelectionMode = false;
+            OnPropertyChanged(nameof(IsSelectionMode));
             OnPropertyChanged(nameof(SelectedContactCount));
             OnPropertyChanged(nameof(HasSelectedContacts));
+            OnPropertyChanged(nameof(ShowDeleteBar));
             OnPropertyChanged(nameof(DeleteContactsLabel));
             DeleteSelectedContactsCommand.RaiseCanExecuteChanged();
 

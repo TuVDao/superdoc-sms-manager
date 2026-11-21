@@ -123,6 +123,21 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
 
     public bool HasMultipleSelectedConversations => SelectedConversationCount > 1;
 
+    private bool _isSelectionMode;
+    public bool IsSelectionMode
+    {
+        get => _isSelectionMode;
+        set
+        {
+            if (SetField(ref _isSelectionMode, value))
+            {
+                OnPropertyChanged(nameof(ShowDeleteBar));
+            }
+        }
+    }
+
+    public bool ShowDeleteBar => (IsSelectionMode && HasSelectedConversations) || HasMultipleSelectedConversations;
+
     public string DeleteMessagesLabel => _loc.DeleteNMessages(SelectedMessageCount);
 
     public string DeleteConversationsLabel => _loc.DeleteNConversations(SelectedConversationCount);
@@ -259,6 +274,7 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(SelectedConversationCount));
         OnPropertyChanged(nameof(HasSelectedConversations));
         OnPropertyChanged(nameof(HasMultipleSelectedConversations));
+        OnPropertyChanged(nameof(ShowDeleteBar));
         OnPropertyChanged(nameof(DeleteConversationsLabel));
         DeleteSelectedConversationsCommand.RaiseCanExecuteChanged();
     }
@@ -393,6 +409,7 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
         try
         {
             var deleted = await Task.Run(() => _smsManager.DeleteConversations(keys));
+            IsSelectionMode = false;
             SetSelectedConversations([]);
 
             if (SelectedConversation is not null && keys.Contains(SelectedConversation.PeerKey))

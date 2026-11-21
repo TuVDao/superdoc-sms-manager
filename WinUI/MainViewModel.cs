@@ -410,7 +410,15 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     }
 
     /// <summary>Runs on a modem callback thread, so the refresh marshals itself to the UI thread.</summary>
-    private void OnSmsReceived(object? sender, SmsMessage message) => _ = RefreshAsync();
+    private void OnSmsReceived(object? sender, SmsMessage message)
+    {
+        _ = RefreshAsync();
+        if (!string.IsNullOrEmpty(BalanceNotice) && BalanceNotice.Contains("USSD request sent"))
+        {
+            var senderName = string.IsNullOrWhiteSpace(message.From) ? "Carrier" : message.From;
+            RunOnUi(() => BalanceNotice = $"{senderName}: {message.Body}");
+        }
+    }
 
     private void OnReceiveStateChanged(object? sender, EventArgs e) => _ = LoadDeviceStatusAsync();
 

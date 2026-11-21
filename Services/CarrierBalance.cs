@@ -179,9 +179,9 @@ public sealed class CarrierBalance(ILogger? logger = null)
             var text = reply.Message?.PayloadAsText?.Trim() ?? string.Empty;
             if (text.Length == 0)
             {
-                if (reply.ResultCode is UssdResultCode.NoActionRequired or UssdResultCode.ActionRequired)
+                if (reply.ResultCode is UssdResultCode.NoActionRequired or UssdResultCode.ActionRequired or UssdResultCode.OtherLocalClient)
                 {
-                    return CarrierBalanceResult.Ok("USSD request sent. The carrier will display your balance or send a summary message via SMS shortly.");
+                    return CarrierBalanceResult.Ok($"USSD request sent ({code.Trim()}). The carrier processed the request and will deliver your balance via SMS shortly.");
                 }
 
                 return CarrierBalanceResult.Failed($"The network replied with no text ({reply.ResultCode}).");

@@ -399,10 +399,85 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private void RootGrid_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.Escape)
+        {
+            var handled = false;
+
+            if (ThreadList.SelectionMode == ListViewSelectionMode.Multiple || (_viewModel?.Conversations.HasSelectedMessages ?? false))
+            {
+                ExitMessageSelection();
+                handled = true;
+            }
+
+            if (ContactList.SelectionMode == ListViewSelectionMode.Multiple || (_viewModel?.ContactBook.ShowDeleteBar ?? false))
+            {
+                ExitContactSelection();
+                handled = true;
+            }
+
+            if (ConversationList.SelectionMode == ListViewSelectionMode.Multiple || (_viewModel?.Conversations.ShowDeleteBar ?? false))
+            {
+                ExitConversationSelection();
+                handled = true;
+            }
+
+            if (handled)
+            {
+                e.Handled = true;
+            }
+        }
+    }
+
+    private void ExitConversationSelection()
+    {
+        if (_viewModel is not null)
+        {
+            _viewModel.Conversations.IsSelectionMode = false;
+        }
+        ConversationList.SelectionMode = ListViewSelectionMode.Single;
+        var current = _viewModel?.Conversations.SelectedConversation;
+        ConversationList.SelectedItems.Clear();
+        if (current is not null)
+        {
+            ConversationList.SelectedItem = current;
+        }
+        _viewModel?.Conversations.SetSelectedConversations(current is not null ? [current] : []);
+    }
+
+    private void ExitContactSelection()
+    {
+        if (_viewModel is not null)
+        {
+            _viewModel.ContactBook.IsSelectionMode = false;
+        }
+        ContactList.SelectionMode = ListViewSelectionMode.Single;
+        var current = _viewModel?.ContactBook.SelectedContact;
+        ContactList.SelectedItems.Clear();
+        if (current is not null)
+        {
+            ContactList.SelectedItem = current;
+        }
+        _viewModel?.ContactBook.SetSelectedContacts(current is not null ? [current] : []);
+    }
+
+    private void ExitMessageSelection()
+    {
+        ThreadList.SelectionMode = ListViewSelectionMode.Single;
+        ThreadList.SelectedItems.Clear();
+        _viewModel?.Conversations.SetSelectedMessages([]);
+    }
+
+    private void CancelConversationSelection_Click(object sender, RoutedEventArgs e) => ExitConversationSelection();
+    private void CancelContactSelection_Click(object sender, RoutedEventArgs e) => ExitContactSelection();
+    private void CancelMessageSelection_Click(object sender, RoutedEventArgs e) => ExitMessageSelection();
+
     private void SelectMessageContext_Click(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement { DataContext: SmsMessage msg })
         {
+            ThreadList.SelectionMode = ListViewSelectionMode.Multiple;
             if (ThreadList.SelectedItems.Contains(msg))
             {
                 ThreadList.SelectedItems.Remove(msg);
@@ -490,8 +565,10 @@ public sealed partial class MainWindow : Window
 
     private void SelectConversationContext_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement { DataContext: Conversation conv })
+        if (sender is FrameworkElement { DataContext: Conversation conv } && _viewModel is not null)
         {
+            _viewModel.Conversations.IsSelectionMode = true;
+            ConversationList.SelectionMode = ListViewSelectionMode.Multiple;
             if (ConversationList.SelectedItems.Contains(conv))
             {
                 ConversationList.SelectedItems.Remove(conv);
@@ -513,8 +590,10 @@ public sealed partial class MainWindow : Window
 
     private void SelectContactContext_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement { DataContext: Contact contact })
+        if (sender is FrameworkElement { DataContext: Contact contact } && _viewModel is not null)
         {
+            _viewModel.ContactBook.IsSelectionMode = true;
+            ContactList.SelectionMode = ListViewSelectionMode.Multiple;
             if (ContactList.SelectedItems.Contains(contact))
             {
                 ContactList.SelectedItems.Remove(contact);
@@ -968,10 +1047,33 @@ public sealed partial class MainWindow : Window
             }
         };
 
-        var showTask = dialog.ShowAsync();
-        await ExecuteTurnAsync(code);
-        await showTask;
-        session.Dispose();
+        void OnIncomingSms(object? sender, SmsMessage sms)
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                progressRing.IsActive = false;
+                progressRing.Visibility = Visibility.Collapsed;
+                var senderName = string.IsNullOrWhiteSpace(sms.From) ? "Carrier" : sms.From;
+                messageBlock.Text = $"{messageBlock.Text}\n\n📨 Carrier response from {senderName}:\n{sms.Body}";
+                if (dialog.CloseButtonText == "Cancel")
+                {
+                    dialog.CloseButtonText = "Done";
+                }
+            });
+        }
+
+        _smsManager.MessageReceived += OnIncomingSms;
+        try
+        {
+            var showTask = dialog.ShowAsync();
+            await ExecuteTurnAsync(code);
+            await showTask;
+        }
+        finally
+        {
+            _smsManager.MessageReceived -= OnIncomingSms;
+            session.Dispose();
+        }
     }
 
     private async Task<bool> ConfirmDestructiveAsync(string title, string message)

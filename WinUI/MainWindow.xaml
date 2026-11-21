@@ -15,7 +15,8 @@
     <Grid x:Name="RootGrid"
           Background="Transparent"
           RowDefinitions="44,*"
-          Padding="0">
+          Padding="0"
+          PreviewKeyDown="RootGrid_PreviewKeyDown">
 
         <!-- ==================== ROW 0: APP TITLE BAR (Full Width, Draggable) ==================== -->
         <!-- Extends across full window width; leaves 135px on right for native Windows caption buttons -->
@@ -99,10 +100,11 @@
                         BorderThickness="0"
                         Margin="0,0,0,6"
                         Padding="0">
-                    <Grid HorizontalAlignment="Stretch" Height="36">
+                    <Grid ColumnDefinitions="40,*" Height="36">
                         <FontIcon Glyph="&#xE700;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16"
-                                  HorizontalAlignment="Left" VerticalAlignment="Center" Margin="12,0,0,0" />
-                        <TextBlock Margin="44,0,8,0" Text="Menu" FontWeight="SemiBold" VerticalAlignment="Center" Visibility="{Binding Ui.NavLabelsVisibility}" />
+                                  Width="16" Height="16"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Margin="4,0,8,0" Text="Menu" FontWeight="SemiBold" VerticalAlignment="Center" Visibility="{Binding Ui.NavLabelsVisibility}" />
                     </Grid>
                 </Button>
 
@@ -118,15 +120,16 @@
                         Foreground="{Binding IsMessagesView, Converter={StaticResource BoolToNavForeground}}"
                         BorderThickness="0"
                         Padding="0">
-                    <Grid HorizontalAlignment="Stretch" Height="36">
+                    <Grid ColumnDefinitions="40,*" Height="36">
                         <Border Width="3" Height="16" CornerRadius="1.5"
                                 Background="{ThemeResource AccentFillColorDefaultBrush}"
                                 VerticalAlignment="Center"
                                 HorizontalAlignment="Left"
                                 Visibility="{Binding IsMessagesView, Converter={StaticResource BoolToVisibility}}" />
                         <FontIcon Glyph="&#xE8BD;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16"
-                                  HorizontalAlignment="Left" VerticalAlignment="Center" Margin="12,0,0,0" />
-                        <TextBlock Margin="44,0,8,0" Text="{Binding Loc.Messages}" FontWeight="Medium" VerticalAlignment="Center" Visibility="{Binding Ui.NavLabelsVisibility}" TextTrimming="CharacterEllipsis" />
+                                  Width="16" Height="16"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Margin="4,0,8,0" Text="{Binding Loc.Messages}" FontWeight="Medium" VerticalAlignment="Center" Visibility="{Binding Ui.NavLabelsVisibility}" TextTrimming="CharacterEllipsis" />
                     </Grid>
                 </Button>
 
@@ -142,15 +145,16 @@
                         Foreground="{Binding IsContactsView, Converter={StaticResource BoolToNavForeground}}"
                         BorderThickness="0"
                         Padding="0">
-                    <Grid HorizontalAlignment="Stretch" Height="36">
+                    <Grid ColumnDefinitions="40,*" Height="36">
                         <Border Width="3" Height="16" CornerRadius="1.5"
                                 Background="{ThemeResource AccentFillColorDefaultBrush}"
                                 VerticalAlignment="Center"
                                 HorizontalAlignment="Left"
                                 Visibility="{Binding IsContactsView, Converter={StaticResource BoolToVisibility}}" />
-                        <FontIcon Glyph="&#xE779;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16"
-                                  HorizontalAlignment="Left" VerticalAlignment="Center" Margin="12,0,0,0" />
-                        <TextBlock Margin="44,0,8,0" Text="{Binding Loc.Contacts}" FontWeight="Medium" VerticalAlignment="Center" Visibility="{Binding Ui.NavLabelsVisibility}" TextTrimming="CharacterEllipsis" />
+                        <FontIcon Glyph="&#xE77B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16"
+                                  Width="16" Height="16"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Margin="4,0,8,0" Text="{Binding Loc.Contacts}" FontWeight="Medium" VerticalAlignment="Center" Visibility="{Binding Ui.NavLabelsVisibility}" TextTrimming="CharacterEllipsis" />
                     </Grid>
                 </Button>
 
@@ -166,15 +170,16 @@
                         Foreground="{Binding IsSettingsView, Converter={StaticResource BoolToNavForeground}}"
                         BorderThickness="0"
                         Padding="0">
-                    <Grid HorizontalAlignment="Stretch" Height="36">
+                    <Grid ColumnDefinitions="40,*" Height="36">
                         <Border Width="3" Height="16" CornerRadius="1.5"
                                 Background="{ThemeResource AccentFillColorDefaultBrush}"
                                 VerticalAlignment="Center"
                                 HorizontalAlignment="Left"
                                 Visibility="{Binding IsSettingsView, Converter={StaticResource BoolToVisibility}}" />
                         <FontIcon Glyph="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16"
-                                  HorizontalAlignment="Left" VerticalAlignment="Center" Margin="12,0,0,0" />
-                        <TextBlock Margin="44,0,8,0" Text="{Binding Loc.Settings}" FontWeight="Medium" VerticalAlignment="Center" Visibility="{Binding Ui.NavLabelsVisibility}" TextTrimming="CharacterEllipsis" />
+                                  Width="16" Height="16"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Margin="4,0,8,0" Text="{Binding Loc.Settings}" FontWeight="Medium" VerticalAlignment="Center" Visibility="{Binding Ui.NavLabelsVisibility}" TextTrimming="CharacterEllipsis" />
                     </Grid>
                 </Button>
             </Grid>
@@ -291,17 +296,28 @@
                                           IsHitTestVisible="False" />
                             </Grid>
 
-                            <!-- Bulk delete button (appears only when multiple conversations are selected) -->
-                            <Button Grid.Row="2"
-                                    HorizontalAlignment="Stretch"
-                                    CornerRadius="8"
-                                    Command="{Binding Conversations.DeleteSelectedConversationsCommand}"
-                                    Visibility="{Binding Conversations.HasMultipleSelectedConversations, Converter={StaticResource BoolToVisibility}}">
-                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                    <FontIcon Glyph="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" Foreground="#FF6B6B" />
-                                    <TextBlock Text="{Binding Conversations.DeleteConversationsLabel}" />
-                                </StackPanel>
-                            </Button>
+                            <!-- Bulk delete bar (appears when in selection mode or multiple conversations selected) -->
+                            <Grid Grid.Row="2"
+                                  ColumnDefinitions="*,Auto"
+                                  ColumnSpacing="6"
+                                  Margin="0,0,0,6"
+                                  Visibility="{Binding Conversations.ShowDeleteBar, Converter={StaticResource BoolToVisibility}}">
+                                <Button HorizontalAlignment="Stretch"
+                                        CornerRadius="8"
+                                        Command="{Binding Conversations.DeleteSelectedConversationsCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                        <FontIcon Glyph="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" Foreground="#FF6B6B" />
+                                        <TextBlock Text="{Binding Conversations.DeleteConversationsLabel}" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="1"
+                                        Click="CancelConversationSelection_Click"
+                                        ToolTipService.ToolTip="Cancel selection (Esc)"
+                                        CornerRadius="8"
+                                        Padding="8,6">
+                                    <TextBlock Text="Cancel (Esc)" FontSize="12" />
+                                </Button>
+                            </Grid>
 
                             <!-- Thread list with Right-Click Context Menu -->
                             <ListView x:Name="ConversationList"
@@ -550,6 +566,12 @@
                                                 <FontIcon Glyph="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" Foreground="#FF6B6B" />
                                                 <TextBlock Text="{Binding Conversations.DeleteMessagesLabel}" />
                                             </StackPanel>
+                                        </Button>
+                                        <Button Click="CancelMessageSelection_Click"
+                                                CornerRadius="6"
+                                                ToolTipService.ToolTip="Cancel selection (Esc)"
+                                                Visibility="{Binding Conversations.HasSelectedMessages, Converter={StaticResource BoolToVisibility}}">
+                                            <TextBlock Text="Cancel (Esc)" FontSize="12" />
                                         </Button>
                                         <Button Command="{Binding AddContactForPeerCommand}"
                                                 CornerRadius="6">
@@ -895,17 +917,28 @@
                                 </Button>
                             </Grid>
 
-                            <!-- Bulk delete contacts button -->
-                            <Button Grid.Row="1"
-                                    HorizontalAlignment="Stretch"
-                                    CornerRadius="8"
-                                    Command="{Binding ContactBook.DeleteSelectedContactsCommand}"
-                                    Visibility="{Binding ContactBook.HasSelectedContacts, Converter={StaticResource BoolToVisibility}}">
-                                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                                    <FontIcon Glyph="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" Foreground="#FF6B6B" />
-                                    <TextBlock Text="{Binding ContactBook.DeleteContactsLabel}" />
-                                </StackPanel>
-                            </Button>
+                            <!-- Bulk delete bar (appears when in selection mode or multiple contacts selected) -->
+                            <Grid Grid.Row="1"
+                                  ColumnDefinitions="*,Auto"
+                                  ColumnSpacing="6"
+                                  Margin="0,0,0,6"
+                                  Visibility="{Binding ContactBook.ShowDeleteBar, Converter={StaticResource BoolToVisibility}}">
+                                <Button HorizontalAlignment="Stretch"
+                                        CornerRadius="8"
+                                        Command="{Binding ContactBook.DeleteSelectedContactsCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                        <FontIcon Glyph="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" Foreground="#FF6B6B" />
+                                        <TextBlock Text="{Binding ContactBook.DeleteContactsLabel}" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="1"
+                                        Click="CancelContactSelection_Click"
+                                        ToolTipService.ToolTip="Cancel selection (Esc)"
+                                        CornerRadius="8"
+                                        Padding="8,6">
+                                    <TextBlock Text="Cancel (Esc)" FontSize="12" />
+                                </Button>
+                            </Grid>
 
                             <!-- Contact list with Context Menu & Multi-selection -->
                             <ListView x:Name="ContactList"

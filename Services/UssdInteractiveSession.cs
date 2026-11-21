@@ -67,9 +67,9 @@ public sealed class UssdInteractiveSession : IDisposable
 
             if (text.Length == 0)
             {
-                if (reply.ResultCode == UssdResultCode.NoActionRequired)
+                if (reply.ResultCode is UssdResultCode.NoActionRequired or UssdResultCode.OtherLocalClient)
                 {
-                    text = "USSD request completed. The carrier will display your balance or send a summary message via SMS shortly.";
+                    text = $"USSD request sent ({trimmed}). The carrier processed the request and will deliver your balance or package details via SMS shortly.";
                 }
                 else
                 {
