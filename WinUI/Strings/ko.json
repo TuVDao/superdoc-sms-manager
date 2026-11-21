@@ -5,7 +5,6 @@
     "rtl": false,
     "reviewed": false
   },
-
   "Messages": "메시지",
   "Contacts": "연락처",
   "FontSizeTooltip": "글자 크기",
@@ -13,7 +12,6 @@
   "ShowList": "목록 표시",
   "HideList": "목록 숨기기",
   "CheckingModem": "모뎀을 확인하는 중…",
-
   "NewMessage": "+ 새 메시지",
   "SearchPlaceholder": "이름 또는 번호 검색…",
   "SaveToContacts": "연락처에 저장",
@@ -30,12 +28,10 @@
   "ComposerSizerTooltip": "위로 드래그하여 입력창 확대",
   "NoRecipient": "받는 사람 번호가 없습니다.",
   "EmojiTooltip": "이모지 삽입",
-
   "StatusPending": "대기 중",
   "StatusSending": "보내는 중",
   "StatusSent": "보냄",
   "StatusFailed": "실패",
-
   "AddContact": "+ 연락처 추가",
   "ContactInfo": "연락처 정보",
   "ContactTitle": "호칭",
@@ -55,16 +51,13 @@
   "Cancel": "취소",
   "ContactNeedsPhone": "전화번호가 필요합니다.",
   "ContactDeleted": "연락처를 삭제했습니다.",
-
   "TrayOpen": "SUPERDOC SMS Manager 열기",
   "TrayTestNotification": "테스트 알림 보내기",
   "TrayExit": "종료",
   "TestNotificationBody": "테스트 알림 — 이 내용이 보이면 알림이 정상 작동 중입니다.",
   "UnknownNumber": "알 수 없는 번호",
-
   "DeleteMessagesTitle": "메시지 삭제",
   "DeleteConversationsTitle": "대화 삭제",
-
   "DeleteNMessages": "메시지 {0}개 삭제",
   "DeleteNConversations": "대화 {0}개 삭제",
   "ConfirmDeleteMessages": "선택한 메시지 {0}개를 영구히 삭제할까요? 되돌릴 수 없습니다.",
@@ -88,24 +81,35 @@
   "SendOnly": " - 보내기 전용: {0}",
   "ModemUnavailable": "모뎀을 사용할 수 없습니다: {0}",
   "ModemStatusFailed": "모뎀 상태를 읽지 못했습니다: {0}",
-
   "ComposerCounter": "{0}자 · {1}개 분할 · {2}",
   "EncodingGsm": "GSM-7",
   "EncodingUnicode": "Unicode",
   "UnicodeWarning": "이모지나 악센트 문자가 포함된 메시지는 분할당 160자가 아닌 70자만 담을 수 있으며, 추가 분할마다 별도로 요금이 부과됩니다.",
-
   "FontSmall": "작게",
   "FontMedium": "보통",
   "FontLarge": "크게",
   "FontXLarge": "아주 크게",
   "FontXXLarge": "최대",
-
   "LanguageAuto": "자동",
-
   "CheckBalance": "잔액 확인",
   "BalanceCodeLabel": "USSD 코드",
   "BalanceChecking": "통신사에 문의하는 중…",
   "BalanceFailed": "잔액을 읽을 수 없습니다: {0}",
   "BalanceNoCode": "통신사의 잔액 조회 코드를 입력하세요. 예: *101#",
-  "SendRefusedHint": "통신사가 이유를 밝히지 않고 메시지를 거부했습니다. 가장 흔한 원인은 선불 잔액 소진입니다. 수신은 무료이므로 받는 것은 정상적으로 계속됩니다."
+  "SendRefusedHint": "통신사가 이유를 밝히지 않고 메시지를 거부했습니다. 가장 흔한 원인은 선불 잔액 소진입니다. 수신은 무료이므로 받는 것은 정상적으로 계속됩니다.",
+  "Appearance": "모양",
+  "CancelPending": "전송 취소",
+  "Copy": "메시지 복사",
+  "EditPending": "메시지 편집",
+  "FixSimHotplug": "⚡ 핫플러그 SIM 수정 / 하드웨어 재설정",
+  "FixSimTooltip": "관리자 권한으로 Intel XMM LTE 모뎀 드라이버 및 WWAN 서비스를 다시 시작합니다",
+  "Language": "언어",
+  "MessageCopied": "메시지가 클립보드에 복사되었습니다",
+  "ModemResetConfirmMessage": "관리자 권한을 사용하여 내부 셀룰러 LTE 모뎀 및 네트워크 서비스를 다시 시작합니다. 재설정 중 네트워크 연결이 일시적으로 끊어질 수 있습니다. 계속하시겠습니까?",
+  "ModemResetConfirmTitle": "셀룰러 모뎀 하드웨어를 재설정하시겠습니까?",
+  "ModemStatus": "셀룰러 모뎀",
+  "RecheckModem": "모뎀 및 SIM 다시 확인",
+  "SelectText": "텍스트 선택",
+  "Settings": "설정",
+  "TextSize": "글자 크기"
 }

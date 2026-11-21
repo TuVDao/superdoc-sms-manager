@@ -5,7 +5,6 @@
     "rtl": false,
     "reviewed": false
   },
-
   "Messages": "メッセージ",
   "Contacts": "連絡先",
   "FontSizeTooltip": "文字サイズ",
@@ -13,7 +12,6 @@
   "ShowList": "一覧を表示",
   "HideList": "一覧を隠す",
   "CheckingModem": "モデムを確認しています…",
-
   "NewMessage": "+ 新規メッセージ",
   "SearchPlaceholder": "名前または番号で検索…",
   "SaveToContacts": "連絡先に保存",
@@ -30,12 +28,10 @@
   "ComposerSizerTooltip": "上にドラッグして入力欄を広げる",
   "NoRecipient": "宛先番号が入力されていません。",
   "EmojiTooltip": "絵文字を挿入",
-
   "StatusPending": "待機中",
   "StatusSending": "送信中",
   "StatusSent": "送信済み",
   "StatusFailed": "送信失敗",
-
   "AddContact": "+ 連絡先を追加",
   "ContactInfo": "連絡先の詳細",
   "ContactTitle": "敬称",
@@ -55,16 +51,13 @@
   "Cancel": "キャンセル",
   "ContactNeedsPhone": "電話番号が必要です。",
   "ContactDeleted": "連絡先を削除しました。",
-
   "TrayOpen": "SUPERDOC SMS Manager を開く",
   "TrayTestNotification": "テスト通知を送信",
   "TrayExit": "終了",
   "TestNotificationBody": "テスト通知 — これが表示されていれば通知は正常に動作しています。",
   "UnknownNumber": "不明な番号",
-
   "DeleteMessagesTitle": "メッセージを削除",
   "DeleteConversationsTitle": "会話を削除",
-
   "DeleteNMessages": "{0} 件のメッセージを削除",
   "DeleteNConversations": "{0} 件の会話を削除",
   "ConfirmDeleteMessages": "選択した {0} 件のメッセージを完全に削除しますか？元に戻せません。",
@@ -88,24 +81,35 @@
   "SendOnly": " - 送信のみ: {0}",
   "ModemUnavailable": "モデムを利用できません: {0}",
   "ModemStatusFailed": "モデムの状態を取得できませんでした: {0}",
-
   "ComposerCounter": "{0} 文字 · {1} セグメント · {2}",
   "EncodingGsm": "GSM-7",
   "EncodingUnicode": "Unicode",
   "UnicodeWarning": "絵文字やアクセント付き文字を含むメッセージは 1 セグメントあたり 160 文字ではなく 70 文字までです。追加のセグメントは別途課金されます。",
-
   "FontSmall": "小",
   "FontMedium": "中",
   "FontLarge": "大",
   "FontXLarge": "特大",
   "FontXXLarge": "最大",
-
   "LanguageAuto": "自動",
-
   "CheckBalance": "残高を確認",
   "BalanceCodeLabel": "USSD コード",
   "BalanceChecking": "通信事業者に問い合わせ中…",
   "BalanceFailed": "残高を取得できませんでした: {0}",
   "BalanceNoCode": "残高照会に使う通信事業者のコードを入力してください（例: *101#）。",
-  "SendRefusedHint": "通信事業者が理由を示さずに送信を拒否しました。最も多い原因はプリペイド残高切れです。受信は無料のため、着信は通常どおり届きます。"
+  "SendRefusedHint": "通信事業者が理由を示さずに送信を拒否しました。最も多い原因はプリペイド残高切れです。受信は無料のため、着信は通常どおり届きます。",
+  "Appearance": "外観",
+  "CancelPending": "送信をキャンセル",
+  "Copy": "メッセージをコピー",
+  "EditPending": "メッセージを編集",
+  "FixSimHotplug": "⚡ SIMホットプラグの修復 / ハードウェアのリセット",
+  "FixSimTooltip": "管理者権限でIntel XMM LTEモデムドライバとWWANサービスを再起動します",
+  "Language": "言語",
+  "MessageCopied": "メッセージをクリップボードにコピーしました",
+  "ModemResetConfirmMessage": "管理者権限を使用して内蔵LTEモデムとネットワークサービスを再起動します。リセット中にネットワーク接続が一時的に切断される場合があります。続行しますか？",
+  "ModemResetConfirmTitle": "セルラーモデムハードウェアをリセットしますか？",
+  "ModemStatus": "セルラーモデム",
+  "RecheckModem": "モデムとSIMを再確認",
+  "SelectText": "テキストを選択",
+  "Settings": "設定",
+  "TextSize": "文字サイズ"
 }

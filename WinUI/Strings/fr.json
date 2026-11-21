@@ -5,7 +5,6 @@
     "rtl": false,
     "reviewed": false
   },
-
   "Messages": "Messages",
   "Contacts": "Contacts",
   "FontSizeTooltip": "Taille du texte",
@@ -13,7 +12,6 @@
   "ShowList": "Afficher la liste",
   "HideList": "Masquer la liste",
   "CheckingModem": "Vérification du modem…",
-
   "NewMessage": "+ Nouveau message",
   "SearchPlaceholder": "Rechercher un nom ou un numéro…",
   "SaveToContacts": "Enregistrer dans les contacts",
@@ -30,12 +28,10 @@
   "ComposerSizerTooltip": "Faites glisser vers le haut pour agrandir la zone de saisie",
   "NoRecipient": "Aucun numéro de destinataire.",
   "EmojiTooltip": "Insérer un emoji",
-
   "StatusPending": "En attente",
   "StatusSending": "Envoi en cours",
   "StatusSent": "Envoyé",
   "StatusFailed": "Échec",
-
   "AddContact": "+ Ajouter un contact",
   "ContactInfo": "Fiche du contact",
   "ContactTitle": "Civilité",
@@ -55,16 +51,13 @@
   "Cancel": "Annuler",
   "ContactNeedsPhone": "Un numéro de téléphone est requis.",
   "ContactDeleted": "Contact supprimé.",
-
   "TrayOpen": "Ouvrir SUPERDOC SMS Manager",
   "TrayTestNotification": "Envoyer une notification de test",
   "TrayExit": "Quitter",
   "TestNotificationBody": "Notification de test — si vous voyez ceci, les notifications fonctionnent.",
   "UnknownNumber": "Numéro inconnu",
-
   "DeleteMessagesTitle": "Supprimer des messages",
   "DeleteConversationsTitle": "Supprimer des conversations",
-
   "DeleteNMessages": "Supprimer {0} message(s)",
   "DeleteNConversations": "Supprimer {0} conversation(s)",
   "ConfirmDeleteMessages": "Supprimer définitivement les {0} message(s) sélectionné(s) ? Action irréversible.",
@@ -88,24 +81,35 @@
   "SendOnly": " - envoi seulement : {0}",
   "ModemUnavailable": "Modem indisponible : {0}",
   "ModemStatusFailed": "Impossible de lire l'état du modem : {0}",
-
   "ComposerCounter": "{0} caractères · {1} segment(s) · {2}",
   "EncodingGsm": "GSM-7",
   "EncodingUnicode": "Unicode",
   "UnicodeWarning": "Les messages contenant des emojis ou des accents ne tiennent que 70 caractères par segment au lieu de 160, et chaque segment supplémentaire est facturé séparément.",
-
   "FontSmall": "Petit",
   "FontMedium": "Moyen",
   "FontLarge": "Grand",
   "FontXLarge": "Très grand",
   "FontXXLarge": "Énorme",
-
   "LanguageAuto": "Automatique",
-
   "CheckBalance": "Vérifier le solde",
   "BalanceCodeLabel": "Code USSD",
   "BalanceChecking": "Interrogation de l'opérateur…",
   "BalanceFailed": "Impossible de lire le solde : {0}",
   "BalanceNoCode": "Saisissez le code utilisé par votre opérateur pour consulter le solde, par exemple *101#.",
-  "SendRefusedHint": "L'opérateur a refusé le message sans indiquer de raison. La cause habituelle est un solde prépayé épuisé : la réception reste gratuite, les messages entrants continuent donc d'arriver."
+  "SendRefusedHint": "L'opérateur a refusé le message sans indiquer de raison. La cause habituelle est un solde prépayé épuisé : la réception reste gratuite, les messages entrants continuent donc d'arriver.",
+  "Appearance": "Apparence",
+  "CancelPending": "Annuler l'envoi",
+  "Copy": "Copier le message",
+  "EditPending": "Modifier le message",
+  "FixSimHotplug": "⚡ Réparer SIM à chaud / Réinitialiser le matériel",
+  "FixSimTooltip": "Redémarre les pilotes du modem Intel XMM LTE et le service WWAN en tant qu'administrateur",
+  "Language": "Langue",
+  "MessageCopied": "Message copié dans le presse-papiers",
+  "ModemResetConfirmMessage": "Cette opération redémarrera le modem cellulaire LTE interne et les services réseau avec les autorisations d'administrateur. Les connexions réseau peuvent être brièvement interrompues. Voulez-vous continuer ?",
+  "ModemResetConfirmTitle": "Réinitialiser le matériel du modem cellulaire ?",
+  "ModemStatus": "Modem cellulaire",
+  "RecheckModem": "Revérifier le modem et la SIM",
+  "SelectText": "Sélectionner le texte",
+  "Settings": "Paramètres",
+  "TextSize": "Taille du texte"
 }

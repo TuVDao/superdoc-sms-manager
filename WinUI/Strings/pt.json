@@ -5,7 +5,6 @@
     "rtl": false,
     "reviewed": false
   },
-
   "Messages": "Mensagens",
   "Contacts": "Contactos",
   "FontSizeTooltip": "Tamanho do texto",
@@ -13,7 +12,6 @@
   "ShowList": "Mostrar a lista",
   "HideList": "Ocultar a lista",
   "CheckingModem": "A verificar o modem…",
-
   "NewMessage": "+ Nova mensagem",
   "SearchPlaceholder": "Procurar nome ou número…",
   "SaveToContacts": "Guardar nos contactos",
@@ -30,12 +28,10 @@
   "ComposerSizerTooltip": "Arraste para cima para aumentar a caixa de texto",
   "NoRecipient": "Falta o número do destinatário.",
   "EmojiTooltip": "Inserir emoji",
-
   "StatusPending": "Pendente",
   "StatusSending": "A enviar",
   "StatusSent": "Enviada",
   "StatusFailed": "Falhou",
-
   "AddContact": "+ Adicionar contacto",
   "ContactInfo": "Dados do contacto",
   "ContactTitle": "Tratamento",
@@ -55,16 +51,13 @@
   "Cancel": "Cancelar",
   "ContactNeedsPhone": "É necessário um número de telefone.",
   "ContactDeleted": "Contacto eliminado.",
-
   "TrayOpen": "Abrir o SUPERDOC SMS Manager",
   "TrayTestNotification": "Enviar uma notificação de teste",
   "TrayExit": "Sair",
   "TestNotificationBody": "Notificação de teste — se vê isto, as notificações estão a funcionar.",
   "UnknownNumber": "Número desconhecido",
-
   "DeleteMessagesTitle": "Eliminar mensagens",
   "DeleteConversationsTitle": "Eliminar conversas",
-
   "DeleteNMessages": "Eliminar {0} mensagem(ns)",
   "DeleteNConversations": "Eliminar {0} conversa(s)",
   "ConfirmDeleteMessages": "Eliminar definitivamente as {0} mensagens selecionadas? Não é possível anular.",
@@ -88,24 +81,35 @@
   "SendOnly": " - apenas envio: {0}",
   "ModemUnavailable": "Modem indisponível: {0}",
   "ModemStatusFailed": "Não foi possível ler o estado do modem: {0}",
-
   "ComposerCounter": "{0} caracteres · {1} segmento(s) · {2}",
   "EncodingGsm": "GSM-7",
   "EncodingUnicode": "Unicode",
   "UnicodeWarning": "Mensagens com emojis ou acentos só cabem 70 caracteres por segmento em vez de 160, e cada segmento adicional é cobrado separadamente.",
-
   "FontSmall": "Pequeno",
   "FontMedium": "Médio",
   "FontLarge": "Grande",
   "FontXLarge": "Muito grande",
   "FontXXLarge": "Enorme",
-
   "LanguageAuto": "Automático",
-
   "CheckBalance": "Consultar saldo",
   "BalanceCodeLabel": "Código USSD",
   "BalanceChecking": "A consultar a operadora…",
   "BalanceFailed": "Não foi possível ler o saldo: {0}",
   "BalanceNoCode": "Introduza o código que a sua operadora usa para consultar o saldo, por exemplo *101#.",
-  "SendRefusedHint": "A operadora recusou a mensagem sem indicar um motivo. A causa habitual é o saldo pré-pago esgotado: receber continua gratuito, por isso as mensagens recebidas continuam a chegar."
+  "SendRefusedHint": "A operadora recusou a mensagem sem indicar um motivo. A causa habitual é o saldo pré-pago esgotado: receber continua gratuito, por isso as mensagens recebidas continuam a chegar.",
+  "Appearance": "Aparência",
+  "CancelPending": "Cancelar envio",
+  "Copy": "Copiar mensagem",
+  "EditPending": "Editar mensagem",
+  "FixSimHotplug": "⚡ Corrigir SIM hot-plug / Reiniciar hardware",
+  "FixSimTooltip": "Reinicia os drivers do modem Intel XMM LTE e o serviço WWAN como administrador",
+  "Language": "Idioma",
+  "MessageCopied": "Mensagem copiada para a área de transferência",
+  "ModemResetConfirmMessage": "Isto reiniciará o modem LTE celular interno e os serviços de rede com permissões de administrador. As conexões de rede podem ser interrompidas brevemente. Deseja continuar?",
+  "ModemResetConfirmTitle": "Reiniciar hardware do modem celular?",
+  "ModemStatus": "Modem celular",
+  "RecheckModem": "Verificar novamente modem e SIM",
+  "SelectText": "Selecionar texto",
+  "Settings": "Configurações",
+  "TextSize": "Tamanho do texto"
 }

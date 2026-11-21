@@ -1,6 +1,10 @@
 {
-  "_meta": { "name": "Nederlands", "code": "nl", "rtl": false, "reviewed": false },
-
+  "_meta": {
+    "name": "Nederlands",
+    "code": "nl",
+    "rtl": false,
+    "reviewed": false
+  },
   "Messages": "Berichten",
   "Contacts": "Contacten",
   "FontSizeTooltip": "Tekstgrootte",
@@ -8,7 +12,6 @@
   "ShowList": "Lijst tonen",
   "HideList": "Lijst verbergen",
   "CheckingModem": "Modem controleren…",
-
   "NewMessage": "+ Nieuw bericht",
   "SearchPlaceholder": "Zoek op naam of nummer…",
   "SaveToContacts": "Opslaan in contacten",
@@ -25,12 +28,10 @@
   "ComposerSizerTooltip": "Sleep omhoog om het invoerveld te vergroten",
   "NoRecipient": "Geen ontvangernummer.",
   "EmojiTooltip": "Emoji invoegen",
-
   "StatusPending": "In wachtrij",
   "StatusSending": "Wordt verzonden",
   "StatusSent": "Verzonden",
   "StatusFailed": "Mislukt",
-
   "AddContact": "+ Contact toevoegen",
   "ContactInfo": "Contactgegevens",
   "ContactTitle": "Aanhef",
@@ -50,16 +51,13 @@
   "Cancel": "Annuleren",
   "ContactNeedsPhone": "Een telefoonnummer is vereist.",
   "ContactDeleted": "Contact verwijderd.",
-
   "TrayOpen": "SUPERDOC SMS Manager openen",
   "TrayTestNotification": "Testmelding sturen",
   "TrayExit": "Afsluiten",
   "TestNotificationBody": "Testmelding — als u dit ziet, werken meldingen.",
   "UnknownNumber": "Onbekend nummer",
-
   "DeleteMessagesTitle": "Berichten verwijderen",
   "DeleteConversationsTitle": "Gesprekken verwijderen",
-
   "DeleteNMessages": "{0} bericht(en) verwijderen",
   "DeleteNConversations": "{0} gesprek(ken) verwijderen",
   "ConfirmDeleteMessages": "De {0} geselecteerde berichten definitief verwijderen? Dit kan niet ongedaan worden gemaakt.",
@@ -83,24 +81,35 @@
   "SendOnly": " - alleen verzenden: {0}",
   "ModemUnavailable": "Modem niet beschikbaar: {0}",
   "ModemStatusFailed": "Kan de modemstatus niet lezen: {0}",
-
   "ComposerCounter": "{0} tekens · {1} segment(en) · {2}",
   "EncodingGsm": "GSM-7",
   "EncodingUnicode": "Unicode",
   "UnicodeWarning": "Berichten met emoji's of accenttekens bevatten slechts 70 tekens per segment in plaats van 160, en elk extra segment wordt apart in rekening gebracht.",
-
   "FontSmall": "Klein",
   "FontMedium": "Normaal",
   "FontLarge": "Groot",
   "FontXLarge": "Zeer groot",
   "FontXXLarge": "Enorm",
-
   "LanguageAuto": "Automatisch",
-
   "CheckBalance": "Saldo controleren",
   "BalanceCodeLabel": "USSD-code",
   "BalanceChecking": "Provider wordt geraadpleegd…",
   "BalanceFailed": "Kon het saldo niet lezen: {0}",
   "BalanceNoCode": "Voer de code in waarmee uw provider het saldo opvraagt, bijvoorbeeld *101#.",
-  "SendRefusedHint": "De provider heeft het bericht geweigerd zonder reden. Meestal is het prepaidsaldo op: ontvangen blijft gratis, dus inkomende berichten komen gewoon binnen."
+  "SendRefusedHint": "De provider heeft het bericht geweigerd zonder reden. Meestal is het prepaidsaldo op: ontvangen blijft gratis, dus inkomende berichten komen gewoon binnen.",
+  "Appearance": "Weergave",
+  "CancelPending": "Verzenden annuleren",
+  "Copy": "Bericht kopiëren",
+  "EditPending": "Bericht bewerken",
+  "FixSimHotplug": "⚡ Hot-plug-SIM herstellen / Hardware resetten",
+  "FixSimTooltip": "Herstart Intel XMM LTE-modemstuurprogramma's en WWAN-service als administrator",
+  "Language": "Taal",
+  "MessageCopied": "Bericht gekopieerd naar klembord",
+  "ModemResetConfirmMessage": "Hiermee worden het interne LTE-modem en de mobiele netwerkservices opnieuw gestart als administrator. Netwerkverbindingen kunnen kort worden onderbroken. Wilt u doorgaan?",
+  "ModemResetConfirmTitle": "Modemhardware opnieuw instellen?",
+  "ModemStatus": "Mobiele modem",
+  "RecheckModem": "Modem en SIM opnieuw controleren",
+  "SelectText": "Tekst selecteren",
+  "Settings": "Instellingen",
+  "TextSize": "Tekstgrootte"
 }

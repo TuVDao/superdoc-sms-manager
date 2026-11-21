@@ -1,6 +1,10 @@
 {
-  "_meta": { "name": "ไทย", "code": "th", "rtl": false, "reviewed": false },
-
+  "_meta": {
+    "name": "ไทย",
+    "code": "th",
+    "rtl": false,
+    "reviewed": false
+  },
   "Messages": "ข้อความ",
   "Contacts": "รายชื่อติดต่อ",
   "FontSizeTooltip": "ขนาดตัวอักษร",
@@ -8,7 +12,6 @@
   "ShowList": "แสดงรายการ",
   "HideList": "ซ่อนรายการ",
   "CheckingModem": "กำลังตรวจสอบโมเด็ม…",
-
   "NewMessage": "+ ข้อความใหม่",
   "SearchPlaceholder": "ค้นหาชื่อหรือหมายเลข…",
   "SaveToContacts": "บันทึกลงรายชื่อติดต่อ",
@@ -25,12 +28,10 @@
   "ComposerSizerTooltip": "ลากขึ้นเพื่อขยายช่องพิมพ์",
   "NoRecipient": "ยังไม่มีหมายเลขผู้รับ",
   "EmojiTooltip": "แทรกอิโมจิ",
-
   "StatusPending": "รอดำเนินการ",
   "StatusSending": "กำลังส่ง",
   "StatusSent": "ส่งแล้ว",
   "StatusFailed": "ล้มเหลว",
-
   "AddContact": "+ เพิ่มรายชื่อ",
   "ContactInfo": "ข้อมูลผู้ติดต่อ",
   "ContactTitle": "คำนำหน้า",
@@ -50,16 +51,13 @@
   "Cancel": "ยกเลิก",
   "ContactNeedsPhone": "ต้องระบุหมายเลขโทรศัพท์",
   "ContactDeleted": "ลบรายชื่อแล้ว",
-
   "TrayOpen": "เปิด SUPERDOC SMS Manager",
   "TrayTestNotification": "ส่งการแจ้งเตือนทดสอบ",
   "TrayExit": "ออก",
   "TestNotificationBody": "การแจ้งเตือนทดสอบ — ถ้าคุณเห็นข้อความนี้ แสดงว่าการแจ้งเตือนทำงานปกติ",
   "UnknownNumber": "หมายเลขที่ไม่รู้จัก",
-
   "DeleteMessagesTitle": "ลบข้อความ",
   "DeleteConversationsTitle": "ลบการสนทนา",
-
   "DeleteNMessages": "ลบ {0} ข้อความ",
   "DeleteNConversations": "ลบ {0} การสนทนา",
   "ConfirmDeleteMessages": "ลบข้อความที่เลือก {0} รายการอย่างถาวรหรือไม่ การกระทำนี้ย้อนกลับไม่ได้",
@@ -83,24 +81,35 @@
   "SendOnly": " - ส่งได้อย่างเดียว: {0}",
   "ModemUnavailable": "ไม่พบโมเด็ม: {0}",
   "ModemStatusFailed": "อ่านสถานะโมเด็มไม่สำเร็จ: {0}",
-
   "ComposerCounter": "{0} อักขระ · {1} ส่วน · {2}",
   "EncodingGsm": "GSM-7",
   "EncodingUnicode": "Unicode",
   "UnicodeWarning": "ข้อความที่มีอิโมจิหรืออักษรไทยจะบรรจุได้เพียง 70 อักขระต่อส่วน แทนที่จะเป็น 160 และแต่ละส่วนที่เพิ่มขึ้นจะคิดค่าบริการแยกกัน",
-
   "FontSmall": "เล็ก",
   "FontMedium": "กลาง",
   "FontLarge": "ใหญ่",
   "FontXLarge": "ใหญ่มาก",
   "FontXXLarge": "ใหญ่ที่สุด",
-
   "LanguageAuto": "อัตโนมัติ",
-
   "CheckBalance": "ตรวจสอบยอดเงิน",
   "BalanceCodeLabel": "รหัส USSD",
   "BalanceChecking": "กำลังสอบถามผู้ให้บริการ…",
   "BalanceFailed": "อ่านยอดเงินไม่ได้: {0}",
   "BalanceNoCode": "ใส่รหัสที่ผู้ให้บริการของคุณใช้ตรวจสอบยอดเงิน เช่น *101#",
-  "SendRefusedHint": "ผู้ให้บริการปฏิเสธข้อความโดยไม่ระบุเหตุผล สาเหตุที่พบบ่อยที่สุดคือยอดเงินแบบเติมเงินหมด การรับข้อความยังฟรี ข้อความเข้าจึงยังมาถึงตามปกติ"
+  "SendRefusedHint": "ผู้ให้บริการปฏิเสธข้อความโดยไม่ระบุเหตุผล สาเหตุที่พบบ่อยที่สุดคือยอดเงินแบบเติมเงินหมด การรับข้อความยังฟรี ข้อความเข้าจึงยังมาถึงตามปกติ",
+  "Appearance": "ลักษณะที่ปรากฏ",
+  "CancelPending": "ยกเลิกการส่ง",
+  "Copy": "คัดลอกข้อความ",
+  "EditPending": "แก้ไขข้อความ",
+  "FixSimHotplug": "⚡ แก้ไข SIM ฮอตปลั๊ก / รีเซ็ตฮาร์ดแวร์",
+  "FixSimTooltip": "เริ่มการทำงานของไดรเวอร์โมเด็ม Intel XMM LTE และบริการ WWAN ใหม่ในฐานะผู้ดูแลระบบ",
+  "Language": "ภาษา",
+  "MessageCopied": "คัดลอกข้อความไปยังคลิปบอร์ดแล้ว",
+  "ModemResetConfirmMessage": "การดำเนินการนี้จะเริ่มการทำงานของโมเด็ม LTE เซลลูลาร์ภายในและบริการเครือข่ายใหม่โดยใช้สิทธิ์ของผู้ดูแลระบบ การเชื่อมต่อเครือข่ายอาจหยุดชะงักชั่วคราว คุณต้องการดำเนินการต่อหรือไม่?",
+  "ModemResetConfirmTitle": "รีเซ็ตฮาร์ดแวร์โมเด็มเซลลูลาร์หรือไม่?",
+  "ModemStatus": "โมเด็มเซลลูลาร์",
+  "RecheckModem": "ตรวจสอบโมเด็มและ SIM อีกครั้ง",
+  "SelectText": "เลือกข้อความ",
+  "Settings": "การตั้งค่า",
+  "TextSize": "ขนาดข้อความ"
 }

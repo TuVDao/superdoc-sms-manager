@@ -5,7 +5,6 @@
     "rtl": false,
     "reviewed": false
   },
-
   "Messages": "短信",
   "Contacts": "联系人",
   "FontSizeTooltip": "字体大小",
@@ -13,7 +12,6 @@
   "ShowList": "显示列表",
   "HideList": "隐藏列表",
   "CheckingModem": "正在检查调制解调器…",
-
   "NewMessage": "+ 新短信",
   "SearchPlaceholder": "搜索姓名或号码…",
   "SaveToContacts": "保存到联系人",
@@ -30,12 +28,10 @@
   "ComposerSizerTooltip": "向上拖动以放大输入框",
   "NoRecipient": "尚未填写收件人号码。",
   "EmojiTooltip": "插入表情符号",
-
   "StatusPending": "等待中",
   "StatusSending": "发送中",
   "StatusSent": "已发送",
   "StatusFailed": "发送失败",
-
   "AddContact": "+ 添加联系人",
   "ContactInfo": "联系人信息",
   "ContactTitle": "称谓",
@@ -55,16 +51,13 @@
   "Cancel": "取消",
   "ContactNeedsPhone": "必须填写电话号码。",
   "ContactDeleted": "联系人已删除。",
-
   "TrayOpen": "打开 SUPERDOC SMS Manager",
   "TrayTestNotification": "发送测试通知",
   "TrayExit": "退出",
   "TestNotificationBody": "测试通知 — 如果您看到这条消息，说明通知功能正常。",
   "UnknownNumber": "未知号码",
-
   "DeleteMessagesTitle": "删除短信",
   "DeleteConversationsTitle": "删除会话",
-
   "DeleteNMessages": "删除 {0} 条短信",
   "DeleteNConversations": "删除 {0} 个会话",
   "ConfirmDeleteMessages": "永久删除选中的 {0} 条短信？此操作无法撤销。",
@@ -88,24 +81,35 @@
   "SendOnly": " - 仅可发送：{0}",
   "ModemUnavailable": "调制解调器不可用：{0}",
   "ModemStatusFailed": "无法读取调制解调器状态：{0}",
-
   "ComposerCounter": "{0} 个字符 · {1} 条分段 · {2}",
   "EncodingGsm": "GSM-7",
   "EncodingUnicode": "Unicode",
   "UnicodeWarning": "含表情符号或重音字符的短信每条分段仅可容纳 70 个字符（而非 160 个），每条额外分段都会单独计费。",
-
   "FontSmall": "小",
   "FontMedium": "中",
   "FontLarge": "大",
   "FontXLarge": "特大",
   "FontXXLarge": "超大",
-
   "LanguageAuto": "自动",
-
   "CheckBalance": "查询余额",
   "BalanceCodeLabel": "USSD 代码",
   "BalanceChecking": "正在询问运营商…",
   "BalanceFailed": "无法读取余额：{0}",
   "BalanceNoCode": "请输入运营商用于查询余额的代码，例如 *101#。",
-  "SendRefusedHint": "运营商拒绝了这条短信且未说明原因。最常见的原因是预付费余额已用尽：接收短信免费，因此来信仍能正常收到。"
+  "SendRefusedHint": "运营商拒绝了这条短信且未说明原因。最常见的原因是预付费余额已用尽：接收短信免费，因此来信仍能正常收到。",
+  "Appearance": "外观",
+  "CancelPending": "取消发送",
+  "Copy": "复制消息",
+  "EditPending": "编辑消息",
+  "FixSimHotplug": "⚡ 修复热插拔SIM / 重置硬件",
+  "FixSimTooltip": "以管理员身份重启 Intel XMM LTE 调制解调器驱动程序和 WWAN 服务",
+  "Language": "语言",
+  "MessageCopied": "消息已复制到剪贴板",
+  "ModemResetConfirmMessage": "这将使用管理员权限重启内置蜂窝 LTE 调制解调器和网络服务。在此过程中网络连接可能会短暂中断。是否继续？",
+  "ModemResetConfirmTitle": "重置蜂窝调制解调器硬件？",
+  "ModemStatus": "蜂窝调制解调器",
+  "RecheckModem": "重新检查调制解调器和 SIM 卡",
+  "SelectText": "选择文本",
+  "Settings": "设置",
+  "TextSize": "文本大小"
 }
