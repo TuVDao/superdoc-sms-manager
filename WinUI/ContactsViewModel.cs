@@ -22,6 +22,8 @@ public sealed class ContactsViewModel : INotifyPropertyChanged
     private string _statusText = string.Empty;
     private bool _isEditing;
 
+    private readonly HashSet<long> _selectedContactIds = [];
+
     public ContactsViewModel(SmsManager smsManager, ILogger logger, DispatcherQueue dispatcher, Strings loc)
     {
         _smsManager = smsManager;
@@ -32,8 +34,93 @@ public sealed class ContactsViewModel : INotifyPropertyChanged
         NewContactCommand = new DelegateCommand(StartNew);
         SaveCommand = new AsyncCommand(SaveAsync, () => IsEditing);
         DeleteCommand = new AsyncCommand(DeleteAsync, () => IsEditing && Editor.Id != 0);
+        DeleteSelectedContactsCommand = new AsyncCommand(DeleteSelectedContactsAsync, () => SelectedContactCount > 0);
         CancelCommand = new DelegateCommand(CancelEdit, () => IsEditing);
+        SendMessageToContactCommand = new DelegateCommand(() =>
+        {
+            if (!string.IsNullOrWhiteSpace(Editor.PhoneNumber))
+            {
+                SendMessageRequested?.Invoke(Editor.PhoneNumber);
+            }
+        }, () => IsEditing && !string.IsNullOrWhiteSpace(Editor.PhoneNumber));
     }
+
+    public Func<string, string, Task<bool>>? ConfirmAsync { get; set; }
+
+    public int SelectedContactCount => _selectedContactIds.Count;
+
+    public bool HasSelectedContacts => SelectedContactCount > 0;
+
+    public string DeleteContactsLabel => SelectedContactCount == 1 ? "Delete 1 contact" : $"Delete {SelectedContactCount} contacts";
+
+    public AsyncCommand DeleteSelectedContactsCommand { get; }
+
+    public void SetSelectedContacts(IEnumerable<Contact> contacts)
+    {
+        _selectedContactIds.Clear();
+        foreach (var c in contacts)
+        {
+            if (c.Id != 0)
+            {
+                _selectedContactIds.Add(c.Id);
+            }
+        }
+        OnPropertyChanged(nameof(SelectedContactCount));
+        OnPropertyChanged(nameof(HasSelectedContacts));
+        OnPropertyChanged(nameof(DeleteContactsLabel));
+        DeleteSelectedContactsCommand.RaiseCanExecuteChanged();
+    }
+
+    public async Task DeleteSelectedContactsAsync()
+    {
+        var count = _selectedContactIds.Count;
+        if (count == 0) return;
+
+        if (ConfirmAsync is not null && !await ConfirmAsync(_loc.Delete, $"Are you sure you want to delete {count} contact(s)?"))
+        {
+            return;
+        }
+
+        try
+        {
+            var ids = _selectedContactIds.ToList();
+            var deleted = await Task.Run(() =>
+            {
+                var total = 0;
+                foreach (var id in ids)
+                {
+                    if (_smsManager.DeleteContact(id))
+                    {
+                        total++;
+                    }
+                }
+                return total;
+            });
+
+            _selectedContactIds.Clear();
+            OnPropertyChanged(nameof(SelectedContactCount));
+            OnPropertyChanged(nameof(HasSelectedContacts));
+            OnPropertyChanged(nameof(DeleteContactsLabel));
+            DeleteSelectedContactsCommand.RaiseCanExecuteChanged();
+
+            StatusText = $"Deleted {deleted} contact(s).";
+            if (SelectedContact is not null && ids.Contains(SelectedContact.Id))
+            {
+                CancelEdit();
+            }
+            await RefreshAsync();
+            ContactsChanged?.Invoke();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete selected contacts.");
+            StatusText = _loc.DeleteFailed(ex.Message);
+        }
+    }
+
+    public event Action<string>? SendMessageRequested;
+
+    public DelegateCommand SendMessageToContactCommand { get; }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -86,11 +173,37 @@ public sealed class ContactsViewModel : INotifyPropertyChanged
         }
     }
 
+    private Microsoft.UI.Xaml.DispatcherTimer? _statusTimer;
+
     public string StatusText
     {
         get => _statusText;
-        set => SetField(ref _statusText, value);
+        set
+        {
+            if (SetField(ref _statusText, value))
+            {
+                OnPropertyChanged(nameof(HasStatusText));
+                RunOnUi(() =>
+                {
+                    _statusTimer?.Stop();
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        _statusTimer = new Microsoft.UI.Xaml.DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+                        _statusTimer.Tick += (_, _) =>
+                        {
+                            _statusTimer?.Stop();
+                            StatusText = string.Empty;
+                        };
+                        _statusTimer.Start();
+                    }
+                });
+            }
+        }
     }
+
+    public bool HasStatusText => !string.IsNullOrEmpty(_statusText);
+
+    public void DismissStatus() => StatusText = string.Empty;
 
     public async Task RefreshAsync()
     {

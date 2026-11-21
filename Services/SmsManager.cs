@@ -216,6 +216,16 @@ public sealed class SmsManager : IDisposable
             : new CarrierBalance(_logger).QueryAsync(code);
     }
 
+    /// <summary>Creates an interactive multi-turn USSD session for packages or menus.</summary>
+    public UssdInteractiveSession CreateUssdSession() => new(_logger);
+
+    /// <summary>Whether outgoing SMS messages request a delivery receipt from the cellular network.</summary>
+    public bool DeliveryReportsEnabled
+    {
+        get => _repo.GetSetting("sms.delivery_reports", "1") == "1";
+        set => _repo.SetSetting("sms.delivery_reports", value ? "1" : "0");
+    }
+
     public int DeleteMessages(IEnumerable<long> ids) => _repo.DeleteMessages(ids);
 
     public bool DeleteMessage(long id) => _repo.DeleteMessages(new[] { id }) > 0;
@@ -613,7 +623,8 @@ public sealed class SmsManager : IDisposable
             {
                 To = msg.To,
                 Body = msg.Body,
-                Encoding = ChooseEncoding(msg.Body)
+                Encoding = ChooseEncoding(msg.Body),
+                IsDeliveryNotificationEnabled = DeliveryReportsEnabled
             };
 
             var result = await device.SendMessageAndGetResultAsync(outgoing);

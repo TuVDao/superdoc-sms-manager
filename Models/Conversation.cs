@@ -49,6 +49,32 @@ public sealed class Conversation : INotifyPropertyChanged
 
     public bool HasContact => Contact is not null;
 
+    /// <summary>
+    /// False when the peer is an alphanumeric sender (e.g. "Safaricom", "Google", "VODAFONE") or a
+    /// short service code (< 6 digits) that cannot receive incoming SMS replies.
+    /// </summary>
+    public bool IsReplyable
+    {
+        get
+        {
+            var raw = PeerDisplay?.Trim() ?? string.Empty;
+            if (raw.Length == 0)
+            {
+                return false;
+            }
+
+            // Alphanumeric sender names contain letters
+            if (raw.Any(char.IsLetter))
+            {
+                return false;
+            }
+
+            // Shortcodes have fewer than 6 digits
+            var digitsOnly = new string(raw.Where(char.IsDigit).ToArray());
+            return digitsOnly.Length >= 6;
+        }
+    }
+
     /// <summary>Contact initials or empty for avatar badge.</summary>
     public string Initials
     {

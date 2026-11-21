@@ -73,6 +73,7 @@ public sealed partial class MainWindow : Window
             }
 
             _viewModel.Conversations.ConfirmAsync = ConfirmDestructiveAsync;
+            _viewModel.ContactBook.ConfirmAsync = ConfirmDestructiveAsync;
             _viewModel.ConfirmActionAsync = ConfirmDestructiveAsync;
 
             // Arabic and other right-to-left languages need the whole layout mirrored, not just
@@ -82,7 +83,20 @@ public sealed partial class MainWindow : Window
             _viewModel.Conversations.ThreadChanged += ScrollThreadToBottom;
 
             _toasts = new ToastNotifier(_loggerFactory.CreateLogger<ToastNotifier>(), _viewModel.Loc);
+            _toasts.ReplyRequested += OnToastReply;
             _smsManager.MessageReceived += OnSmsReceived;
+
+            _viewModel.Ui.ApplyThemeRequested += theme =>
+            {
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    if (Content is FrameworkElement root) root.RequestedTheme = theme;
+                });
+            };
+            if (Content is FrameworkElement rootElem)
+            {
+                rootElem.RequestedTheme = _viewModel.Ui.ElementTheme;
+            }
 
             SetUpTray();
 
@@ -181,6 +195,20 @@ public sealed partial class MainWindow : Window
 
     private void OnSmsReceived(object? sender, SmsMessage message)
         => DispatcherQueue.TryEnqueue(() => _toasts?.ShowIncoming(message));
+
+    private void OnToastReply(string peer, string replyText)
+    {
+        _logger.LogInformation("Sending quick reply to {Peer} via toast notification.", peer);
+        try
+        {
+            _smsManager?.SendSms(peer, replyText);
+            DispatcherQueue.TryEnqueue(() => _ = _viewModel?.Conversations.RefreshAsync());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send quick reply from toast to {Peer}.", peer);
+        }
+    }
 
     /// <summary>
     /// Puts the app's own icon in the title bar and Alt+Tab.
@@ -371,29 +399,18 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async void SelectTextMessage_Click(object sender, RoutedEventArgs e)
+    private void SelectMessageContext_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement { DataContext: SmsMessage msg } && Content?.XamlRoot is not null)
+        if (sender is FrameworkElement { DataContext: SmsMessage msg })
         {
-            var box = new TextBox
+            if (ThreadList.SelectedItems.Contains(msg))
             {
-                Text = msg.Body,
-                IsReadOnly = true,
-                TextWrapping = TextWrapping.Wrap,
-                AcceptsReturn = true,
-                MinHeight = 100,
-                MaxHeight = 350
-            };
-            box.SelectAll();
-
-            var dialog = new ContentDialog
+                ThreadList.SelectedItems.Remove(msg);
+            }
+            else
             {
-                Title = _viewModel?.Loc.SelectText ?? "Select Text",
-                Content = box,
-                CloseButtonText = "Close",
-                XamlRoot = Content.XamlRoot
-            };
-            await dialog.ShowAsync();
+                ThreadList.SelectedItems.Add(msg);
+            }
         }
     }
 
@@ -427,6 +444,178 @@ public sealed partial class MainWindow : Window
         if (sender is FrameworkElement { DataContext: SmsMessage msg } && _viewModel is not null)
         {
             await _viewModel.Conversations.DeleteMessageAsync(msg.Id);
+        }
+    }
+
+    private void MessageBox_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.Enter)
+        {
+            var shift = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Shift)
+                .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+            if (!shift)
+            {
+                e.Handled = true;
+                if (_viewModel?.Conversations.SendCommand.CanExecute(null) == true)
+                {
+                    _viewModel.Conversations.SendCommand.Execute(null);
+                }
+            }
+        }
+    }
+
+    private void CopyPhoneNumber_Click(object sender, RoutedEventArgs e)
+    {
+        string? phone = null;
+        if (sender is FrameworkElement { DataContext: Conversation conv })
+        {
+            phone = conv.PeerDisplay;
+        }
+        else if (sender is FrameworkElement { DataContext: Contact contact })
+        {
+            phone = contact.PhoneNumber;
+        }
+
+        if (!string.IsNullOrEmpty(phone))
+        {
+            var dp = new DataPackage();
+            dp.SetText(phone);
+            Clipboard.SetContent(dp);
+            if (_viewModel is not null)
+            {
+                _viewModel.Conversations.StatusText = "Phone number copied to clipboard.";
+            }
+        }
+    }
+
+    private void SelectConversationContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: Conversation conv })
+        {
+            if (ConversationList.SelectedItems.Contains(conv))
+            {
+                ConversationList.SelectedItems.Remove(conv);
+            }
+            else
+            {
+                ConversationList.SelectedItems.Add(conv);
+            }
+        }
+    }
+
+    private async void DeleteConversationContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: Conversation conv } && _viewModel is not null)
+        {
+            await _viewModel.Conversations.DeleteSingleConversationAsync(conv);
+        }
+    }
+
+    private void SelectContactContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: Contact contact })
+        {
+            if (ContactList.SelectedItems.Contains(contact))
+            {
+                ContactList.SelectedItems.Remove(contact);
+            }
+            else
+            {
+                ContactList.SelectedItems.Add(contact);
+            }
+        }
+    }
+
+    private void ContactList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is ListView list)
+        {
+            _viewModel?.ContactBook.SetSelectedContacts(list.SelectedItems.OfType<Contact>());
+        }
+    }
+
+    private void DismissStatus_Click(object sender, RoutedEventArgs e)
+        => _viewModel?.DismissAllStatus();
+
+    private void DismissBalanceNotice_Click(object sender, RoutedEventArgs e)
+        => _viewModel?.DismissBalanceNotice();
+
+    private async void PresetUssd_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string code } && !string.IsNullOrWhiteSpace(code))
+        {
+            if (_viewModel is not null)
+            {
+                _viewModel.BalanceUssdCode = code;
+            }
+            await ShowInteractiveUssdSessionAsync(code);
+        }
+    }
+
+    private async void SettingsCheckBalance_Click(object sender, RoutedEventArgs e)
+    {
+        var code = _viewModel?.BalanceUssdCode?.Trim();
+        if (!string.IsNullOrEmpty(code))
+        {
+            await ShowInteractiveUssdSessionAsync(code);
+        }
+        else
+        {
+            CheckBalance_Click(sender, e);
+        }
+    }
+
+    private void SaveConversationContact_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: Conversation conv } && _viewModel is not null)
+        {
+            _viewModel.AddContactForPeer(conv.PeerDisplay);
+        }
+    }
+
+    private void SendContactMessage_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: Contact c } && _viewModel is not null && !string.IsNullOrWhiteSpace(c.PhoneNumber))
+        {
+            _viewModel.StartConversationWith(c.PhoneNumber);
+        }
+    }
+
+    private void RecipientSuggestBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+    {
+        if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput && _viewModel is not null)
+        {
+            var query = sender.Text?.Trim() ?? string.Empty;
+            if (string.IsNullOrEmpty(query))
+            {
+                sender.ItemsSource = null;
+            }
+            else
+            {
+                var matches = _viewModel.ContactBook.Contacts
+                    .Where(c => (!string.IsNullOrEmpty(c.DisplayName) && c.DisplayName.Contains(query, StringComparison.OrdinalIgnoreCase))
+                             || (!string.IsNullOrEmpty(c.PhoneNumber) && c.PhoneNumber.Contains(query, StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+                sender.ItemsSource = matches;
+            }
+        }
+    }
+
+    private void RecipientSuggestBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+    {
+        if (args.SelectedItem is Contact c && _viewModel is not null)
+        {
+            sender.Text = c.PhoneNumber;
+            _viewModel.Conversations.NewRecipient = c.PhoneNumber;
+        }
+    }
+
+    private void PickContactItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: Contact c } && _viewModel is not null)
+        {
+            _viewModel.Conversations.NewRecipient = c.PhoneNumber;
+            RecipientSuggestBox.Text = c.PhoneNumber;
         }
     }
 
@@ -643,12 +832,146 @@ public sealed partial class MainWindow : Window
 
             // Saved before the query so a correction survives even if the network is unreachable.
             _viewModel.BalanceUssdCode = input.Text;
-            _viewModel.CheckBalanceCommand.Execute(null);
+            await ShowInteractiveUssdSessionAsync(input.Text);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Could not show the balance dialog.");
         }
+    }
+
+    private async Task ShowInteractiveUssdSessionAsync(string code)
+    {
+        if (_smsManager is null || Content?.XamlRoot is null)
+        {
+            return;
+        }
+
+        var session = _smsManager.CreateUssdSession();
+        var messageBlock = new TextBlock
+        {
+            Text = $"Dialling {code}...",
+            TextWrapping = TextWrapping.Wrap,
+            IsTextSelectionEnabled = true,
+            Margin = new Thickness(0, 0, 0, 10)
+        };
+
+        var progressRing = new ProgressRing
+        {
+            IsActive = true,
+            Width = 24,
+            Height = 24,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 8, 0, 8)
+        };
+
+        var replyBox = new TextBox
+        {
+            Header = "Reply with choice (e.g. 1, 2):",
+            PlaceholderText = "Enter number or response...",
+            CornerRadius = new CornerRadius(8),
+            Visibility = Visibility.Collapsed
+        };
+
+        var stack = new StackPanel
+        {
+            Spacing = 8,
+            MinWidth = 340,
+            MaxWidth = 480,
+            Children = { messageBlock, progressRing, replyBox }
+        };
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Content.XamlRoot,
+            Title = $"Carrier USSD ({code})",
+            Content = stack,
+            PrimaryButtonText = "Send Reply",
+            IsPrimaryButtonEnabled = false,
+            CloseButtonText = "Cancel"
+        };
+
+        async Task ExecuteTurnAsync(string input)
+        {
+            progressRing.Visibility = Visibility.Visible;
+            progressRing.IsActive = true;
+            replyBox.IsEnabled = false;
+            dialog.IsPrimaryButtonEnabled = false;
+
+            try
+            {
+                var turn = await session.SendAsync(input);
+                progressRing.IsActive = false;
+                progressRing.Visibility = Visibility.Collapsed;
+
+                if (!turn.Success)
+                {
+                    messageBlock.Text = string.IsNullOrEmpty(turn.Error) ? turn.Text : $"USSD Error: {turn.Error}";
+                    replyBox.Visibility = Visibility.Collapsed;
+                    dialog.PrimaryButtonText = string.Empty;
+                    dialog.IsPrimaryButtonEnabled = false;
+                    dialog.CloseButtonText = "Close";
+                    return;
+                }
+
+                messageBlock.Text = turn.Text;
+
+                if (!turn.ExpectsReply)
+                {
+                    replyBox.Visibility = Visibility.Collapsed;
+                    dialog.PrimaryButtonText = string.Empty;
+                    dialog.IsPrimaryButtonEnabled = false;
+                    dialog.CloseButtonText = "Done";
+                }
+                else
+                {
+                    replyBox.Visibility = Visibility.Visible;
+                    replyBox.IsEnabled = true;
+                    replyBox.Text = string.Empty;
+                    dialog.PrimaryButtonText = "Send Reply";
+                    dialog.IsPrimaryButtonEnabled = true;
+                    replyBox.Focus(FocusState.Programmatic);
+                }
+            }
+            catch (Exception ex)
+            {
+                progressRing.IsActive = false;
+                progressRing.Visibility = Visibility.Collapsed;
+                messageBlock.Text = $"USSD Error: {ex.Message}";
+                replyBox.Visibility = Visibility.Collapsed;
+                dialog.PrimaryButtonText = string.Empty;
+                dialog.IsPrimaryButtonEnabled = false;
+                dialog.CloseButtonText = "Close";
+            }
+        }
+
+        dialog.PrimaryButtonClick += async (s, args) =>
+        {
+            args.Cancel = true;
+            var reply = replyBox.Text?.Trim();
+            if (!string.IsNullOrEmpty(reply))
+            {
+                await ExecuteTurnAsync(reply);
+            }
+        };
+
+        replyBox.KeyDown += async (s, e) =>
+        {
+            if (e.Key == Windows.System.VirtualKey.Enter && dialog.IsPrimaryButtonEnabled)
+            {
+                e.Handled = true;
+                var reply = replyBox.Text?.Trim();
+                if (!string.IsNullOrEmpty(reply))
+                {
+                    await ExecuteTurnAsync(reply);
+                }
+            }
+        };
+
+        var showTask = dialog.ShowAsync();
+        await ExecuteTurnAsync(code);
+        await showTask;
+        session.Dispose();
     }
 
     private async Task<bool> ConfirmDestructiveAsync(string title, string message)

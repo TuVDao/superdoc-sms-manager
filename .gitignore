@@ -23,6 +23,7 @@ vs_BuildTools.exe
 [Oo]bj/
 /artifacts/
 /app/
+/dist/
 
 # ---------------------------------------------------------------------------
 # IDE and editor state
@@ -49,6 +50,8 @@ $RECYCLE.BIN/
 *.db-shm
 *.log
 *.binlog
+build_err.txt
+*_err.txt
 
 # ---------------------------------------------------------------------------
 # Your own private identifiers, listed for scripts\check-no-secrets.ps1 to look

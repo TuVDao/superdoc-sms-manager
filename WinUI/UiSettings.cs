@@ -257,11 +257,85 @@ public sealed class UiSettings : INotifyPropertyChanged
         }
     }
 
-    public double NavRailWidth => IsNavExpanded ? 180 : 52;
+    public double NavRailWidth => IsNavExpanded ? 180 : 48;
 
     public Visibility NavLabelsVisibility => IsNavExpanded ? Visibility.Visible : Visibility.Collapsed;
 
     public void ToggleNavExpansion() => IsNavExpanded = !IsNavExpanded;
+
+    private const string ThemeKey = "ui.theme";
+    private ElementTheme _elementTheme = ElementTheme.Default;
+
+    /// <summary>Visual theme for the application: Default (Auto), Light, or Dark.</summary>
+    public ElementTheme ElementTheme
+    {
+        get => _elementTheme;
+        set
+        {
+            if (SetField(ref _elementTheme, value))
+            {
+                OnPropertyChanged(nameof(SelectedThemeOption));
+                Save(ThemeKey, (int)value);
+                ApplyThemeRequested?.Invoke(value);
+            }
+        }
+    }
+
+    public event Action<ElementTheme>? ApplyThemeRequested;
+
+    public IReadOnlyList<PickerOption<ElementTheme>> ThemeOptions { get; } =
+    [
+        new("Automatic (System)", ElementTheme.Default),
+        new("Light", ElementTheme.Light),
+        new("Dark", ElementTheme.Dark)
+    ];
+
+    public PickerOption<ElementTheme>? SelectedThemeOption
+    {
+        get => ThemeOptions.FirstOrDefault(o => o.Value == ElementTheme) ?? ThemeOptions[0];
+        set
+        {
+            if (value is not null)
+            {
+                ElementTheme = value.Value;
+            }
+        }
+    }
+
+    /// <summary>Controls automatic startup with Windows via CurrentVersion\Run registry.</summary>
+    public bool StartWithWindows
+    {
+        get => StartupRegistration.IsEnabled();
+        set
+        {
+            if (StartupRegistration.IsEnabled() != value)
+            {
+                if (value)
+                {
+                    StartupRegistration.Enable(_logger);
+                }
+                else
+                {
+                    StartupRegistration.Disable(_logger);
+                }
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>Whether outgoing SMS messages request a delivery receipt from the network.</summary>
+    public bool DeliveryReportsEnabled
+    {
+        get => _smsManager.DeliveryReportsEnabled;
+        set
+        {
+            if (_smsManager.DeliveryReportsEnabled != value)
+            {
+                _smsManager.DeliveryReportsEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     /// <summary>
     /// Translates the setting written by the earlier enum-based version ("Vietnamese", "English",
@@ -287,6 +361,7 @@ public sealed class UiSettings : INotifyPropertyChanged
             _leftPanelWidth = ReadDouble(PanelWidthKey, DefaultPanelWidth, 180, 640);
             _composerHeight = ReadDouble(ComposerHeightKey, DefaultComposerHeight, 90, 600);
             _isNavExpanded = ReadDouble(NavExpandedKey, 0.0, 0.0, 1.0) > 0.5;
+            _elementTheme = (ElementTheme)(int)ReadDouble(ThemeKey, 0, 0, 2);
             SavedWindowWidth = (int)ReadDouble(WindowWidthKey, DefaultWindowWidth, 600, 3840);
             SavedWindowHeight = (int)ReadDouble(WindowHeightKey, DefaultWindowHeight, 400, 2160);
         }

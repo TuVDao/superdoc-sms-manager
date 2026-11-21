@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
 using SuperDoc.Sms.Models;
 using SuperDoc.Sms.Services;
 using System.ComponentModel;
@@ -80,6 +81,22 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
         Conversations.PropertyChanged += (_, e) =>
         {
+            if (e.PropertyName == nameof(ConversationsViewModel.StatusText))
+            {
+                OnPropertyChanged(nameof(CurrentStatusText));
+            }
+        };
+        ContactBook.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ContactsViewModel.StatusText))
+            {
+                OnPropertyChanged(nameof(CurrentStatusText));
+            }
+        };
+        ContactBook.SendMessageRequested += StartConversationWith;
+
+        Conversations.PropertyChanged += (_, e) =>
+        {
             if (e.PropertyName == nameof(ConversationsViewModel.SelectedConversation))
             {
                 AddContactForPeerCommand.RaiseCanExecuteChanged();
@@ -135,6 +152,21 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     public DelegateCommand AddContactForPeerCommand { get; }
 
+    public string CurrentStatusText => !string.IsNullOrEmpty(Conversations.StatusText) ? Conversations.StatusText : ContactBook.StatusText;
+
+    public void DismissAllStatus()
+    {
+        Conversations.DismissStatus();
+        ContactBook.DismissStatus();
+        OnPropertyChanged(nameof(CurrentStatusText));
+    }
+
+    public void DismissBalanceNotice()
+    {
+        _balanceNoticeTimer?.Stop();
+        BalanceNotice = string.Empty;
+    }
+
     public string DeviceStatusText
     {
         get => _deviceStatusText;
@@ -155,6 +187,15 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     public AsyncCommand CheckBalanceCommand { get; }
 
+    public void StartConversationWith(string phone)
+    {
+        SelectView("Messages");
+        Conversations.StartNewConversation();
+        Conversations.NewRecipient = phone;
+    }
+
+    private DispatcherTimer? _balanceNoticeTimer;
+
     /// <summary>
     /// Why sending is failing, and what the carrier says about the account. Empty most of the
     /// time; shown prominently when it is not.
@@ -167,6 +208,20 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             if (SetField(ref _balanceNotice, value))
             {
                 OnPropertyChanged(nameof(HasBalanceNotice));
+                RunOnUi(() =>
+                {
+                    _balanceNoticeTimer?.Stop();
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        _balanceNoticeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(6) };
+                        _balanceNoticeTimer.Tick += (_, _) =>
+                        {
+                            _balanceNoticeTimer?.Stop();
+                            BalanceNotice = string.Empty;
+                        };
+                        _balanceNoticeTimer.Start();
+                    }
+                });
             }
         }
     }
@@ -335,6 +390,13 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         await RecheckModemAsync();
     }
 
+    /// <summary>Jumps to the address book with the given phone number filled in.</summary>
+    public void AddContactForPeer(string phone)
+    {
+        ContactBook.StartNewFor(phone);
+        IsContactsView = true;
+    }
+
     /// <summary>Jumps to the address book with the open thread's number already filled in.</summary>
     private void AddContactForCurrentPeer()
     {
@@ -344,8 +406,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             return;
         }
 
-        ContactBook.StartNewFor(conversation.PeerDisplay);
-        IsContactsView = true;
+        AddContactForPeer(conversation.PeerDisplay);
     }
 
     /// <summary>Runs on a modem callback thread, so the refresh marshals itself to the UI thread.</summary>

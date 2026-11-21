@@ -146,6 +146,32 @@ finally {
     }
 }
 
+Write-Host 'Launching Contacts view...'
+$env:SUPERDOC_SMS_VIEW = 'Contacts'
+$processContacts = Start-Process -FilePath $exe -PassThru
+try {
+    $deadline = (Get-Date).AddSeconds(30)
+    while ($processContacts.MainWindowHandle -eq 0 -and (Get-Date) -lt $deadline) {
+        Start-Sleep -Milliseconds 250
+        $processContacts.Refresh()
+    }
+
+    if ($processContacts.MainWindowHandle -ne 0) {
+        Start-Sleep -Seconds 4
+        [void][Win32Capture]::SetForegroundWindow($processContacts.MainWindowHandle)
+        Start-Sleep -Milliseconds 800
+
+        $targetContacts = Join-Path $OutputDirectory 'contacts.png'
+        Save-WindowImage -Handle $processContacts.MainWindowHandle -Path $targetContacts
+        Write-Host "Saved $targetContacts"
+    }
+}
+finally {
+    if (-not $processContacts.HasExited) {
+        Stop-Process -Id $processContacts.Id -Force -ErrorAction SilentlyContinue
+    }
+}
+
 Write-Host 'Launching Settings view...'
 $env:SUPERDOC_SMS_VIEW = 'Settings'
 $processSettings = Start-Process -FilePath $exe -PassThru
