@@ -96,7 +96,7 @@
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Stretch"
                         Height="36"
-                        CornerRadius="6"
+                        CornerRadius="8"
                         Background="Transparent"
                         BorderThickness="0"
                         Margin="0,0,0,6"
@@ -116,7 +116,7 @@
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Stretch"
                         Height="36"
-                        CornerRadius="6"
+                        CornerRadius="8"
                         Margin="0,2"
                         Background="{Binding IsMessagesView, Converter={StaticResource BoolToNavBackground}}"
                         Foreground="{Binding IsMessagesView, Converter={StaticResource BoolToNavForeground}}"
@@ -142,7 +142,7 @@
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Stretch"
                         Height="36"
-                        CornerRadius="6"
+                        CornerRadius="8"
                         Margin="0,2"
                         Background="{Binding IsContactsView, Converter={StaticResource BoolToNavBackground}}"
                         Foreground="{Binding IsContactsView, Converter={StaticResource BoolToNavForeground}}"
@@ -168,7 +168,7 @@
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Stretch"
                         Height="36"
-                        CornerRadius="6"
+                        CornerRadius="8"
                         Margin="0,2"
                         Background="{Binding IsSettingsView, Converter={StaticResource BoolToNavBackground}}"
                         Foreground="{Binding IsSettingsView, Converter={StaticResource BoolToNavForeground}}"
@@ -260,7 +260,7 @@
                             Background="{ThemeResource LayerFillColorDefaultBrush}"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                             BorderThickness="1"
-                            CornerRadius="8"
+                            CornerRadius="12"
                             Padding="10"
                             Visibility="{Binding Ui.IsLeftPanelVisible, Converter={StaticResource BoolToVisibility}}">
                         <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="8">
@@ -466,7 +466,7 @@
                             Background="{ThemeResource LayerFillColorDefaultBrush}"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                             BorderThickness="1"
-                            CornerRadius="8"
+                            CornerRadius="12"
                             Padding="16"
                             Margin="8,0,0,0">
 
@@ -603,6 +603,8 @@
                                         <DataTemplate>
                                             <Grid Padding="0,6" HorizontalAlignment="{Binding IsIncoming, Converter={StaticResource IncomingToAlignment}}">
                                                 <Border Background="{Binding IsIncoming, Converter={StaticResource IncomingToBrush}}"
+                                                        BorderBrush="{Binding IsIncoming, Converter={StaticResource IncomingToBorderBrush}}"
+                                                        BorderThickness="1"
                                                         CornerRadius="16"
                                                         Padding="14,10"
                                                         MaxWidth="640">
@@ -662,22 +664,24 @@
                                                         </MenuFlyout>
                                                     </Border.ContextFlyout>
                                                     <StackPanel Spacing="5">
-                                                        <!-- Direct text selection enabled inside the bubble -->
+                                                        <!-- Direct text selection enabled inside the bubble, with native TextBlock flyout suppressed so right-click opens the bubble MenuFlyout -->
                                                         <TextBlock Text="{Binding Body}"
                                                                    FontWeight="{Binding IsUnread, Converter={StaticResource UnreadToFontWeight}}"
-                                                                   Foreground="White"
+                                                                   Foreground="{Binding IsIncoming, Converter={StaticResource IncomingToForegroundBrush}}"
                                                                    TextWrapping="Wrap"
-                                                                   IsTextSelectionEnabled="True" />
+                                                                   IsTextSelectionEnabled="True"
+                                                                   ContextFlyout="{x:Null}"
+                                                                   SelectionFlyout="{x:Null}" />
                                                         <StackPanel Orientation="Horizontal" Spacing="10">
-                                                            <TextBlock Text="{Binding TimestampDisplay}"
-                                                                       Foreground="#E0E0E0"
-                                                                       FontSize="12" />
-                                                            <TextBlock Text="{Binding Status, Converter={StaticResource StatusToText}}"
-                                                                       Foreground="#E0E0E0"
-                                                                       FontSize="12" />
+                                                             <TextBlock Text="{Binding TimestampDisplay}"
+                                                                        Foreground="{Binding IsIncoming, Converter={StaticResource IncomingToForegroundBrush}, ConverterParameter=Secondary}"
+                                                                        FontSize="12" />
+                                                             <TextBlock Text="{Binding Status, Converter={StaticResource StatusToText}}"
+                                                                        Foreground="{Binding IsIncoming, Converter={StaticResource IncomingToForegroundBrush}, ConverterParameter=Secondary}"
+                                                                        FontSize="12" />
                                                             <Button Content="{Binding DataContext.Loc.Retry, ElementName=RootGrid}"
                                                                     Padding="10,2"
-                                                                    CornerRadius="4"
+                                                                    CornerRadius="6"
                                                                     Click="RetryButton_Click"
                                                                     Tag="{Binding Id}"
                                                                     Visibility="{Binding Status, Converter={StaticResource RetryVisibilityConverter}}" />
@@ -898,7 +902,7 @@
                             Background="{ThemeResource LayerFillColorDefaultBrush}"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                             BorderThickness="1"
-                            CornerRadius="8"
+                            CornerRadius="12"
                             Padding="10"
                             Visibility="{Binding Ui.IsLeftPanelVisible, Converter={StaticResource BoolToVisibility}}">
                         <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
@@ -1045,7 +1049,7 @@
                             Background="{ThemeResource LayerFillColorDefaultBrush}"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                             BorderThickness="1"
-                            CornerRadius="8"
+                            CornerRadius="12"
                             Padding="20"
                             Margin="8,0,0,0">
                         <Grid>
@@ -1218,7 +1222,7 @@
                             <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
                                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="8"
+                                    CornerRadius="12"
                                     Padding="20">
                                 <StackPanel Spacing="18">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
@@ -1316,7 +1320,7 @@
                             <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
                                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="8"
+                                    CornerRadius="12"
                                     Padding="20">
                                 <StackPanel Spacing="18">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
@@ -1360,7 +1364,7 @@
                             <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
                                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="8"
+                                    CornerRadius="12"
                                     Padding="20">
                                 <StackPanel Spacing="16">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
@@ -1469,7 +1473,7 @@
                             <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
                                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="8"
+                                    CornerRadius="12"
                                     Padding="20">
                                 <StackPanel Spacing="6">
                                     <TextBlock Text="SUPERDOC SMS Manager" FontWeight="SemiBold" FontSize="14" />

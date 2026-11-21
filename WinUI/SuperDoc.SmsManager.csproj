@@ -25,6 +25,7 @@
     <!-- Gives the executable itself an icon in Explorer, the taskbar and Alt+Tab. The MSIX
          tiles come from the Assets PNGs instead; both are generated from the same source. -->
     <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(GenerateAppxPackageOnBuild)' == 'true'">

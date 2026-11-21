@@ -24,6 +24,8 @@
             <local:StringToVisibilityConverter x:Key="StringToVisibility" />
             <local:IncomingToAlignmentConverter x:Key="IncomingToAlignment" />
             <local:IncomingToBrushConverter x:Key="IncomingToBrush" />
+            <local:IncomingToForegroundBrushConverter x:Key="IncomingToForegroundBrush" />
+            <local:IncomingToBorderBrushConverter x:Key="IncomingToBorderBrush" />
             <local:SmsStatusToTextConverter x:Key="StatusToText" />
             <local:BoolToNavBackgroundConverter x:Key="BoolToNavBackground" />
             <local:BoolToNavForegroundConverter x:Key="BoolToNavForeground" />

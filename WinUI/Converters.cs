@@ -75,22 +75,87 @@ public sealed class IncomingToAlignmentConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
-/// <summary>Bubble colour: neutral grey for what arrived, accent color for what we sent.</summary>
+/// <summary>Bubble colour: neutral card background for what arrived, accent color for what we sent.</summary>
 public sealed class IncomingToBrushConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
         if (value is bool incoming && incoming)
         {
-            return new SolidColorBrush(Color.FromArgb(255, 58, 58, 60));
+            if (Application.Current is { } app && app.Resources.TryGetValue("CardBackgroundFillColorSecondaryBrush", out var cardBrush) && cardBrush is Brush cb)
+            {
+                return cb;
+            }
+
+            return new SolidColorBrush(Color.FromArgb(255, 48, 48, 52));
         }
 
-        if (Application.Current is { } app && app.Resources.TryGetValue("AccentFillColorDefaultBrush", out var brush) && brush is Brush b)
+        if (Application.Current is { } app2 && app2.Resources.TryGetValue("AccentFillColorDefaultBrush", out var brush) && brush is Brush b)
         {
             return b;
         }
 
         return new SolidColorBrush(Color.FromArgb(255, 0, 120, 212));
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+        => throw new NotSupportedException();
+}
+
+/// <summary>Border stroke: subtle card stroke for incoming bubbles, transparent for outbound accent bubbles.</summary>
+public sealed class IncomingToBorderBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        if (value is bool incoming && incoming)
+        {
+            if (Application.Current is { } app && app.Resources.TryGetValue("CardStrokeColorDefaultBrush", out var brush) && brush is Brush b)
+            {
+                return b;
+            }
+
+            return new SolidColorBrush(Color.FromArgb(32, 255, 255, 255));
+        }
+
+        return new SolidColorBrush(Colors.Transparent);
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+        => throw new NotSupportedException();
+}
+
+/// <summary>
+/// Text contrast & hierarchy: On incoming bubbles, uses ThemeResource TextFillColorPrimary/Secondary.
+/// On outgoing accent bubbles, uses ThemeResource TextOnAccentFillColorPrimary/Secondary.
+/// Pass parameter "Secondary" for timestamps and status indicators.
+/// </summary>
+public sealed class IncomingToForegroundBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        var incoming = value is bool b && b;
+        var isSecondary = parameter is string s && s.Equals("Secondary", StringComparison.OrdinalIgnoreCase);
+
+        if (incoming)
+        {
+            var key = isSecondary ? "TextFillColorSecondaryBrush" : "TextFillColorPrimaryBrush";
+            if (Application.Current is { } app && app.Resources.TryGetValue(key, out var brush) && brush is Brush resBrush)
+            {
+                return resBrush;
+            }
+
+            return new SolidColorBrush(isSecondary ? Color.FromArgb(255, 156, 163, 175) : Colors.White);
+        }
+        else
+        {
+            var key = isSecondary ? "TextOnAccentFillColorSecondaryBrush" : "TextOnAccentFillColorPrimaryBrush";
+            if (Application.Current is { } app && app.Resources.TryGetValue(key, out var brush) && brush is Brush resBrush)
+            {
+                return resBrush;
+            }
+
+            return new SolidColorBrush(isSecondary ? Color.FromArgb(204, 255, 255, 255) : Colors.White);
+        }
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)
@@ -143,15 +208,19 @@ public sealed class BoolToNavBackgroundConverter : IValueConverter
         => throw new NotSupportedException();
 }
 
-/// <summary>Active tab styling: white text when active, secondary text when inactive.</summary>
+/// <summary>Active tab styling: primary text when active, secondary text when inactive (adapts to light and dark themes).</summary>
 public sealed class BoolToNavForegroundConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
         var isActive = value is bool b && b;
-        return isActive
-            ? new SolidColorBrush(Colors.White)
-            : new SolidColorBrush(Color.FromArgb(255, 209, 213, 219));
+        var key = isActive ? "TextFillColorPrimaryBrush" : "TextFillColorSecondaryBrush";
+        if (Application.Current is { } app && app.Resources.TryGetValue(key, out var brush) && brush is Brush navBrush)
+        {
+            return navBrush;
+        }
+
+        return new SolidColorBrush(isActive ? Colors.White : Color.FromArgb(255, 156, 163, 175));
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

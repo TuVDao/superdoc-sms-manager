@@ -50,8 +50,9 @@ public sealed class Conversation : INotifyPropertyChanged
     public bool HasContact => Contact is not null;
 
     /// <summary>
-    /// False when the peer is an alphanumeric sender (e.g. "Safaricom", "Google", "VODAFONE") or a
-    /// short service code (< 6 digits) that cannot receive incoming SMS replies.
+    /// False when the peer is an alphanumeric sender (e.g. "Safaricom", "Google", "VODAFONE") that
+    /// cannot receive incoming SMS replies. Numeric senders, including 3-to-5 digit carrier shortcodes
+    /// (e.g. 994, 804, 704, 131) and standard telephone numbers, are replyable.
     /// </summary>
     public bool IsReplyable
     {
@@ -63,15 +64,15 @@ public sealed class Conversation : INotifyPropertyChanged
                 return false;
             }
 
-            // Alphanumeric sender names contain letters
+            // Alphanumeric sender names contain letters (e.g. "Safaricom", "Google", "Bank")
             if (raw.Any(char.IsLetter))
             {
                 return false;
             }
 
-            // Shortcodes have fewer than 6 digits
+            // Numeric senders, including carrier shortcodes (e.g. 994, 804) and standard numbers
             var digitsOnly = new string(raw.Where(char.IsDigit).ToArray());
-            return digitsOnly.Length >= 6;
+            return digitsOnly.Length >= 3;
         }
     }
 

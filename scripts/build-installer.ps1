@@ -37,9 +37,12 @@ Write-Host "Created portable archive: $zipFile" -ForegroundColor Green
 Write-Host "`n=== 3/3: Searching for Inno Setup Compiler (iscc.exe) ===" -ForegroundColor Cyan
 $isccLocations = @(
     (Get-Command iscc.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source),
+    "${env:LocalAppData}\Programs\Inno Setup 7\iscc.exe",
+    "${env:LocalAppData}\Programs\Inno Setup 6\iscc.exe",
+    "${env:ProgramFiles(x86)}\Inno Setup 7\iscc.exe",
+    "${env:ProgramFiles}\Inno Setup 7\iscc.exe",
     "${env:ProgramFiles(x86)}\Inno Setup 6\iscc.exe",
-    "${env:ProgramFiles}\Inno Setup 6\iscc.exe",
-    "${env:LocalAppData}\Programs\Inno Setup 6\iscc.exe"
+    "${env:ProgramFiles}\Inno Setup 6\iscc.exe"
 ) | Where-Object { $_ -and (Test-Path $_) }
 
 if ($isccLocations.Count -gt 0) {
