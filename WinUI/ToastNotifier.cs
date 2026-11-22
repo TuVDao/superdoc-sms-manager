@@ -40,8 +40,8 @@ public sealed class ToastNotifier : IDisposable
                 _logger.LogWarning("Notification icon missing at {Path}.", iconPath);
             }
 
-            AppNotificationManager.Default.Register("SUPERDOC SMS Manager", icon);
             AppNotificationManager.Default.NotificationInvoked += OnNotificationInvoked;
+            AppNotificationManager.Default.Register("SUPERDOC SMS Manager", icon);
             _registered = true;
 
             // Logged at Information deliberately: whether notifications actually work was
@@ -163,6 +163,7 @@ public sealed class ToastNotifier : IDisposable
 
         try
         {
+            AppNotificationManager.Default.NotificationInvoked -= OnNotificationInvoked;
             AppNotificationManager.Default.Unregister();
         }
         catch (Exception ex)

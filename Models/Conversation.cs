@@ -16,8 +16,16 @@ public sealed class Conversation : INotifyPropertyChanged
     private int _failedCount;
     private int _unreadCount;
     private Contact? _contact;
+    private bool _isSelected;
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>True when selected in multiple-selection mode.</summary>
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => SetField(ref _isSelected, value);
+    }
 
     /// <summary>Normalised peer address; the identity of the thread.</summary>
     public required string PeerKey { get; init; }

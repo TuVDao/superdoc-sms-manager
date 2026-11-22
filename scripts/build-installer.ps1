@@ -16,6 +16,10 @@ $dist = Join-Path $repo 'dist'
 $appDir = Join-Path $repo 'app'
 $issFile = Join-Path $scriptDir 'installer.iss'
 
+# Ensure running instance does not lock binaries during packaging
+Get-Process SuperDoc.SmsManager -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+Start-Sleep -Milliseconds 500
+
 Write-Host "=== 1/3: Publishing Release x64 App ===" -ForegroundColor Cyan
 & (Join-Path $repo 'scripts\build.cmd') Release x64
 if ($LASTEXITCODE -ne 0) {

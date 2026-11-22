@@ -41,13 +41,14 @@
                         Background="Transparent"
                         BorderThickness="0"
                         Padding="0"
-                        CornerRadius="12"
+                        CornerRadius="8"
                         VerticalAlignment="Center">
-                    <Border CornerRadius="12"
+                    <Border CornerRadius="8"
+                            Height="32"
                             Background="{ThemeResource SubtleFillColorSecondaryBrush}"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                             BorderThickness="1"
-                            Padding="10,4"
+                            Padding="10,0"
                             VerticalAlignment="Center">
                         <ToolTipService.ToolTip>
                             <ToolTip Content="{Binding DeviceStatusText}" Placement="Bottom" />
@@ -68,12 +69,13 @@
                 <!-- Check balance button aligned beside status -->
                 <Button Click="CheckBalance_Click"
                         ToolTipService.ToolTip="{Binding Loc.BalanceCodeLabel}"
-                        CornerRadius="6"
-                        Padding="8,5"
+                        Height="32"
+                        CornerRadius="8"
+                        Padding="10,0"
                         VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Spacing="5">
+                    <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
                         <FontIcon Glyph="&#xE8C7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" />
-                        <TextBlock Text="{Binding Loc.CheckBalance}" />
+                        <TextBlock Text="{Binding Loc.CheckBalance}" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
             </StackPanel>
@@ -269,36 +271,47 @@
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
                                 <Button Style="{StaticResource AccentButtonStyle}"
                                         HorizontalAlignment="Stretch"
-                                        Height="38"
+                                        Height="36"
                                         CornerRadius="8"
+                                        VerticalAlignment="Center"
                                         Command="{Binding Conversations.NewConversationCommand}">
                                     <TextBlock Text="{Binding Loc.NewMessage}" FontWeight="SemiBold" HorizontalAlignment="Center" />
                                 </Button>
                                 <Button Command="{Binding ToggleLeftPanelCommand}"
                                         ToolTipService.ToolTip="{Binding Ui.TogglePanelTooltip}"
-                                        Height="38"
-                                        Width="38"
+                                        Height="36"
+                                        Width="36"
                                         CornerRadius="8"
+                                        VerticalAlignment="Center"
                                         Padding="0">
                                     <FontIcon Glyph="&#xE8A0;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
                                 </Button>
                             </Grid>
 
-                            <!-- Search box with magnifying glass icon -->
-                            <Grid Grid.Row="1">
-                                <TextBox CornerRadius="8"
-                                         Padding="32,6,10,6"
-                                         PlaceholderText="{Binding Loc.SearchPlaceholder}"
-                                         Text="{Binding Conversations.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                <FontIcon Glyph="&#xE721;"
-                                          FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
-                                          FontSize="13"
-                                          HorizontalAlignment="Left"
-                                          VerticalAlignment="Center"
-                                          Margin="10,0,0,0"
-                                          Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                          IsHitTestVisible="False" />
-                            </Grid>
+                            <!-- Search box with magnifying glass icon: Clean Fluent border with zero end-line misalignment -->
+                            <Border Grid.Row="1"
+                                    Height="36"
+                                    CornerRadius="8"
+                                    Background="{ThemeResource ControlFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource ControlElevationBorderBrush}"
+                                    BorderThickness="1">
+                                <Grid ColumnDefinitions="Auto,*" Margin="10,0,8,0">
+                                    <FontIcon Glyph="&#xE721;"
+                                              FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                                              FontSize="13"
+                                              Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,8,0" />
+                                    <TextBox Grid.Column="1"
+                                             PlaceholderText="{Binding Loc.SearchPlaceholder}"
+                                             Text="{Binding Conversations.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             Padding="0"
+                                             VerticalAlignment="Center"
+                                             VerticalContentAlignment="Center" />
+                                </Grid>
+                            </Border>
 
                             <!-- Bulk delete bar (appears when in selection mode or multiple conversations selected) -->
                             <Grid Grid.Row="2"
@@ -307,19 +320,23 @@
                                   Margin="0,0,0,6"
                                   Visibility="{Binding Conversations.ShowDeleteBar, Converter={StaticResource BoolToVisibility}}">
                                 <Button HorizontalAlignment="Stretch"
+                                        Height="36"
                                         CornerRadius="8"
+                                        VerticalAlignment="Center"
                                         Command="{Binding Conversations.DeleteSelectedConversationsCommand}">
-                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
                                         <FontIcon Glyph="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" Foreground="#FF6B6B" />
-                                        <TextBlock Text="{Binding Conversations.DeleteConversationsLabel}" />
+                                        <TextBlock Text="{Binding Conversations.DeleteConversationsLabel}" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                                 <Button Grid.Column="1"
+                                        Height="36"
                                         Click="CancelConversationSelection_Click"
                                         ToolTipService.ToolTip="Cancel selection (Esc)"
                                         CornerRadius="8"
-                                        Padding="8,6">
-                                    <TextBlock Text="Cancel (Esc)" FontSize="12" />
+                                        Padding="12,0"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="Cancel (Esc)" FontSize="12" VerticalAlignment="Center" />
                                 </Button>
                             </Grid>
 
@@ -329,11 +346,11 @@
                                       ItemsSource="{Binding Conversations.Conversations}"
                                       SelectedItem="{Binding Conversations.SelectedConversation, Mode=TwoWay}"
                                       SelectionChanged="ConversationList_SelectionChanged"
-                                      SelectionMode="Extended"
+                                      SelectionMode="Single"
                                       ItemContainerStyle="{StaticResource ModernListItemStyle}">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid ColumnDefinitions="Auto,*,Auto" Padding="4,8" ColumnSpacing="12">
+                                        <Grid ColumnDefinitions="Auto,Auto,*,Auto" Padding="4,8" ColumnSpacing="10">
                                             <Grid.ContextFlyout>
                                                 <MenuFlyout>
                                                     <MenuFlyoutItem Text="Select" Click="SelectConversationContext_Click">
@@ -361,8 +378,18 @@
                                                 </MenuFlyout>
                                             </Grid.ContextFlyout>
 
+                                            <!-- Native Windows 11 CheckBox: Matches official Microsoft Learn Checkbox control -->
+                                            <CheckBox Grid.Column="0"
+                                                      IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                      Click="ConversationCheckBox_Click"
+                                                      Visibility="{Binding DataContext.Conversations.IsSelectionMode, ElementName=RootGrid, Converter={StaticResource BoolToVisibility}}"
+                                                      MinWidth="0"
+                                                      Padding="0"
+                                                      Margin="0,0,2,0"
+                                                      VerticalAlignment="Center" />
+
                                             <!-- Avatar circle with contact initials or crisp vector phone icon -->
-                                            <Border Width="40" Height="40" CornerRadius="20"
+                                            <Border Grid.Column="1" Width="40" Height="40" CornerRadius="20"
                                                     Background="{ThemeResource AccentFillColorTertiaryBrush}"
                                                     VerticalAlignment="Center">
                                                 <Grid>
@@ -385,7 +412,7 @@
                                             </Border>
 
                                             <!-- Conversation text -->
-                                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                            <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Title}"
                                                            FontWeight="{Binding HasUnread, Converter={StaticResource UnreadToFontWeight}, ConverterParameter=SemiBold}"
                                                            FontSize="14"
@@ -404,7 +431,7 @@
                                             </StackPanel>
 
                                             <!-- Time & Unread / Error badge -->
-                                            <StackPanel Grid.Column="2" Spacing="6" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                            <StackPanel Grid.Column="3" Spacing="6" HorizontalAlignment="Right" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding LastMessageAtDisplay}"
                                                            FontSize="11"
                                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -565,24 +592,33 @@
 
                                     <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                         <Button Command="{Binding Conversations.DeleteSelectedMessagesCommand}"
-                                                CornerRadius="6"
+                                                Height="36"
+                                                CornerRadius="8"
+                                                Padding="12,0"
+                                                VerticalAlignment="Center"
                                                 Visibility="{Binding Conversations.HasSelectedMessages, Converter={StaticResource BoolToVisibility}}">
-                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                                                 <FontIcon Glyph="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" Foreground="#FF6B6B" />
-                                                <TextBlock Text="{Binding Conversations.DeleteMessagesLabel}" />
+                                                <TextBlock Text="{Binding Conversations.DeleteMessagesLabel}" VerticalAlignment="Center" />
                                             </StackPanel>
                                         </Button>
                                         <Button Click="CancelMessageSelection_Click"
-                                                CornerRadius="6"
+                                                Height="36"
+                                                CornerRadius="8"
+                                                Padding="12,0"
+                                                VerticalAlignment="Center"
                                                 ToolTipService.ToolTip="Cancel selection (Esc)"
                                                 Visibility="{Binding Conversations.HasSelectedMessages, Converter={StaticResource BoolToVisibility}}">
-                                            <TextBlock Text="Cancel (Esc)" FontSize="12" />
+                                            <TextBlock Text="Cancel (Esc)" FontSize="12" VerticalAlignment="Center" />
                                         </Button>
                                         <Button Command="{Binding AddContactForPeerCommand}"
-                                                CornerRadius="6">
-                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                Height="36"
+                                                CornerRadius="8"
+                                                Padding="12,0"
+                                                VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                                                 <FontIcon Glyph="&#xE779;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
-                                                <TextBlock Text="{Binding Loc.SaveToContacts}" />
+                                                <TextBlock Text="{Binding Loc.SaveToContacts}" VerticalAlignment="Center" />
                                             </StackPanel>
                                         </Button>
                                     </StackPanel>
@@ -601,8 +637,17 @@
                                           SelectionMode="None">
                                     <ListView.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid Padding="0,6" HorizontalAlignment="{Binding IsIncoming, Converter={StaticResource IncomingToAlignment}}">
-                                                <Border Background="{Binding IsIncoming, Converter={StaticResource IncomingToBrush}}"
+                                            <Grid Padding="0,6" HorizontalAlignment="{Binding IsIncoming, Converter={StaticResource IncomingToAlignment}}" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                                <!-- Native Windows 11 CheckBox -->
+                                                <CheckBox Grid.Column="0"
+                                                          IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                          Click="MessageCheckBox_Click"
+                                                          Visibility="{Binding DataContext.Conversations.HasSelectedMessages, ElementName=RootGrid, Converter={StaticResource BoolToVisibility}}"
+                                                          MinWidth="0"
+                                                          Padding="0"
+                                                          VerticalAlignment="Center" />
+                                                <Border Grid.Column="1"
+                                                        Background="{Binding IsIncoming, Converter={StaticResource IncomingToBrush}}"
                                                         BorderBrush="{Binding IsIncoming, Converter={StaticResource IncomingToBorderBrush}}"
                                                         BorderThickness="1"
                                                         CornerRadius="16"
@@ -911,16 +956,18 @@
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
                                 <Button Style="{StaticResource AccentButtonStyle}"
                                         HorizontalAlignment="Stretch"
-                                        Height="38"
+                                        Height="36"
                                         CornerRadius="8"
+                                        VerticalAlignment="Center"
                                         Command="{Binding ContactBook.NewContactCommand}">
                                     <TextBlock Text="{Binding Loc.AddContact}" FontWeight="SemiBold" HorizontalAlignment="Center" />
                                 </Button>
                                 <Button Command="{Binding ToggleLeftPanelCommand}"
                                         ToolTipService.ToolTip="{Binding Ui.TogglePanelTooltip}"
-                                        Height="38"
-                                        Width="38"
+                                        Height="36"
+                                        Width="36"
                                         CornerRadius="8"
+                                        VerticalAlignment="Center"
                                         Padding="0">
                                     <FontIcon Glyph="&#xE8A0;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
                                 </Button>
@@ -933,19 +980,23 @@
                                   Margin="0,0,0,6"
                                   Visibility="{Binding ContactBook.ShowDeleteBar, Converter={StaticResource BoolToVisibility}}">
                                 <Button HorizontalAlignment="Stretch"
+                                        Height="36"
                                         CornerRadius="8"
+                                        VerticalAlignment="Center"
                                         Command="{Binding ContactBook.DeleteSelectedContactsCommand}">
-                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
                                         <FontIcon Glyph="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" Foreground="#FF6B6B" />
-                                        <TextBlock Text="{Binding ContactBook.DeleteContactsLabel}" />
+                                        <TextBlock Text="{Binding ContactBook.DeleteContactsLabel}" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                                 <Button Grid.Column="1"
+                                        Height="36"
                                         Click="CancelContactSelection_Click"
                                         ToolTipService.ToolTip="Cancel selection (Esc)"
                                         CornerRadius="8"
-                                        Padding="8,6">
-                                    <TextBlock Text="Cancel (Esc)" FontSize="12" />
+                                        Padding="12,0"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="Cancel (Esc)" FontSize="12" VerticalAlignment="Center" />
                                 </Button>
                             </Grid>
 
@@ -955,11 +1006,11 @@
                                       ItemsSource="{Binding ContactBook.Contacts}"
                                       SelectedItem="{Binding ContactBook.SelectedContact, Mode=TwoWay}"
                                       SelectionChanged="ContactList_SelectionChanged"
-                                      SelectionMode="Extended"
+                                      SelectionMode="Single"
                                       ItemContainerStyle="{StaticResource ModernListItemStyle}">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid ColumnDefinitions="Auto,*" Padding="4,8" ColumnSpacing="12">
+                                        <Grid ColumnDefinitions="Auto,Auto,*" Padding="4,8" ColumnSpacing="10">
                                             <Grid.ContextFlyout>
                                                 <MenuFlyout>
                                                     <MenuFlyoutItem Text="Select" Click="SelectContactContext_Click">
@@ -987,8 +1038,18 @@
                                                 </MenuFlyout>
                                             </Grid.ContextFlyout>
 
+                                            <!-- Native Windows 11 CheckBox -->
+                                            <CheckBox Grid.Column="0"
+                                                      IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                      Click="ContactCheckBox_Click"
+                                                      Visibility="{Binding DataContext.ContactBook.IsSelectionMode, ElementName=RootGrid, Converter={StaticResource BoolToVisibility}}"
+                                                      MinWidth="0"
+                                                      Padding="0"
+                                                      Margin="0,0,2,0"
+                                                      VerticalAlignment="Center" />
+
                                             <!-- Avatar circle with contact initials or crisp vector person icon -->
-                                            <Border Width="38" Height="38" CornerRadius="19"
+                                            <Border Grid.Column="1" Width="38" Height="38" CornerRadius="19"
                                                     Background="{ThemeResource AccentFillColorTertiaryBrush}"
                                                     VerticalAlignment="Center">
                                                 <Grid>
@@ -1010,7 +1071,7 @@
                                                 </Grid>
                                             </Border>
 
-                                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                            <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="14" />
                                                 <TextBlock Text="{Binding DisplayPhone}"
                                                            FontSize="12"
@@ -1112,10 +1173,12 @@
                                     <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding Loc.ContactInfo}"
                                                    FontSize="{Binding Ui.HeaderFontSize}"
-                                                   FontWeight="SemiBold" />
+                                                   FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis" />
                                         <TextBlock Text="Manage contact name and phone number"
                                                    FontSize="12"
-                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                   TextTrimming="CharacterEllipsis" />
                                     </StackPanel>
 
                                     <!-- Action buttons docked at top: Always visible without scrolling! -->
@@ -1123,24 +1186,29 @@
                                         <Button Style="{StaticResource AccentButtonStyle}"
                                                 Height="36"
                                                 CornerRadius="8"
+                                                Padding="14,0"
                                                 Command="{Binding ContactBook.SaveCommand}">
-                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                                                 <FontIcon Glyph="&#xE74E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
-                                                <TextBlock Text="{Binding Loc.Save}" FontWeight="SemiBold" />
+                                                <TextBlock Text="{Binding Loc.Save}" FontWeight="SemiBold" VerticalAlignment="Center" />
                                             </StackPanel>
                                         </Button>
 
                                         <Button Height="36"
                                                 CornerRadius="8"
+                                                Padding="10,0"
                                                 Command="{Binding ContactBook.SendMessageToContactCommand}">
-                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                                                 <FontIcon Glyph="&#xE8BD;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" />
-                                                <TextBlock Text="Send message" />
+                                                <TextBlock Text="Send message" VerticalAlignment="Center" />
                                             </StackPanel>
                                         </Button>
 
                                         <Button Height="36"
+                                                Width="36"
                                                 CornerRadius="8"
+                                                Padding="0"
+                                                ToolTipService.ToolTip="{Binding Loc.Delete}"
                                                 Command="{Binding ContactBook.DeleteCommand}">
                                             <FontIcon Glyph="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" Foreground="#FF6B6B" />
                                         </Button>
@@ -1148,6 +1216,7 @@
                                         <Button Content="{Binding Loc.Cancel}"
                                                 Height="36"
                                                 CornerRadius="8"
+                                                Padding="12,0"
                                                 Command="{Binding ContactBook.CancelCommand}" />
                                     </StackPanel>
                                 </Grid>

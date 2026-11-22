@@ -115,6 +115,10 @@ public sealed class ContactsViewModel : INotifyPropertyChanged
 
             _selectedContactIds.Clear();
             _isSelectionMode = false;
+            foreach (var c in Contacts)
+            {
+                c.IsSelected = false;
+            }
             OnPropertyChanged(nameof(IsSelectionMode));
             OnPropertyChanged(nameof(SelectedContactCount));
             OnPropertyChanged(nameof(HasSelectedContacts));

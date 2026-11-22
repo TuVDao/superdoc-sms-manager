@@ -12,8 +12,16 @@ public sealed class Contact : INotifyPropertyChanged
     private string _address = string.Empty;
     private string _note = string.Empty;
     private string _phoneNumber = string.Empty;
+    private bool _isSelected;
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>True when selected in multiple-selection mode.</summary>
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => SetField(ref _isSelected, value);
+    }
 
     public long Id { get; set; }
 

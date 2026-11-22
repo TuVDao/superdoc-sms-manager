@@ -38,8 +38,16 @@ public class SmsMessage : INotifyPropertyChanged
     private string _errorMessage = string.Empty;
     private DateTimeOffset? _nextAttemptAt;
     private DateTimeOffset? _readAt;
+    private bool _isSelected;
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>True when selected in multiple-selection mode.</summary>
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => SetField(ref _isSelected, value);
+    }
 
     public long Id { get; set; }
 

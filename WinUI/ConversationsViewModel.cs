@@ -410,6 +410,10 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
         {
             var deleted = await Task.Run(() => _smsManager.DeleteConversations(keys));
             IsSelectionMode = false;
+            foreach (var c in Conversations)
+            {
+                c.IsSelected = false;
+            }
             SetSelectedConversations([]);
 
             if (SelectedConversation is not null && keys.Contains(SelectedConversation.PeerKey))

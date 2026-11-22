@@ -435,15 +435,13 @@ public sealed partial class MainWindow : Window
         if (_viewModel is not null)
         {
             _viewModel.Conversations.IsSelectionMode = false;
+            foreach (var c in _viewModel.Conversations.Conversations)
+            {
+                c.IsSelected = false;
+            }
+            var current = _viewModel.Conversations.SelectedConversation;
+            _viewModel.Conversations.SetSelectedConversations(current is not null ? [current] : []);
         }
-        ConversationList.SelectionMode = ListViewSelectionMode.Single;
-        var current = _viewModel?.Conversations.SelectedConversation;
-        ConversationList.SelectedItems.Clear();
-        if (current is not null)
-        {
-            ConversationList.SelectedItem = current;
-        }
-        _viewModel?.Conversations.SetSelectedConversations(current is not null ? [current] : []);
     }
 
     private void ExitContactSelection()
@@ -451,41 +449,65 @@ public sealed partial class MainWindow : Window
         if (_viewModel is not null)
         {
             _viewModel.ContactBook.IsSelectionMode = false;
+            foreach (var c in _viewModel.ContactBook.Contacts)
+            {
+                c.IsSelected = false;
+            }
+            var current = _viewModel.ContactBook.SelectedContact;
+            _viewModel.ContactBook.SetSelectedContacts(current is not null ? [current] : []);
         }
-        ContactList.SelectionMode = ListViewSelectionMode.Single;
-        var current = _viewModel?.ContactBook.SelectedContact;
-        ContactList.SelectedItems.Clear();
-        if (current is not null)
-        {
-            ContactList.SelectedItem = current;
-        }
-        _viewModel?.ContactBook.SetSelectedContacts(current is not null ? [current] : []);
     }
 
     private void ExitMessageSelection()
     {
-        ThreadList.SelectionMode = ListViewSelectionMode.None;
-        ThreadList.SelectedItems.Clear();
-        _viewModel?.Conversations.SetSelectedMessages([]);
+        if (_viewModel is not null)
+        {
+            foreach (var m in _viewModel.Conversations.ThreadMessages)
+            {
+                m.IsSelected = false;
+            }
+            _viewModel.Conversations.SetSelectedMessages([]);
+        }
     }
 
     private void CancelConversationSelection_Click(object sender, RoutedEventArgs e) => ExitConversationSelection();
     private void CancelContactSelection_Click(object sender, RoutedEventArgs e) => ExitContactSelection();
     private void CancelMessageSelection_Click(object sender, RoutedEventArgs e) => ExitMessageSelection();
 
+    private void ConversationCheckBox_Click(object sender, RoutedEventArgs e)
+    {
+        if (_viewModel is not null)
+        {
+            var selected = _viewModel.Conversations.Conversations.Where(c => c.IsSelected).ToList();
+            _viewModel.Conversations.SetSelectedConversations(selected);
+        }
+    }
+
+    private void ContactCheckBox_Click(object sender, RoutedEventArgs e)
+    {
+        if (_viewModel is not null)
+        {
+            var selected = _viewModel.ContactBook.Contacts.Where(c => c.IsSelected).ToList();
+            _viewModel.ContactBook.SetSelectedContacts(selected);
+        }
+    }
+
+    private void MessageCheckBox_Click(object sender, RoutedEventArgs e)
+    {
+        if (_viewModel is not null)
+        {
+            var selected = _viewModel.Conversations.ThreadMessages.Where(m => m.IsSelected).ToList();
+            _viewModel.Conversations.SetSelectedMessages(selected);
+        }
+    }
+
     private void SelectMessageContext_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement { DataContext: SmsMessage msg })
+        if (sender is FrameworkElement { DataContext: SmsMessage msg } && _viewModel is not null)
         {
-            ThreadList.SelectionMode = ListViewSelectionMode.Multiple;
-            if (ThreadList.SelectedItems.Contains(msg))
-            {
-                ThreadList.SelectedItems.Remove(msg);
-            }
-            else
-            {
-                ThreadList.SelectedItems.Add(msg);
-            }
+            msg.IsSelected = !msg.IsSelected;
+            var selected = _viewModel.Conversations.ThreadMessages.Where(m => m.IsSelected).ToList();
+            _viewModel.Conversations.SetSelectedMessages(selected);
         }
     }
 
@@ -569,15 +591,9 @@ public sealed partial class MainWindow : Window
         if (sender is FrameworkElement { DataContext: Conversation conv } && _viewModel is not null)
         {
             _viewModel.Conversations.IsSelectionMode = true;
-            ConversationList.SelectionMode = ListViewSelectionMode.Multiple;
-            if (ConversationList.SelectedItems.Contains(conv))
-            {
-                ConversationList.SelectedItems.Remove(conv);
-            }
-            else
-            {
-                ConversationList.SelectedItems.Add(conv);
-            }
+            conv.IsSelected = !conv.IsSelected;
+            var selected = _viewModel.Conversations.Conversations.Where(c => c.IsSelected).ToList();
+            _viewModel.Conversations.SetSelectedConversations(selected);
         }
     }
 
@@ -595,15 +611,9 @@ public sealed partial class MainWindow : Window
         if (sender is FrameworkElement { DataContext: Contact contact } && _viewModel is not null)
         {
             _viewModel.ContactBook.IsSelectionMode = true;
-            ContactList.SelectionMode = ListViewSelectionMode.Multiple;
-            if (ContactList.SelectedItems.Contains(contact))
-            {
-                ContactList.SelectedItems.Remove(contact);
-            }
-            else
-            {
-                ContactList.SelectedItems.Add(contact);
-            }
+            contact.IsSelected = !contact.IsSelected;
+            var selected = _viewModel.ContactBook.Contacts.Where(c => c.IsSelected).ToList();
+            _viewModel.ContactBook.SetSelectedContacts(selected);
         }
     }
 
