@@ -52,12 +52,13 @@ public sealed class UssdInteractiveSession : IDisposable
             var reply = await _session.SendMessageAndGetReplyAsync(new UssdMessage(trimmed));
             var text = reply.Message?.PayloadAsText?.Trim() ?? string.Empty;
 
-            // If another local client had the modem locked, wait briefly and retry once
+            // If another local client had the modem locked, wait and retry once
+            // (CSFB radio fallback from LTE to 3G/2G takes ~2-3s for band sync and SIB acquisition)
             if (reply.ResultCode == UssdResultCode.OtherLocalClient && text.Length == 0)
             {
-                _logger?.LogInformation("USSD turn returned OtherLocalClient; resetting session and retrying in 600ms...");
+                _logger?.LogInformation("USSD turn returned OtherLocalClient; waiting 2500ms for radio CSFB transition before retry...");
                 Close();
-                await Task.Delay(600);
+                await Task.Delay(2500);
 
                 try
                 {
@@ -87,9 +88,18 @@ public sealed class UssdInteractiveSession : IDisposable
 
             if (text.Length == 0)
             {
-                if (reply.ResultCode is UssdResultCode.NoActionRequired or UssdResultCode.OtherLocalClient)
+                if (reply.ResultCode == UssdResultCode.NoActionRequired)
                 {
-                    text = $"USSD request sent ({trimmed}). The carrier processed the request and will deliver your balance or package details via SMS shortly.";
+                    text = $"USSD request completed ({trimmed}), but no display text was returned by the network.";
+                }
+                else if (reply.ResultCode == UssdResultCode.OtherLocalClient)
+                {
+                    return new UssdTurnResult(
+                        string.Empty,
+                        false,
+                        false,
+                        "Modem radio conflict (OtherLocalClient): Cellular data connection conflicted with network switching (CSFB) during USSD. " +
+                        "Tip: Temporarily pause or turn off Cellular Data in Windows Quick Settings, then dial USSD again.");
                 }
                 else
                 {
