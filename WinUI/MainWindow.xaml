@@ -746,11 +746,13 @@
                                 <StackPanel Grid.Row="3" Spacing="6" Margin="0,4,0,0">
 
                                     <!-- New recipient box if composing a new conversation with AutoSuggest and Contact picker -->
-                                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8"
+                                    <Grid ColumnDefinitions="Auto,Auto,Auto,*" ColumnSpacing="8"
                                           Visibility="{Binding Conversations.CanEditRecipient, Converter={StaticResource BoolToVisibility}}"
                                           Margin="0,0,0,4">
                                         <AutoSuggestBox Grid.Column="0"
                                                         x:Name="RecipientSuggestBox"
+                                                        Width="320"
+                                                        HorizontalAlignment="Left"
                                                         Header="{Binding Loc.RecipientHeader}"
                                                         PlaceholderText="Search contact name or type phone number..."
                                                         Text="{Binding Conversations.NewRecipient, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -820,7 +822,8 @@
                                         </Button>
 
                                         <!-- Cancel New Conversation Button -->
-                                        <Button VerticalAlignment="Bottom"
+                                        <Button Grid.Column="2"
+                                                VerticalAlignment="Bottom"
                                                 Height="36"
                                                 Width="36"
                                                 Padding="0"
