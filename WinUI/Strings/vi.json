@@ -5,7 +5,6 @@
     "rtl": false,
     "reviewed": true
   },
-
   "Messages": "Tin nhắn",
   "Contacts": "Danh bạ",
   "FontSizeTooltip": "Cỡ chữ",
@@ -13,7 +12,6 @@
   "ShowList": "Hiện danh sách",
   "HideList": "Ẩn danh sách",
   "CheckingModem": "Đang kiểm tra modem...",
-
   "NewMessage": "+ Tin nhắn mới",
   "SearchPlaceholder": "Tìm tên hoặc số...",
   "SaveToContacts": "Lưu vào danh bạ",
@@ -30,12 +28,11 @@
   "ComposerSizerTooltip": "Kéo lên để mở rộng ô soạn tin",
   "NoRecipient": "Chưa có số người nhận.",
   "EmojiTooltip": "Chèn biểu tượng cảm xúc",
-
   "StatusPending": "Đang chờ",
   "StatusSending": "Đang gửi",
   "StatusSent": "Đã gửi",
+  "StatusDelivered": "Đã nhận",
   "StatusFailed": "Gửi lỗi",
-
   "AddContact": "+ Thêm liên hệ",
   "ContactInfo": "Thông tin liên hệ",
   "ContactTitle": "Danh xưng",
@@ -55,16 +52,13 @@
   "Cancel": "Huỷ",
   "ContactNeedsPhone": "Cần có số điện thoại.",
   "ContactDeleted": "Đã xoá liên hệ.",
-
   "TrayOpen": "Mở SUPERDOC SMS Manager",
   "TrayTestNotification": "Gửi thông báo thử",
   "TrayExit": "Thoát",
   "TestNotificationBody": "Thông báo thử - nếu bạn thấy dòng này thì thông báo đang hoạt động.",
   "UnknownNumber": "Số không xác định",
-
   "DeleteMessagesTitle": "Xoá tin nhắn",
   "DeleteConversationsTitle": "Xoá hội thoại",
-
   "DeleteNMessages": "Xoá {0} tin",
   "DeleteNConversations": "Xoá {0} hội thoại",
   "ConfirmDeleteMessages": "Xoá vĩnh viễn {0} tin nhắn đã chọn? Thao tác này không thể hoàn tác.",
@@ -88,24 +82,35 @@
   "SendOnly": " - chỉ gửi: {0}",
   "ModemUnavailable": "Modem không khả dụng: {0}",
   "ModemStatusFailed": "Không đọc được trạng thái modem: {0}",
-
   "ComposerCounter": "{0} ký tự · {1} phần · {2}",
   "EncodingGsm": "GSM-7",
   "EncodingUnicode": "Unicode",
   "UnicodeWarning": "Tin có emoji hoặc dấu tiếng Việt chỉ chứa được 70 ký tự mỗi phần thay vì 160 - mỗi phần thêm bị tính cước riêng.",
-
   "FontSmall": "Nhỏ",
   "FontMedium": "Vừa",
   "FontLarge": "Lớn",
   "FontXLarge": "Rất lớn",
   "FontXXLarge": "Cực lớn",
-
   "LanguageAuto": "Tự động",
-
   "CheckBalance": "Kiểm tra tài khoản",
   "BalanceCodeLabel": "Mã USSD",
   "BalanceChecking": "Đang hỏi nhà mạng…",
   "BalanceFailed": "Không đọc được số dư: {0}",
   "BalanceNoCode": "Nhập mã tra cứu số dư của nhà mạng, ví dụ *101#.",
-  "SendRefusedHint": "Nhà mạng từ chối tin nhắn mà không nêu lý do. Nguyên nhân thường gặp nhất là tài khoản đã hết tiền: nhận tin vẫn miễn phí nên tin đến vẫn về bình thường."
+  "SendRefusedHint": "Nhà mạng từ chối tin nhắn mà không nêu lý do. Nguyên nhân thường gặp nhất là tài khoản đã hết tiền: nhận tin vẫn miễn phí nên tin đến vẫn về bình thường.",
+  "Appearance": "Giao diện",
+  "CancelPending": "Hủy gửi",
+  "Copy": "Sao chép tin nhắn",
+  "EditPending": "Chỉnh sửa tin nhắn",
+  "FixSimHotplug": "⚡ Khắc phục SIM cắm nóng / Đặt lại phần cứng",
+  "FixSimTooltip": "Khởi động lại trình điều khiển modem Intel XMM LTE và dịch vụ WWAN dưới quyền Quản trị viên",
+  "Language": "Ngôn ngữ",
+  "MessageCopied": "Đã sao chép tin nhắn vào khay nhớ tạm",
+  "ModemResetConfirmMessage": "Thao tác này sẽ khởi động lại modem LTE di động nội bộ và các dịch vụ mạng bằng quyền Quản trị viên. Kết nối mạng có thể bị gián đoạn tạm thời. Bạn có muốn tiếp tục không?",
+  "ModemResetConfirmTitle": "Đặt lại phần cứng modem di động?",
+  "ModemStatus": "Modem di động",
+  "RecheckModem": "Kiểm tra lại modem và SIM",
+  "SelectText": "Chọn văn bản",
+  "Settings": "Cài đặt",
+  "TextSize": "Cỡ chữ"
 }

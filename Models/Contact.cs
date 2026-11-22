@@ -12,8 +12,16 @@ public sealed class Contact : INotifyPropertyChanged
     private string _address = string.Empty;
     private string _note = string.Empty;
     private string _phoneNumber = string.Empty;
+    private bool _isSelected;
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>True when selected in multiple-selection mode.</summary>
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => SetField(ref _isSelected, value);
+    }
 
     public long Id { get; set; }
 
@@ -26,6 +34,7 @@ public sealed class Contact : INotifyPropertyChanged
             if (SetField(ref _title, value))
             {
                 OnPropertyChanged(nameof(DisplayName));
+                OnPropertyChanged(nameof(Initials));
             }
         }
     }
@@ -39,6 +48,7 @@ public sealed class Contact : INotifyPropertyChanged
             if (SetField(ref _familyName, value))
             {
                 OnPropertyChanged(nameof(DisplayName));
+                OnPropertyChanged(nameof(Initials));
             }
         }
     }
@@ -52,6 +62,7 @@ public sealed class Contact : INotifyPropertyChanged
             if (SetField(ref _givenName, value))
             {
                 OnPropertyChanged(nameof(DisplayName));
+                OnPropertyChanged(nameof(Initials));
             }
         }
     }
@@ -91,21 +102,54 @@ public sealed class Contact : INotifyPropertyChanged
     public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
-    /// Vietnamese name order: title, then family name, then given name. Falls back to whichever
-    /// part exists, and finally to the number, so a half-filled contact still shows something
-    /// usable rather than an empty row.
+    /// Formats the contact name. For countries with family-name-first order (e.g. Vietnam '84'),
+    /// formats Title + FamilyName + GivenName. For Ethiopia ('251') and Western order, formats
+    /// Title + GivenName + Father's Name / FamilyName (e.g. 'Abebe Bikila'). Falls back to whichever
+    /// part exists, and finally to the phone number.
     /// </summary>
     public string DisplayName
     {
         get
         {
+            var parts = Models.PhoneNumber.DefaultCountryCode == "84"
+                ? new[] { Title, FamilyName, GivenName }
+                : new[] { Title, GivenName, FamilyName };
+
             var full = string.Join(
                 ' ',
-                new[] { Title, FamilyName, GivenName }.Where(p => !string.IsNullOrWhiteSpace(p)));
+                parts.Where(p => !string.IsNullOrWhiteSpace(p)));
 
             return full.Length > 0 ? full : DisplayPhone;
         }
     }
+
+    /// <summary>Two-letter avatar initials or single letter.</summary>
+    public string Initials
+    {
+        get
+        {
+            var text = DisplayName.Trim();
+            if (string.IsNullOrEmpty(text))
+            {
+                return string.Empty;
+            }
+
+            if (char.IsLetter(text[0]))
+            {
+                var parts = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length >= 2 && char.IsLetter(parts[0][0]) && char.IsLetter(parts[1][0]))
+                {
+                    return $"{char.ToUpperInvariant(parts[0][0])}{char.ToUpperInvariant(parts[1][0])}";
+                }
+
+                return char.ToUpperInvariant(text[0]).ToString();
+            }
+
+            return string.Empty;
+        }
+    }
+
+    public bool HasInitials => !string.IsNullOrEmpty(Initials);
 
     public Contact Clone() => new()
     {

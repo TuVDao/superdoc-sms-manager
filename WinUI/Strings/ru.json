@@ -5,7 +5,6 @@
     "rtl": false,
     "reviewed": false
   },
-
   "Messages": "Сообщения",
   "Contacts": "Контакты",
   "FontSizeTooltip": "Размер текста",
@@ -13,7 +12,6 @@
   "ShowList": "Показать список",
   "HideList": "Скрыть список",
   "CheckingModem": "Проверка модема…",
-
   "NewMessage": "+ Новое сообщение",
   "SearchPlaceholder": "Поиск по имени или номеру…",
   "SaveToContacts": "Сохранить в контакты",
@@ -30,12 +28,11 @@
   "ComposerSizerTooltip": "Потяните вверх, чтобы увеличить поле ввода",
   "NoRecipient": "Не указан номер получателя.",
   "EmojiTooltip": "Вставить эмодзи",
-
   "StatusPending": "В очереди",
   "StatusSending": "Отправляется",
   "StatusSent": "Отправлено",
+  "StatusDelivered": "Доставлено",
   "StatusFailed": "Ошибка",
-
   "AddContact": "+ Добавить контакт",
   "ContactInfo": "Данные контакта",
   "ContactTitle": "Обращение",
@@ -55,16 +52,13 @@
   "Cancel": "Отмена",
   "ContactNeedsPhone": "Требуется номер телефона.",
   "ContactDeleted": "Контакт удалён.",
-
   "TrayOpen": "Открыть SUPERDOC SMS Manager",
   "TrayTestNotification": "Отправить тестовое уведомление",
   "TrayExit": "Выход",
   "TestNotificationBody": "Тестовое уведомление — если вы это видите, уведомления работают.",
   "UnknownNumber": "Неизвестный номер",
-
   "DeleteMessagesTitle": "Удаление сообщений",
   "DeleteConversationsTitle": "Удаление переписок",
-
   "DeleteNMessages": "Удалить сообщений: {0}",
   "DeleteNConversations": "Удалить переписок: {0}",
   "ConfirmDeleteMessages": "Безвозвратно удалить выбранные сообщения ({0})? Отменить будет нельзя.",
@@ -88,24 +82,35 @@
   "SendOnly": " - только отправка: {0}",
   "ModemUnavailable": "Модем недоступен: {0}",
   "ModemStatusFailed": "Не удалось получить состояние модема: {0}",
-
   "ComposerCounter": "{0} символов · частей: {1} · {2}",
   "EncodingGsm": "GSM-7",
   "EncodingUnicode": "Unicode",
   "UnicodeWarning": "Сообщения с эмодзи или кириллицей вмещают 70 символов в части вместо 160, и каждая дополнительная часть тарифицируется отдельно.",
-
   "FontSmall": "Мелкий",
   "FontMedium": "Средний",
   "FontLarge": "Крупный",
   "FontXLarge": "Очень крупный",
   "FontXXLarge": "Огромный",
-
   "LanguageAuto": "Автоматически",
-
   "CheckBalance": "Проверить баланс",
   "BalanceCodeLabel": "USSD-код",
   "BalanceChecking": "Запрос к оператору…",
   "BalanceFailed": "Не удалось получить баланс: {0}",
   "BalanceNoCode": "Введите код запроса баланса вашего оператора, например *101#.",
-  "SendRefusedHint": "Оператор отклонил сообщение, не указав причину. Обычно это исчерпанный баланс: приём остаётся бесплатным, поэтому входящие продолжают приходить."
+  "SendRefusedHint": "Оператор отклонил сообщение, не указав причину. Обычно это исчерпанный баланс: приём остаётся бесплатным, поэтому входящие продолжают приходить.",
+  "Appearance": "Внешний вид",
+  "CancelPending": "Отменить отправку",
+  "Copy": "Копировать сообщение",
+  "EditPending": "Редактировать сообщение",
+  "FixSimHotplug": "⚡ Исправить SIM / Сбросить оборудование",
+  "FixSimTooltip": "Перезапуск драйверов модема Intel XMM LTE и службы WWAN с правами администратора",
+  "Language": "Язык",
+  "MessageCopied": "Сообщение скопировано в буфер обмена",
+  "ModemResetConfirmMessage": "Это перезапустит внутренний LTE-модем и сетевые службы с правами администратора. Сетевые подключения могут кратковременно прерваться. Продолжить?",
+  "ModemResetConfirmTitle": "Перезапустить оборудование модема?",
+  "ModemStatus": "Сотовый модем",
+  "RecheckModem": "Проверить модем и SIM",
+  "SelectText": "Выделить текст",
+  "Settings": "Параметры",
+  "TextSize": "Размер текста"
 }

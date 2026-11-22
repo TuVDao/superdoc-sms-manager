@@ -5,7 +5,6 @@
     "rtl": true,
     "reviewed": false
   },
-
   "Messages": "الرسائل",
   "Contacts": "جهات الاتصال",
   "FontSizeTooltip": "حجم النص",
@@ -13,7 +12,6 @@
   "ShowList": "إظهار القائمة",
   "HideList": "إخفاء القائمة",
   "CheckingModem": "جارٍ فحص المودم…",
-
   "NewMessage": "+ رسالة جديدة",
   "SearchPlaceholder": "ابحث بالاسم أو الرقم…",
   "SaveToContacts": "حفظ في جهات الاتصال",
@@ -30,12 +28,11 @@
   "ComposerSizerTooltip": "اسحب للأعلى لتكبير مربع الكتابة",
   "NoRecipient": "لا يوجد رقم مستلم.",
   "EmojiTooltip": "إدراج رمز تعبيري",
-
   "StatusPending": "قيد الانتظار",
   "StatusSending": "جارٍ الإرسال",
   "StatusSent": "تم الإرسال",
+  "StatusDelivered": "تم التسليم",
   "StatusFailed": "فشل",
-
   "AddContact": "+ إضافة جهة اتصال",
   "ContactInfo": "بيانات جهة الاتصال",
   "ContactTitle": "اللقب",
@@ -55,16 +52,13 @@
   "Cancel": "إلغاء",
   "ContactNeedsPhone": "رقم الهاتف مطلوب.",
   "ContactDeleted": "تم حذف جهة الاتصال.",
-
   "TrayOpen": "فتح SUPERDOC SMS Manager",
   "TrayTestNotification": "إرسال إشعار تجريبي",
   "TrayExit": "خروج",
   "TestNotificationBody": "إشعار تجريبي — إذا ظهر هذا النص فالإشعارات تعمل.",
   "UnknownNumber": "رقم غير معروف",
-
   "DeleteMessagesTitle": "حذف الرسائل",
   "DeleteConversationsTitle": "حذف المحادثات",
-
   "DeleteNMessages": "حذف {0} رسالة",
   "DeleteNConversations": "حذف {0} محادثة",
   "ConfirmDeleteMessages": "هل تريد حذف {0} رسالة محددة نهائيًا؟ لا يمكن التراجع عن ذلك.",
@@ -88,24 +82,35 @@
   "SendOnly": " - إرسال فقط: {0}",
   "ModemUnavailable": "المودم غير متاح: {0}",
   "ModemStatusFailed": "تعذرت قراءة حالة المودم: {0}",
-
   "ComposerCounter": "{0} حرفًا · {1} جزء · {2}",
   "EncodingGsm": "GSM-7",
   "EncodingUnicode": "Unicode",
   "UnicodeWarning": "الرسائل التي تحتوي على رموز تعبيرية أو حروف عربية تتسع لـ 70 حرفًا فقط في كل جزء بدلًا من 160، ويُحتسب كل جزء إضافي على حدة.",
-
   "FontSmall": "صغير",
   "FontMedium": "متوسط",
   "FontLarge": "كبير",
   "FontXLarge": "كبير جدًا",
   "FontXXLarge": "ضخم",
-
   "LanguageAuto": "تلقائي",
-
   "CheckBalance": "التحقق من الرصيد",
   "BalanceCodeLabel": "رمز USSD",
   "BalanceChecking": "جارٍ سؤال المشغّل…",
   "BalanceFailed": "تعذّرت قراءة الرصيد: {0}",
   "BalanceNoCode": "أدخل الرمز الذي يستخدمه مشغّلك للاستعلام عن الرصيد، مثل ‎*101#‎.",
-  "SendRefusedHint": "رفض المشغّل الرسالة دون ذكر سبب. السبب المعتاد هو نفاد رصيد الدفع المسبق: الاستقبال يبقى مجانيًا، لذا تستمر الرسائل الواردة في الوصول."
+  "SendRefusedHint": "رفض المشغّل الرسالة دون ذكر سبب. السبب المعتاد هو نفاد رصيد الدفع المسبق: الاستقبال يبقى مجانيًا، لذا تستمر الرسائل الواردة في الوصول.",
+  "Appearance": "المظهر",
+  "CancelPending": "إلغاء الإرسال",
+  "Copy": "نسخ الرسالة",
+  "EditPending": "تعديل الرسالة",
+  "FixSimHotplug": "⚡ إصلاح شريحة SIM / إعادة تعيين المودم",
+  "FixSimTooltip": "إعادة تشغيل أجهزة مودم Intel XMM LTE وخدمة WWAN بصلاحيات المسؤول",
+  "Language": "اللغة",
+  "MessageCopied": "تم نسخ الرسالة إلى الحافظة",
+  "ModemResetConfirmMessage": "سيؤدي هذا إلى إعادة تشغيل مودم LTE الخلوي الداخلي وخدمات الشبكة باستخدام صلاحيات المسؤول. قد يتم فصل اتصالات الشبكة مؤقتًا أثناء إعادة التشغيل. هل تريد المتابعة؟",
+  "ModemResetConfirmTitle": "إعادة تعيين أجهزة المودم الخلوي؟",
+  "ModemStatus": "المودم الخلوي",
+  "RecheckModem": "إعادة فحص المودم وشريحة SIM",
+  "SelectText": "تحديد النص",
+  "Settings": "الإعدادات",
+  "TextSize": "حجم النص"
 }

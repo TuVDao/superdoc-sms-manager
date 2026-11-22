@@ -1,9 +1,13 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
 using SuperDoc.Sms.Models;
 using SuperDoc.Sms.Services;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
 
 namespace SuperDoc.Sms.WinUI;
 
@@ -16,13 +20,17 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private readonly ILogger<MainViewModel> _logger;
     private readonly DispatcherQueue _dispatcher;
     private string _deviceStatusText = string.Empty;
+    private string _deviceStatusSummary = "Modem Off";
+    private bool _isModemReady;
     private string _balanceNotice = string.Empty;
-    private bool _isContactsView;
+    private string _activeView = "Messages";
     private bool _disposed;
     private DateTimeOffset _lastBalanceEnquiry = DateTimeOffset.MinValue;
 
     /// <summary>How rarely the account may be queried while sends keep failing.</summary>
     private static readonly TimeSpan BalanceEnquiryInterval = TimeSpan.FromMinutes(10);
+
+    public Func<string, string, Task<bool>>? ConfirmActionAsync { get; set; }
 
     public MainViewModel(SmsManager smsManager, ILogger<MainViewModel> logger, DispatcherQueue dispatcher)
     {
@@ -44,14 +52,48 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             Conversations.RefreshLocalisedText();
         };
 
-        ShowMessagesCommand = new DelegateCommand(() => IsContactsView = false);
-        ShowContactsCommand = new DelegateCommand(() => IsContactsView = true);
+        var initialView = Environment.GetEnvironmentVariable("SUPERDOC_SMS_VIEW");
+        if (!string.IsNullOrEmpty(initialView))
+        {
+            _activeView = initialView;
+        }
+
+        ShowMessagesCommand = new DelegateCommand(() => SelectView("Messages"));
+        ShowContactsCommand = new DelegateCommand(() => SelectView("Contacts"));
+        ShowSettingsCommand = new DelegateCommand(() => SelectView("Settings"));
+        ToggleNavCommand = new DelegateCommand(Ui.ToggleNavExpansion);
+        DismissBalanceNoticeCommand = new DelegateCommand(() => BalanceNotice = string.Empty);
+        SetBalanceUssdCodeCommand = new DelegateCommand<string>(code =>
+        {
+            if (!string.IsNullOrWhiteSpace(code))
+            {
+                BalanceUssdCode = code;
+            }
+        });
+        RecheckModemCommand = new AsyncCommand(RecheckModemAsync);
+        RestartModemHardwareCommand = new AsyncCommand(RestartModemHardwareAsync);
         ToggleLeftPanelCommand = new DelegateCommand(Ui.ToggleLeftPanel);
         AddContactForPeerCommand = new DelegateCommand(AddContactForCurrentPeer, () =>
             Conversations.SelectedConversation is { HasContact: false });
 
         // Renaming or adding a contact changes how every thread is titled.
         ContactBook.ContactsChanged += () => _ = Conversations.RefreshAsync();
+
+        Conversations.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ConversationsViewModel.StatusText))
+            {
+                OnPropertyChanged(nameof(CurrentStatusText));
+            }
+        };
+        ContactBook.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ContactsViewModel.StatusText))
+            {
+                OnPropertyChanged(nameof(CurrentStatusText));
+            }
+        };
+        ContactBook.SendMessageRequested += StartConversationWith;
 
         Conversations.PropertyChanged += (_, e) =>
         {
@@ -100,7 +142,30 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     public DelegateCommand ShowContactsCommand { get; }
 
+    public DelegateCommand ShowSettingsCommand { get; }
+    public DelegateCommand ToggleNavCommand { get; }
+    public DelegateCommand DismissBalanceNoticeCommand { get; }
+    public DelegateCommand<string> SetBalanceUssdCodeCommand { get; }
+
+    public AsyncCommand RecheckModemCommand { get; }
+    public AsyncCommand RestartModemHardwareCommand { get; }
+
     public DelegateCommand AddContactForPeerCommand { get; }
+
+    public string CurrentStatusText => !string.IsNullOrEmpty(Conversations.StatusText) ? Conversations.StatusText : ContactBook.StatusText;
+
+    public void DismissAllStatus()
+    {
+        Conversations.DismissStatus();
+        ContactBook.DismissStatus();
+        OnPropertyChanged(nameof(CurrentStatusText));
+    }
+
+    public void DismissBalanceNotice()
+    {
+        _balanceNoticeTimer?.Stop();
+        BalanceNotice = string.Empty;
+    }
 
     public string DeviceStatusText
     {
@@ -108,7 +173,28 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         set => SetField(ref _deviceStatusText, value);
     }
 
+    public string DeviceStatusSummary
+    {
+        get => _deviceStatusSummary;
+        set => SetField(ref _deviceStatusSummary, value);
+    }
+
+    public bool IsModemReady
+    {
+        get => _isModemReady;
+        set => SetField(ref _isModemReady, value);
+    }
+
     public AsyncCommand CheckBalanceCommand { get; }
+
+    public void StartConversationWith(string phone)
+    {
+        SelectView("Messages");
+        Conversations.StartNewConversation();
+        Conversations.NewRecipient = phone;
+    }
+
+    private DispatcherTimer? _balanceNoticeTimer;
 
     /// <summary>
     /// Why sending is failing, and what the carrier says about the account. Empty most of the
@@ -122,6 +208,20 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             if (SetField(ref _balanceNotice, value))
             {
                 OnPropertyChanged(nameof(HasBalanceNotice));
+                RunOnUi(() =>
+                {
+                    _balanceNoticeTimer?.Stop();
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        _balanceNoticeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(6) };
+                        _balanceNoticeTimer.Tick += (_, _) =>
+                        {
+                            _balanceNoticeTimer?.Stop();
+                            BalanceNotice = string.Empty;
+                        };
+                        _balanceNoticeTimer.Start();
+                    }
+                });
             }
         }
     }
@@ -138,6 +238,9 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             OnPropertyChanged();
         }
     }
+
+    /// <summary>Quick USSD presets for the current country / carrier (e.g. Ethio Telecom, Safaricom).</summary>
+    public IReadOnlyList<UssdPreset> UssdPresets => _smsManager.GetUssdPresets();
 
     private void OnSendRefusedWithoutReason(object? sender, EventArgs e)
     {
@@ -178,23 +281,121 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             : hint + Loc.BalanceFailed(result.Error ?? string.Empty));
     }
 
+    public bool IsMessagesView => _activeView == "Messages";
+
     public bool IsContactsView
     {
-        get => _isContactsView;
-        set
+        get => _activeView == "Contacts";
+        set => SelectView(value ? "Contacts" : "Messages");
+    }
+
+    public bool IsSettingsView => _activeView == "Settings";
+
+    public void SelectView(string view)
+    {
+        if (SetField(ref _activeView, view, nameof(IsMessagesView)))
         {
-            if (SetField(ref _isContactsView, value))
+            OnPropertyChanged(nameof(IsContactsView));
+            OnPropertyChanged(nameof(IsSettingsView));
+            if (view == "Contacts")
             {
-                OnPropertyChanged(nameof(IsMessagesView));
-                if (value)
-                {
-                    _ = ContactBook.RefreshAsync();
-                }
+                _ = ContactBook.RefreshAsync();
+            }
+            else if (view == "Settings")
+            {
+                _ = LoadDeviceStatusAsync();
             }
         }
     }
 
-    public bool IsMessagesView => !IsContactsView;
+    private async Task RecheckModemAsync()
+    {
+        RunOnUi(() =>
+        {
+            DeviceStatusSummary = "Checking...";
+            DeviceStatusText = "Resetting and re-querying modem...";
+        });
+        await _smsManager.ResetAndReinitializeAsync();
+        await LoadDeviceStatusAsync();
+    }
+
+    private async Task RestartModemHardwareAsync()
+    {
+        if (ConfirmActionAsync is not null)
+        {
+            var proceed = await ConfirmActionAsync(
+                Loc.ModemResetConfirmTitle,
+                Loc.ModemResetConfirmMessage);
+            if (!proceed)
+            {
+                return;
+            }
+        }
+
+        RunOnUi(() =>
+        {
+            DeviceStatusSummary = "Restarting...";
+            DeviceStatusText = "Restarting cellular modem hardware and services...";
+        });
+
+        try
+        {
+            var baseDir = AppContext.BaseDirectory;
+            var scriptPath = Path.Combine(baseDir, "scripts", "Fix-SIM-Detection.bat");
+            if (!File.Exists(scriptPath))
+            {
+                scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "scripts", "Fix-SIM-Detection.bat");
+            }
+
+            if (File.Exists(scriptPath))
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = scriptPath,
+                    UseShellExecute = true
+                };
+                var proc = Process.Start(psi);
+                if (proc is not null)
+                {
+                    await proc.WaitForExitAsync();
+                }
+            }
+            else
+            {
+                var ps1Path = Path.Combine(baseDir, "scripts", "restart-modem.ps1");
+                if (!File.Exists(ps1Path))
+                {
+                    ps1Path = Path.Combine(Directory.GetCurrentDirectory(), "scripts", "restart-modem.ps1");
+                }
+
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "powershell.exe",
+                    Arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{ps1Path}\"",
+                    Verb = "runas",
+                    UseShellExecute = true
+                };
+                var proc = Process.Start(psi);
+                if (proc is not null)
+                {
+                    await proc.WaitForExitAsync();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Hardware modem restart was cancelled or failed.");
+        }
+
+        await RecheckModemAsync();
+    }
+
+    /// <summary>Jumps to the address book with the given phone number filled in.</summary>
+    public void AddContactForPeer(string phone)
+    {
+        ContactBook.StartNewFor(phone);
+        IsContactsView = true;
+    }
 
     /// <summary>Jumps to the address book with the open thread's number already filled in.</summary>
     private void AddContactForCurrentPeer()
@@ -205,12 +406,19 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             return;
         }
 
-        ContactBook.StartNewFor(conversation.PeerDisplay);
-        IsContactsView = true;
+        AddContactForPeer(conversation.PeerDisplay);
     }
 
     /// <summary>Runs on a modem callback thread, so the refresh marshals itself to the UI thread.</summary>
-    private void OnSmsReceived(object? sender, SmsMessage message) => _ = RefreshAsync();
+    private void OnSmsReceived(object? sender, SmsMessage message)
+    {
+        _ = RefreshAsync();
+        if (!string.IsNullOrEmpty(BalanceNotice) && BalanceNotice.Contains("USSD request sent"))
+        {
+            var senderName = string.IsNullOrWhiteSpace(message.From) ? "Carrier" : message.From;
+            RunOnUi(() => BalanceNotice = $"{senderName}: {message.Body}");
+        }
+    }
 
     private void OnReceiveStateChanged(object? sender, EventArgs e) => _ = LoadDeviceStatusAsync();
 
@@ -224,10 +432,33 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
             if (DemoMode.IsEnabled)
             {
-                // "Modem unavailable" is accurate but reads as a fault; in demo mode there is no
-                // fault, the modem was never opened on purpose.
-                RunOnUi(() => DeviceStatusText = snapshot.Diagnostic);
+                RunOnUi(() =>
+                {
+                    DeviceStatusSummary = "Demo Mode";
+                    IsModemReady = false;
+                    DeviceStatusText = snapshot.Diagnostic;
+                });
                 return;
+            }
+
+            var isReady = snapshot.IsAvailable && snapshot.DeviceStatus == "Ready";
+            string summary;
+
+            if (!snapshot.IsAvailable || snapshot.DeviceStatus is "Off" or "Unavailable" or "DeviceFailure")
+            {
+                summary = "Modem Off";
+            }
+            else if (!string.IsNullOrEmpty(snapshot.CarrierName))
+            {
+                summary = snapshot.CarrierName;
+            }
+            else if (!string.IsNullOrEmpty(snapshot.AccountPhoneNumber) && snapshot.AccountPhoneNumber != "(None)")
+            {
+                summary = snapshot.AccountPhoneNumber;
+            }
+            else
+            {
+                summary = "Modem Ready";
             }
 
             var text = snapshot.IsAvailable
@@ -238,12 +469,27 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
                       : Loc.SendOnly(snapshot.Diagnostic))
                 : Loc.ModemUnavailable(snapshot.Diagnostic);
 
-            RunOnUi(() => DeviceStatusText = text);
+            if (!string.IsNullOrEmpty(snapshot.CarrierName))
+            {
+                text = $"{snapshot.CarrierName} • {text}";
+            }
+
+            RunOnUi(() =>
+            {
+                IsModemReady = isReady;
+                DeviceStatusSummary = summary;
+                DeviceStatusText = text;
+            });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to read modem status.");
-            RunOnUi(() => DeviceStatusText = Loc.ModemStatusFailed(ex.Message));
+            RunOnUi(() =>
+            {
+                IsModemReady = false;
+                DeviceStatusSummary = "Modem Error";
+                DeviceStatusText = Loc.ModemStatusFailed(ex.Message);
+            });
         }
     }
 

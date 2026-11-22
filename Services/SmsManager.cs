@@ -26,6 +26,7 @@ public sealed record SmsDeviceSnapshot
     public string ReceiveMode { get; init; } = string.Empty;
 
     public string Diagnostic { get; init; } = string.Empty;
+    public string CarrierName { get; init; } = string.Empty;
 }
 
 /// <summary>
@@ -53,8 +54,8 @@ public sealed class SmsManager : IDisposable
     private string _receiveMode = string.Empty;
     private bool _disposed;
 
-    /// <summary>Often enough that a dropped receive path is noticed in under a minute.</summary>
-    private static readonly TimeSpan HealthCheckInterval = TimeSpan.FromSeconds(30);
+    /// <summary>Polled frequently so newly detected SIM cards or modem resets are reflected quickly.</summary>
+    private static readonly TimeSpan HealthCheckInterval = TimeSpan.FromSeconds(5);
 
     private readonly Timer _healthTimer;
 
@@ -169,7 +170,7 @@ public sealed class SmsManager : IDisposable
 
     /// <summary>
     /// The USSD code used to ask the carrier for the account balance. Empty when neither the user
-    /// nor <see cref="CarrierBalance.DefaultCodeForCountry"/> has one for this SIM.
+    /// nor <see cref="CarrierBalance.DefaultCodeForCountry(string?, string?)"/> has one for this SIM.
     /// </summary>
     public string BalanceUssdCode
     {
@@ -178,10 +179,18 @@ public sealed class SmsManager : IDisposable
             var stored = _repo.GetSetting(CarrierBalance.UssdCodeSetting);
             return CarrierBalance.IsPlausibleCode(stored)
                 ? stored
-                : CarrierBalance.DefaultCodeForCountry(PhoneNumber.DefaultCountryCode);
+                : CarrierBalance.DefaultCodeForCountry(
+                    PhoneNumber.DefaultCountryCode,
+                    _device?.AccountPhoneNumber ?? _device?.SmscAddress);
         }
         set => _repo.SetSetting(CarrierBalance.UssdCodeSetting, value?.Trim() ?? string.Empty);
     }
+
+    /// <summary>Returns quick presets for USSD codes for the current SIM / carrier.</summary>
+    public IReadOnlyList<UssdPreset> GetUssdPresets()
+        => CarrierBalance.GetPresetsForCountry(
+            PhoneNumber.DefaultCountryCode,
+            _device?.AccountPhoneNumber ?? _device?.SmscAddress);
 
     /// <summary>Asks the carrier what the account balance is, over USSD.</summary>
     public Task<CarrierBalanceResult> CheckBalanceAsync()
@@ -195,12 +204,31 @@ public sealed class SmsManager : IDisposable
         }
 
         var code = BalanceUssdCode;
-        return code.Length == 0
-            ? Task.FromResult(CarrierBalanceResult.Failed(string.Empty))
+        if (string.IsNullOrEmpty(code))
+        {
+            code = CarrierBalance.DefaultCodeForCountry(
+                PhoneNumber.DefaultCountryCode,
+                _device?.AccountPhoneNumber ?? _device?.SmscAddress);
+        }
+
+        return string.IsNullOrEmpty(code)
+            ? Task.FromResult(CarrierBalanceResult.Failed("No USSD balance code configured. Please specify a balance code (e.g. *704# for Safaricom or *804# for Ethio Telecom)."))
             : new CarrierBalance(_logger).QueryAsync(code);
     }
 
+    /// <summary>Creates an interactive multi-turn USSD session for packages or menus.</summary>
+    public UssdInteractiveSession CreateUssdSession() => new(_logger);
+
+    /// <summary>Whether outgoing SMS messages request a delivery receipt from the cellular network.</summary>
+    public bool DeliveryReportsEnabled
+    {
+        get => _repo.GetSetting("sms.delivery_reports", "1") == "1";
+        set => _repo.SetSetting("sms.delivery_reports", value ? "1" : "0");
+    }
+
     public int DeleteMessages(IEnumerable<long> ids) => _repo.DeleteMessages(ids);
+
+    public bool DeleteMessage(long id) => _repo.DeleteMessages(new[] { id }) > 0;
 
     public int DeleteConversations(IEnumerable<string> peerKeys) => _repo.DeleteConversations(peerKeys);
 
@@ -228,17 +256,29 @@ public sealed class SmsManager : IDisposable
 
         try
         {
+            var smsc = device.SmscAddress ?? string.Empty;
+            var carrier = string.Empty;
+            if (smsc.StartsWith("+2517", StringComparison.Ordinal))
+            {
+                carrier = "Safaricom Ethiopia";
+            }
+            else if (smsc.StartsWith("+2519", StringComparison.Ordinal))
+            {
+                carrier = "Ethio Telecom";
+            }
+
             return new SmsDeviceSnapshot
             {
                 IsAvailable = true,
                 DeviceId = device.DeviceId,
                 AccountPhoneNumber = device.AccountPhoneNumber ?? string.Empty,
-                SmscAddress = device.SmscAddress ?? string.Empty,
+                SmscAddress = smsc,
                 DeviceStatus = device.DeviceStatus.ToString(),
                 CellularClass = device.CellularClass.ToString(),
                 CanReceive = _canReceive,
                 ReceiveMode = _receiveMode,
-                Diagnostic = _initDiagnostic
+                Diagnostic = _initDiagnostic,
+                CarrierName = carrier
             };
         }
         catch (Exception ex)
@@ -264,19 +304,29 @@ public sealed class SmsManager : IDisposable
             return;
         }
 
-        if (CallingCodes.IsKnownCode(_repo.GetSetting(SmsRepository.CountryCodeSetting)))
+        var source = _repo.GetSetting(SmsRepository.CountryCodeSetting + ".source");
+        if (string.Equals(source, "user", StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
 
         try
         {
-            var fromSmsc = CallingCodes.FromInternationalNumber(_device.SmscAddress);
-            var code = fromSmsc.Length > 0
-                ? fromSmsc
-                : CallingCodes.FromInternationalNumber(_device.AccountPhoneNumber);
+            var smsc = _device.SmscAddress ?? string.Empty;
+            string code;
+            if (smsc.StartsWith("+251", StringComparison.Ordinal) || smsc.StartsWith("251", StringComparison.Ordinal))
+            {
+                code = "251";
+            }
+            else
+            {
+                var fromSmsc = CallingCodes.FromInternationalNumber(smsc);
+                code = fromSmsc.Length > 0
+                    ? fromSmsc
+                    : CallingCodes.FromInternationalNumber(_device.AccountPhoneNumber);
+            }
 
-            if (code.Length > 0)
+            if (code.Length > 0 && !string.Equals(_repo.GetSetting(SmsRepository.CountryCodeSetting), code, StringComparison.Ordinal))
             {
                 _repo.ApplyCountryCode(code, "SIM");
             }
@@ -322,19 +372,45 @@ public sealed class SmsManager : IDisposable
         return (body.Length + perSegment - 1) / perSegment;
     }
 
+    private static void TryPowerOnCellularRadio()
+    {
+        try
+        {
+            using var proc = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "netsh.exe",
+                Arguments = "mbn set powerstate interface=\"Cellular\" state=on",
+                CreateNoWindow = true,
+                UseShellExecute = false
+            });
+            proc?.WaitForExit(1500);
+        }
+        catch
+        {
+        }
+    }
+
     private async Task EnsureInitializedAsync()
     {
-        if (_device is not null)
+        if (DemoMode.IsEnabled)
         {
+            _initDiagnostic = "Demo mode: the modem is not opened and nothing can be sent.";
             return;
         }
 
-        if (DemoMode.IsEnabled)
+        if (_device is not null)
         {
-            // Opening the modem here would take the receive registration away from the copy the
-            // user is actually running.
-            _initDiagnostic = "Demo mode: the modem is not opened and nothing can be sent.";
-            return;
+            try
+            {
+                if (_device.DeviceStatus == SmsDeviceStatus.Ready)
+                {
+                    return;
+                }
+            }
+            catch
+            {
+                _device = null;
+            }
         }
 
         await _initGate.WaitAsync();
@@ -342,24 +418,48 @@ public sealed class SmsManager : IDisposable
         {
             if (_device is not null)
             {
-                return;
+                try
+                {
+                    if (_device.DeviceStatus == SmsDeviceStatus.Ready)
+                    {
+                        return;
+                    }
+                }
+                catch
+                {
+                    _device = null;
+                }
             }
 
-            _device = SmsDevice2.GetDefault();
-            if (_device is null)
+            var fresh = SmsDevice2.GetDefault();
+            if (fresh is null)
             {
                 _initDiagnostic = "No WWAN SMS device found. Check that the SIM is inserted and mobile broadband is enabled.";
                 _logger?.LogWarning("{Diagnostic}", _initDiagnostic);
                 return;
             }
 
+            if (fresh.DeviceStatus == SmsDeviceStatus.Off)
+            {
+                TryPowerOnCellularRadio();
+                await Task.Delay(1000);
+                try
+                {
+                    var rechecked = SmsDevice2.GetDefault();
+                    if (rechecked is not null)
+                    {
+                        fresh = rechecked;
+                    }
+                }
+                catch { }
+            }
+
+            _device = fresh;
             _initDiagnostic = $"Modem ready. Status={_device.DeviceStatus}, number={_device.AccountPhoneNumber}, SMSC={_device.SmscAddress}.";
             _logger?.LogInformation("{Diagnostic}", _initDiagnostic);
 
             AdoptCountryCodeFromSim();
 
-            // Re-acquiring the modem after a reset must not register a second time - the receive
-            // registration outlives the device handle.
             if (_registration is null)
             {
                 TryRegisterForIncomingMessages();
@@ -474,6 +574,22 @@ public sealed class SmsManager : IDisposable
     {
         try
         {
+            if (args.MessageType == SmsMessageType.Status)
+            {
+                var statusMsg = args.StatusMessage;
+                if (statusMsg is not null)
+                {
+                    var recipient = !string.IsNullOrWhiteSpace(statusMsg.To) ? statusMsg.To : statusMsg.From;
+                    _logger?.LogInformation("Delivery status report received for {Recipient}: status={Status}", recipient, statusMsg.Status);
+                    // 3GPP TS 23.040: status values 0..31 represent successful delivery to recipient
+                    if (statusMsg.Status < 32 && !string.IsNullOrWhiteSpace(recipient))
+                    {
+                        MarkLatestSentMessageAsDelivered(recipient);
+                    }
+                }
+                return;
+            }
+
             var text = args.TextMessage;
             if (text is null || string.IsNullOrWhiteSpace(text.Body))
             {
@@ -502,6 +618,26 @@ public sealed class SmsManager : IDisposable
         }
     }
 
+    /// <summary>Updates the latest sent message to Delivered when an SMS delivery receipt is acknowledged.</summary>
+    public void MarkLatestSentMessageAsDelivered(string recipient)
+    {
+        try
+        {
+            var msg = _repo.GetLatestSentMessageTo(recipient);
+            if (msg is not null && msg.Status == SmsStatus.Sent)
+            {
+                msg.Status = SmsStatus.Delivered;
+                _repo.Update(msg);
+                _logger?.LogInformation("Marked SMS #{Id} to {Recipient} as Delivered.", msg.Id, recipient);
+                MessageReceived?.Invoke(this, msg);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Could not update delivery status for {Recipient}", recipient);
+        }
+    }
+
     private async Task<SmsSendResult> SendMessageInternalAsync(SmsMessage msg)
     {
         try
@@ -523,7 +659,8 @@ public sealed class SmsManager : IDisposable
             {
                 To = msg.To,
                 Body = msg.Body,
-                Encoding = ChooseEncoding(msg.Body)
+                Encoding = ChooseEncoding(msg.Body),
+                IsDeliveryNotificationEnabled = DeliveryReportsEnabled
             };
 
             var result = await device.SendMessageAndGetResultAsync(outgoing);
@@ -590,12 +727,11 @@ public sealed class SmsManager : IDisposable
         try
         {
             var wasReceiving = _canReceive;
+            var wasReady = false;
 
-            // Touching the device is what surfaces a dead handle: the property throws rather
-            // than returning a "gone" status.
             try
             {
-                _ = _device?.DeviceStatus;
+                wasReady = _device?.DeviceStatus == SmsDeviceStatus.Ready;
             }
             catch (Exception ex)
             {
@@ -603,12 +739,12 @@ public sealed class SmsManager : IDisposable
                 ResetDevice();
             }
 
-            if (_device is null)
+            if (!wasReady)
             {
                 await EnsureInitializedAsync();
             }
 
-            if (!IsRegistrationAlive())
+            if (!IsRegistrationAlive() && _device?.DeviceStatus == SmsDeviceStatus.Ready)
             {
                 _logger?.LogWarning("Incoming SMS registration is gone; re-registering.");
 
@@ -622,7 +758,8 @@ public sealed class SmsManager : IDisposable
                 }
             }
 
-            if (wasReceiving != _canReceive)
+            var isReady = _device?.DeviceStatus == SmsDeviceStatus.Ready;
+            if (wasReceiving != _canReceive || wasReady != isReady)
             {
                 ReceiveStateChanged?.Invoke(this, EventArgs.Empty);
             }
@@ -663,7 +800,7 @@ public sealed class SmsManager : IDisposable
     }
 
     /// <summary>Forces the next send to re-acquire the modem, keeping any receive registration.</summary>
-    private void ResetDevice()
+    public void ResetDevice()
     {
         if (_device is null)
         {
@@ -673,6 +810,27 @@ public sealed class SmsManager : IDisposable
         _device = null;
         _initDiagnostic = "Modem handle was reset after a failure; it will be re-acquired.";
         _logger?.LogWarning("Dropped the cached modem handle so it can be re-acquired.");
+    }
+
+    /// <summary>
+    /// Drops the cached modem handle and re-queries Windows for the WWAN modem and SIM card.
+    /// Useful when the SIM card is inserted while the app is running.
+    /// </summary>
+    public async Task ResetAndReinitializeAsync()
+    {
+        await _initGate.WaitAsync();
+        try
+        {
+            _device = null;
+            _canReceive = false;
+            _initDiagnostic = "Re-querying modem and SIM card...";
+        }
+        finally
+        {
+            _initGate.Release();
+        }
+
+        await EnsureInitializedAsync();
     }
 
     /// <summary>

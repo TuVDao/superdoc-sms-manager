@@ -17,6 +17,9 @@ public sealed class ToastNotifier : IDisposable
     private bool _registered;
     private bool _disposed;
 
+    /// <summary>Raised when the user submits an inline reply from a Windows toast banner.</summary>
+    public event Action<string, string>? ReplyRequested;
+
     public ToastNotifier(ILogger logger, Strings loc)
     {
         _logger = logger;
@@ -37,6 +40,7 @@ public sealed class ToastNotifier : IDisposable
                 _logger.LogWarning("Notification icon missing at {Path}.", iconPath);
             }
 
+            AppNotificationManager.Default.NotificationInvoked += OnNotificationInvoked;
             AppNotificationManager.Default.Register("SUPERDOC SMS Manager", icon);
             _registered = true;
 
@@ -49,6 +53,29 @@ public sealed class ToastNotifier : IDisposable
             // Unpackaged runs without a registered COM activator land here. Not fatal: the
             // message is still stored and shown in the list.
             _logger.LogWarning(ex, "Toast notifications unavailable; incoming SMS will not raise a banner.");
+        }
+    }
+
+    private void OnNotificationInvoked(AppNotificationManager sender, AppNotificationActivatedEventArgs args)
+    {
+        try
+        {
+            if (args.Arguments.TryGetValue("action", out var action) && action == "reply")
+            {
+                if (args.Arguments.TryGetValue("peer", out var peer) &&
+                    args.UserInput.TryGetValue("replyBox", out var replyText))
+                {
+                    if (!string.IsNullOrWhiteSpace(replyText))
+                    {
+                        _logger.LogInformation("Inline toast reply received for {Peer}.", peer);
+                        ReplyRequested?.Invoke(peer, replyText);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to process notification activation.");
         }
     }
 
@@ -94,10 +121,25 @@ public sealed class ToastNotifier : IDisposable
             var body = message.Body.Length > 200 ? message.Body[..200] + "..." : message.Body;
 
             // The builder writes XML, so anything coming off the air has to be escaped.
-            var toast = new AppNotificationBuilder()
+            var builder = new AppNotificationBuilder()
                 .AddText(WebUtility.HtmlEncode(from))
-                .AddText(WebUtility.HtmlEncode(body))
-                .BuildNotification();
+                .AddText(WebUtility.HtmlEncode(body));
+
+            // Only offer quick reply for numbers that can receive an SMS back (exclude shortcodes & alphanumeric senders)
+            var canReply = !string.IsNullOrWhiteSpace(message.From) &&
+                           !message.From.Any(char.IsLetter) &&
+                           message.From.Count(char.IsDigit) >= 6;
+
+            if (canReply)
+            {
+                builder.AddTextBox("replyBox", "Type a reply...", "Reply")
+                       .AddButton(new AppNotificationButton("Send")
+                           .AddArgument("action", "reply")
+                           .AddArgument("peer", message.From)
+                           .SetInputId("replyBox"));
+            }
+
+            var toast = builder.BuildNotification();
 
             AppNotificationManager.Default.Show(toast);
 
@@ -121,6 +163,7 @@ public sealed class ToastNotifier : IDisposable
 
         try
         {
+            AppNotificationManager.Default.NotificationInvoked -= OnNotificationInvoked;
             AppNotificationManager.Default.Unregister();
         }
         catch (Exception ex)

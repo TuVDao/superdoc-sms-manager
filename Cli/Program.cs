@@ -42,7 +42,7 @@ PrintSnapshot(snapshot);
 
 Console.WriteLine();
 Console.WriteLine("Commands:");
-Console.WriteLine("  send <phone> <message>   queue an SMS (e.g. send +84912345678 Xin chao)");
+Console.WriteLine("  send <phone> <message>   queue an SMS (e.g. send +251911234567 Selam or 0712345678)");
 Console.WriteLine("  list [n]                 show the most recent messages (default 20)");
 Console.WriteLine("  status                   re-read modem state");
 Console.WriteLine("  quit");

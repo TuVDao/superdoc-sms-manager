@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.UI.Xaml;
 using SuperDoc.Sms.Services;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -27,6 +28,11 @@ public sealed class UiSettings : INotifyPropertyChanged
     /// </summary>
     private const string ComposerHeightKey = "ui.composerHeight.v2";
     private const string LanguageKey = "ui.language";
+    private const string WindowWidthKey = "ui.windowWidth";
+    private const string WindowHeightKey = "ui.windowHeight";
+
+    private const double DefaultWindowWidth = 980;
+    private const double DefaultWindowHeight = 640;
 
     /// <summary>Roomier than the WinUI default of 14: the previous UI read as cramped.</summary>
     private const double DefaultFontSize = 15;
@@ -145,6 +151,20 @@ public sealed class UiSettings : INotifyPropertyChanged
         }
     }
 
+    public int SavedWindowWidth { get; private set; } = (int)DefaultWindowWidth;
+    public int SavedWindowHeight { get; private set; } = (int)DefaultWindowHeight;
+
+    public void SaveWindowSize(int width, int height)
+    {
+        if (width >= 600 && height >= 400)
+        {
+            SavedWindowWidth = width;
+            SavedWindowHeight = height;
+            Save(WindowWidthKey, width);
+            Save(WindowHeightKey, height);
+        }
+    }
+
     /// <summary>Secondary text. Kept close to the body size so it stays comfortably readable.</summary>
     public double SmallFontSize => Math.Max(11, FontSize - 2);
 
@@ -219,6 +239,104 @@ public sealed class UiSettings : INotifyPropertyChanged
 
     public void ToggleLeftPanel() => IsLeftPanelVisible = !IsLeftPanelVisible;
 
+    private const string NavExpandedKey = "ui.isNavExpanded";
+    private bool _isNavExpanded;
+
+    /// <summary>Whether the Windows 11 left navigation rail is expanded with text labels or compact with icons only.</summary>
+    public bool IsNavExpanded
+    {
+        get => _isNavExpanded;
+        set
+        {
+            if (SetField(ref _isNavExpanded, value))
+            {
+                OnPropertyChanged(nameof(NavRailWidth));
+                OnPropertyChanged(nameof(NavLabelsVisibility));
+                Save(NavExpandedKey, value ? 1.0 : 0.0);
+            }
+        }
+    }
+
+    public double NavRailWidth => IsNavExpanded ? 180 : 48;
+
+    public Visibility NavLabelsVisibility => IsNavExpanded ? Visibility.Visible : Visibility.Collapsed;
+
+    public void ToggleNavExpansion() => IsNavExpanded = !IsNavExpanded;
+
+    private const string ThemeKey = "ui.theme";
+    private ElementTheme _elementTheme = ElementTheme.Default;
+
+    /// <summary>Visual theme for the application: Default (Auto), Light, or Dark.</summary>
+    public ElementTheme ElementTheme
+    {
+        get => _elementTheme;
+        set
+        {
+            if (SetField(ref _elementTheme, value))
+            {
+                OnPropertyChanged(nameof(SelectedThemeOption));
+                Save(ThemeKey, (int)value);
+                ApplyThemeRequested?.Invoke(value);
+            }
+        }
+    }
+
+    public event Action<ElementTheme>? ApplyThemeRequested;
+
+    public IReadOnlyList<PickerOption<ElementTheme>> ThemeOptions { get; } =
+    [
+        new("Automatic (System)", ElementTheme.Default),
+        new("Light", ElementTheme.Light),
+        new("Dark", ElementTheme.Dark)
+    ];
+
+    public PickerOption<ElementTheme>? SelectedThemeOption
+    {
+        get => ThemeOptions.FirstOrDefault(o => o.Value == ElementTheme) ?? ThemeOptions[0];
+        set
+        {
+            if (value is not null)
+            {
+                ElementTheme = value.Value;
+            }
+        }
+    }
+
+    /// <summary>Controls automatic startup with Windows via CurrentVersion\Run registry.</summary>
+    public bool StartWithWindows
+    {
+        get => StartupRegistration.IsEnabled();
+        set
+        {
+            if (StartupRegistration.IsEnabled() != value)
+            {
+                if (value)
+                {
+                    StartupRegistration.Enable(_logger);
+                }
+                else
+                {
+                    StartupRegistration.Disable(_logger);
+                }
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    /// <summary>Whether outgoing SMS messages request a delivery receipt from the network.</summary>
+    public bool DeliveryReportsEnabled
+    {
+        get => _smsManager.DeliveryReportsEnabled;
+        set
+        {
+            if (_smsManager.DeliveryReportsEnabled != value)
+            {
+                _smsManager.DeliveryReportsEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
     /// <summary>
     /// Translates the setting written by the earlier enum-based version ("Vietnamese", "English",
     /// "Auto") into a language code. Without this an existing install would silently revert to
@@ -242,6 +360,10 @@ public sealed class UiSettings : INotifyPropertyChanged
             _fontSize = ReadDouble(FontSizeKey, DefaultFontSize, 11, 28);
             _leftPanelWidth = ReadDouble(PanelWidthKey, DefaultPanelWidth, 180, 640);
             _composerHeight = ReadDouble(ComposerHeightKey, DefaultComposerHeight, 90, 600);
+            _isNavExpanded = ReadDouble(NavExpandedKey, 0.0, 0.0, 1.0) > 0.5;
+            _elementTheme = (ElementTheme)(int)ReadDouble(ThemeKey, 0, 0, 2);
+            SavedWindowWidth = (int)ReadDouble(WindowWidthKey, DefaultWindowWidth, 600, 3840);
+            SavedWindowHeight = (int)ReadDouble(WindowHeightKey, DefaultWindowHeight, 400, 2160);
         }
         catch (Exception ex)
         {

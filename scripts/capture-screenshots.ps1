@@ -144,8 +144,61 @@ finally {
         # By process id only: the copy the user actually runs must survive this script.
         Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
     }
+}
+
+Write-Host 'Launching Contacts view...'
+$env:SUPERDOC_SMS_VIEW = 'Contacts'
+$processContacts = Start-Process -FilePath $exe -PassThru
+try {
+    $deadline = (Get-Date).AddSeconds(30)
+    while ($processContacts.MainWindowHandle -eq 0 -and (Get-Date) -lt $deadline) {
+        Start-Sleep -Milliseconds 250
+        $processContacts.Refresh()
+    }
+
+    if ($processContacts.MainWindowHandle -ne 0) {
+        Start-Sleep -Seconds 4
+        [void][Win32Capture]::SetForegroundWindow($processContacts.MainWindowHandle)
+        Start-Sleep -Milliseconds 800
+
+        $targetContacts = Join-Path $OutputDirectory 'contacts.png'
+        Save-WindowImage -Handle $processContacts.MainWindowHandle -Path $targetContacts
+        Write-Host "Saved $targetContacts"
+    }
+}
+finally {
+    if (-not $processContacts.HasExited) {
+        Stop-Process -Id $processContacts.Id -Force -ErrorAction SilentlyContinue
+    }
+}
+
+Write-Host 'Launching Settings view...'
+$env:SUPERDOC_SMS_VIEW = 'Settings'
+$processSettings = Start-Process -FilePath $exe -PassThru
+try {
+    $deadline = (Get-Date).AddSeconds(30)
+    while ($processSettings.MainWindowHandle -eq 0 -and (Get-Date) -lt $deadline) {
+        Start-Sleep -Milliseconds 250
+        $processSettings.Refresh()
+    }
+
+    if ($processSettings.MainWindowHandle -ne 0) {
+        Start-Sleep -Seconds 4
+        [void][Win32Capture]::SetForegroundWindow($processSettings.MainWindowHandle)
+        Start-Sleep -Milliseconds 800
+
+        $targetSettings = Join-Path $OutputDirectory 'settings.png'
+        Save-WindowImage -Handle $processSettings.MainWindowHandle -Path $targetSettings
+        Write-Host "Saved $targetSettings"
+    }
+}
+finally {
+    if (-not $processSettings.HasExited) {
+        Stop-Process -Id $processSettings.Id -Force -ErrorAction SilentlyContinue
+    }
 
     Remove-Item Env:\SUPERDOC_SMS_DEMO -ErrorAction SilentlyContinue
+    Remove-Item Env:\SUPERDOC_SMS_VIEW -ErrorAction SilentlyContinue
 }
 
 Write-Host 'Done.'

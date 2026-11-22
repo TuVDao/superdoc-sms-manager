@@ -1,6 +1,10 @@
 {
-  "_meta": { "name": "Türkçe", "code": "tr", "rtl": false, "reviewed": false },
-
+  "_meta": {
+    "name": "Türkçe",
+    "code": "tr",
+    "rtl": false,
+    "reviewed": false
+  },
   "Messages": "Mesajlar",
   "Contacts": "Kişiler",
   "FontSizeTooltip": "Yazı boyutu",
@@ -8,7 +12,6 @@
   "ShowList": "Listeyi göster",
   "HideList": "Listeyi gizle",
   "CheckingModem": "Modem denetleniyor…",
-
   "NewMessage": "+ Yeni mesaj",
   "SearchPlaceholder": "Ad veya numara ara…",
   "SaveToContacts": "Kişilere kaydet",
@@ -25,12 +28,11 @@
   "ComposerSizerTooltip": "Yazma alanını büyütmek için yukarı sürükleyin",
   "NoRecipient": "Alıcı numarası yok.",
   "EmojiTooltip": "Emoji ekle",
-
   "StatusPending": "Bekliyor",
   "StatusSending": "Gönderiliyor",
   "StatusSent": "Gönderildi",
+  "StatusDelivered": "İletildi",
   "StatusFailed": "Başarısız",
-
   "AddContact": "+ Kişi ekle",
   "ContactInfo": "Kişi bilgileri",
   "ContactTitle": "Unvan",
@@ -50,16 +52,13 @@
   "Cancel": "İptal",
   "ContactNeedsPhone": "Telefon numarası gerekli.",
   "ContactDeleted": "Kişi silindi.",
-
   "TrayOpen": "SUPERDOC SMS Manager'ı aç",
   "TrayTestNotification": "Test bildirimi gönder",
   "TrayExit": "Çıkış",
   "TestNotificationBody": "Test bildirimi — bunu görüyorsanız bildirimler çalışıyor.",
   "UnknownNumber": "Bilinmeyen numara",
-
   "DeleteMessagesTitle": "Mesajları sil",
   "DeleteConversationsTitle": "Sohbetleri sil",
-
   "DeleteNMessages": "{0} mesajı sil",
   "DeleteNConversations": "{0} sohbeti sil",
   "ConfirmDeleteMessages": "Seçili {0} mesaj kalıcı olarak silinsin mi? Bu işlem geri alınamaz.",
@@ -83,24 +82,35 @@
   "SendOnly": " - yalnızca gönderme: {0}",
   "ModemUnavailable": "Modem kullanılamıyor: {0}",
   "ModemStatusFailed": "Modem durumu okunamadı: {0}",
-
   "ComposerCounter": "{0} karakter · {1} parça · {2}",
   "EncodingGsm": "GSM-7",
   "EncodingUnicode": "Unicode",
   "UnicodeWarning": "Emoji veya Türkçe karakter içeren mesajlar parça başına 160 yerine yalnızca 70 karakter alır ve her ek parça ayrı ücretlendirilir.",
-
   "FontSmall": "Küçük",
   "FontMedium": "Orta",
   "FontLarge": "Büyük",
   "FontXLarge": "Çok büyük",
   "FontXXLarge": "Devasa",
-
   "LanguageAuto": "Otomatik",
-
   "CheckBalance": "Bakiye sorgula",
   "BalanceCodeLabel": "USSD kodu",
   "BalanceChecking": "Operatöre soruluyor…",
   "BalanceFailed": "Bakiye okunamadı: {0}",
   "BalanceNoCode": "Operatörünüzün bakiye sorgulama kodunu girin, örneğin *101#.",
-  "SendRefusedHint": "Operatör mesajı gerekçe belirtmeden reddetti. En yaygın neden biten ön ödemeli bakiyedir: almak ücretsiz olduğu için gelen mesajlar normal şekilde ulaşmaya devam eder."
+  "SendRefusedHint": "Operatör mesajı gerekçe belirtmeden reddetti. En yaygın neden biten ön ödemeli bakiyedir: almak ücretsiz olduğu için gelen mesajlar normal şekilde ulaşmaya devam eder.",
+  "Appearance": "Görünüm",
+  "CancelPending": "Göndermeyi iptal et",
+  "Copy": "Mesajı kopyala",
+  "EditPending": "Mesajı düzenle",
+  "FixSimHotplug": "⚡ Hot-Plug SIM'i Düzelt / Donanımı Sıfırla",
+  "FixSimTooltip": "Intel XMM LTE modem sürücülerini ve WWAN hizmetini yönetici olarak yeniden başlatır",
+  "Language": "Dil",
+  "MessageCopied": "Mesaj panoya kopyalandı",
+  "ModemResetConfirmMessage": "Bu işlem dahili LTE modemi ve hücresel ağ hizmetlerini yönetici yetkileriyle yeniden başlatacaktır. Ağ bağlantıları kısa süreliğine kesilebilir. Devam etmek istiyor musunuz?",
+  "ModemResetConfirmTitle": "Hücresel Modem Donanımı Sıfırlansın mı?",
+  "ModemStatus": "Hücresel Modem",
+  "RecheckModem": "Modem ve SIM'i Yeniden Denetle",
+  "SelectText": "Metni seç",
+  "Settings": "Ayarlar",
+  "TextSize": "Metin boyutu"
 }

@@ -24,7 +24,12 @@
             <local:StringToVisibilityConverter x:Key="StringToVisibility" />
             <local:IncomingToAlignmentConverter x:Key="IncomingToAlignment" />
             <local:IncomingToBrushConverter x:Key="IncomingToBrush" />
+            <local:IncomingToForegroundBrushConverter x:Key="IncomingToForegroundBrush" />
+            <local:IncomingToBorderBrushConverter x:Key="IncomingToBorderBrush" />
             <local:SmsStatusToTextConverter x:Key="StatusToText" />
+            <local:BoolToNavBackgroundConverter x:Key="BoolToNavBackground" />
+            <local:BoolToNavForegroundConverter x:Key="BoolToNavForeground" />
+            <local:BoolToModemBrushConverter x:Key="BoolToModemBrush" />
 
             <!--
               The thread is a ListView so messages can be ticked and deleted, but a bubble must
@@ -36,6 +41,18 @@
                 <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                 <Setter Property="Padding" Value="0" />
                 <Setter Property="MinHeight" Value="0" />
+            </Style>
+
+            <!--
+              Modern rounded list item style for conversations and contacts (Task Manager / Fluent style).
+              Soft rounded corners, smooth padding, clean alignment.
+            -->
+            <Style x:Key="ModernListItemStyle" TargetType="ListViewItem">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Margin" Value="0,2" />
+                <Setter Property="Padding" Value="8,6" />
+                <Setter Property="MinHeight" Value="44" />
             </Style>
         </ResourceDictionary>
     </Application.Resources>

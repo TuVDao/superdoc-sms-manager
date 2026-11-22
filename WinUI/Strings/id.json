@@ -1,6 +1,10 @@
 {
-  "_meta": { "name": "Bahasa Indonesia", "code": "id", "rtl": false, "reviewed": false },
-
+  "_meta": {
+    "name": "Bahasa Indonesia",
+    "code": "id",
+    "rtl": false,
+    "reviewed": false
+  },
   "Messages": "Pesan",
   "Contacts": "Kontak",
   "FontSizeTooltip": "Ukuran teks",
@@ -8,7 +12,6 @@
   "ShowList": "Tampilkan daftar",
   "HideList": "Sembunyikan daftar",
   "CheckingModem": "Memeriksa modem…",
-
   "NewMessage": "+ Pesan baru",
   "SearchPlaceholder": "Cari nama atau nomor…",
   "SaveToContacts": "Simpan ke kontak",
@@ -25,12 +28,11 @@
   "ComposerSizerTooltip": "Seret ke atas untuk memperbesar kotak tulis",
   "NoRecipient": "Nomor penerima belum diisi.",
   "EmojiTooltip": "Sisipkan emoji",
-
   "StatusPending": "Menunggu",
   "StatusSending": "Mengirim",
   "StatusSent": "Terkirim",
+  "StatusDelivered": "Terkirim (Diterima)",
   "StatusFailed": "Gagal",
-
   "AddContact": "+ Tambah kontak",
   "ContactInfo": "Detail kontak",
   "ContactTitle": "Sapaan",
@@ -50,16 +52,13 @@
   "Cancel": "Batal",
   "ContactNeedsPhone": "Nomor telepon wajib diisi.",
   "ContactDeleted": "Kontak dihapus.",
-
   "TrayOpen": "Buka SUPERDOC SMS Manager",
   "TrayTestNotification": "Kirim notifikasi uji",
   "TrayExit": "Keluar",
   "TestNotificationBody": "Notifikasi uji — jika Anda melihat ini, notifikasi berfungsi.",
   "UnknownNumber": "Nomor tidak dikenal",
-
   "DeleteMessagesTitle": "Hapus pesan",
   "DeleteConversationsTitle": "Hapus percakapan",
-
   "DeleteNMessages": "Hapus {0} pesan",
   "DeleteNConversations": "Hapus {0} percakapan",
   "ConfirmDeleteMessages": "Hapus permanen {0} pesan terpilih? Tindakan ini tidak dapat dibatalkan.",
@@ -83,24 +82,35 @@
   "SendOnly": " - hanya kirim: {0}",
   "ModemUnavailable": "Modem tidak tersedia: {0}",
   "ModemStatusFailed": "Tidak dapat membaca status modem: {0}",
-
   "ComposerCounter": "{0} karakter · {1} segmen · {2}",
   "EncodingGsm": "GSM-7",
   "EncodingUnicode": "Unicode",
   "UnicodeWarning": "Pesan dengan emoji atau huruf beraksen hanya memuat 70 karakter per segmen, bukan 160, dan setiap segmen tambahan ditagih terpisah.",
-
   "FontSmall": "Kecil",
   "FontMedium": "Sedang",
   "FontLarge": "Besar",
   "FontXLarge": "Sangat besar",
   "FontXXLarge": "Raksasa",
-
   "LanguageAuto": "Otomatis",
-
   "CheckBalance": "Cek pulsa",
   "BalanceCodeLabel": "Kode USSD",
   "BalanceChecking": "Menanyakan operator…",
   "BalanceFailed": "Tidak bisa membaca pulsa: {0}",
   "BalanceNoCode": "Masukkan kode yang dipakai operator Anda untuk cek pulsa, misalnya *101#.",
-  "SendRefusedHint": "Operator menolak pesan tanpa memberi alasan. Penyebab paling umum adalah pulsa habis: menerima tetap gratis, jadi pesan masuk tetap sampai seperti biasa."
+  "SendRefusedHint": "Operator menolak pesan tanpa memberi alasan. Penyebab paling umum adalah pulsa habis: menerima tetap gratis, jadi pesan masuk tetap sampai seperti biasa.",
+  "Appearance": "Tampilan",
+  "CancelPending": "Batalkan pengiriman",
+  "Copy": "Salin pesan",
+  "EditPending": "Edit pesan",
+  "FixSimHotplug": "⚡ Perbaiki SIM Hot-Plug / Atur Ulang Perangkat Keras",
+  "FixSimTooltip": "Mulai ulang driver modem Intel XMM LTE dan layanan WWAN sebagai Administrator",
+  "Language": "Bahasa",
+  "MessageCopied": "Pesan disalin ke papan klip",
+  "ModemResetConfirmMessage": "Tindakan ini akan memulai ulang modem LTE seluler internal dan layanan jaringan dengan izin Administrator. Sambungan jaringan mungkin terputus sebentar. Lanjutkan?",
+  "ModemResetConfirmTitle": "Atur Ulang Perangkat Keras Modem Seluler?",
+  "ModemStatus": "Modem Seluler",
+  "RecheckModem": "Periksa Ulang Modem & SIM",
+  "SelectText": "Pilih teks",
+  "Settings": "Pengaturan",
+  "TextSize": "Ukuran teks"
 }

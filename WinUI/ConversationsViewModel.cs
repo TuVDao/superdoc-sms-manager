@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
 using SuperDoc.Sms.Models;
 using SuperDoc.Sms.Services;
 using System.Collections.ObjectModel;
@@ -46,6 +47,33 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
         DeleteSelectedMessagesCommand = new AsyncCommand(DeleteSelectedMessagesAsync, () => SelectedMessageCount > 0);
         DeleteSelectedConversationsCommand =
             new AsyncCommand(DeleteSelectedConversationsAsync, () => SelectedConversationCount > 0);
+        DeleteSingleConversationCommand = new DelegateCommand<Conversation>(async conv => await DeleteSingleConversationAsync(conv));
+        DismissStatusCommand = new DelegateCommand(DismissStatus);
+    }
+
+    public async Task DeleteSingleConversationAsync(Conversation? conv)
+    {
+        if (conv is null) return;
+        var name = conv.Title;
+        if (ConfirmAsync is not null && !await ConfirmAsync(_loc.DeleteConversationsTitle, _loc.ConfirmDeleteConversations(name)))
+        {
+            return;
+        }
+
+        try
+        {
+            var count = _smsManager.DeleteConversations([conv.PeerKey]);
+            if (SelectedConversation?.PeerKey == conv.PeerKey)
+            {
+                SelectedConversation = null;
+            }
+            StatusText = _loc.DeletedConversations(1, count);
+            await RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusText = _loc.DeleteFailed(ex.Message);
+        }
     }
 
     /// <summary>
@@ -75,6 +103,10 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
 
     public AsyncCommand DeleteSelectedConversationsCommand { get; }
 
+    public DelegateCommand<Conversation> DeleteSingleConversationCommand { get; }
+
+    public DelegateCommand DismissStatusCommand { get; }
+
     /// <summary>Ids of the messages ticked in the open thread.</summary>
     private readonly List<long> _selectedMessageIds = [];
 
@@ -88,6 +120,23 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
     public bool HasSelectedMessages => SelectedMessageCount > 0;
 
     public bool HasSelectedConversations => SelectedConversationCount > 0;
+
+    public bool HasMultipleSelectedConversations => SelectedConversationCount > 1;
+
+    private bool _isSelectionMode;
+    public bool IsSelectionMode
+    {
+        get => _isSelectionMode;
+        set
+        {
+            if (SetField(ref _isSelectionMode, value))
+            {
+                OnPropertyChanged(nameof(ShowDeleteBar));
+            }
+        }
+    }
+
+    public bool ShowDeleteBar => (IsSelectionMode && HasSelectedConversations) || HasMultipleSelectedConversations;
 
     public string DeleteMessagesLabel => _loc.DeleteNMessages(SelectedMessageCount);
 
@@ -224,6 +273,8 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
 
         OnPropertyChanged(nameof(SelectedConversationCount));
         OnPropertyChanged(nameof(HasSelectedConversations));
+        OnPropertyChanged(nameof(HasMultipleSelectedConversations));
+        OnPropertyChanged(nameof(ShowDeleteBar));
         OnPropertyChanged(nameof(DeleteConversationsLabel));
         DeleteSelectedConversationsCommand.RaiseCanExecuteChanged();
     }
@@ -267,6 +318,68 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
         }
     }
 
+    public async Task DeleteMessageAsync(long id)
+    {
+        var confirmed = ConfirmAsync is null || await ConfirmAsync(
+            _loc.DeleteMessagesTitle,
+            _loc.ConfirmDeleteMessages(1));
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            var deleted = await Task.Run(() => _smsManager.DeleteMessage(id));
+            StatusText = _loc.DeletedMessages(deleted ? 1 : 0);
+
+            var key = SelectedConversation?.PeerKey;
+            await RefreshAsync();
+
+            if (key is not null && Conversations.All(c => c.PeerKey != key))
+            {
+                SelectedConversation = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete message #{Id}.", id);
+            StatusText = _loc.DeleteFailed(ex.Message);
+        }
+    }
+
+    public async Task CancelPendingMessageAsync(long id)
+    {
+        try
+        {
+            await Task.Run(() => _smsManager.DeleteMessage(id));
+            StatusText = "Pending message cancelled.";
+            await RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to cancel pending message #{Id}.", id);
+            StatusText = _loc.DeleteFailed(ex.Message);
+        }
+    }
+
+    public async Task EditPendingMessageAsync(long id, string body)
+    {
+        try
+        {
+            await Task.Run(() => _smsManager.DeleteMessage(id));
+            MessageBody = body;
+            StatusText = "Message restored to draft.";
+            await RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to edit pending message #{Id}.", id);
+            StatusText = _loc.DeleteFailed(ex.Message);
+        }
+    }
+
     private async Task DeleteSelectedConversationsAsync()
     {
         var keys = _selectedConversationKeys.ToList();
@@ -296,6 +409,11 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
         try
         {
             var deleted = await Task.Run(() => _smsManager.DeleteConversations(keys));
+            IsSelectionMode = false;
+            foreach (var c in Conversations)
+            {
+                c.IsSelected = false;
+            }
             SetSelectedConversations([]);
 
             if (SelectedConversation is not null && keys.Contains(SelectedConversation.PeerKey))
@@ -318,21 +436,31 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
         get => _selectedConversation;
         set
         {
-            if (SetField(ref _selectedConversation, value))
+            if (_selectedConversation != value)
             {
-                if (value is not null)
+                SaveCurrentDraft();
+                if (SetField(ref _selectedConversation, value))
                 {
-                    _isComposingNew = false;
-                    OnPropertyChanged(nameof(IsComposingNew));
-                }
+                    if (value is not null)
+                    {
+                        _isComposingNew = false;
+                        OnPropertyChanged(nameof(IsComposingNew));
+                        LoadDraftFor(value.PeerKey);
+                    }
+                    else if (!_isComposingNew)
+                    {
+                        LoadDraftFor(null);
+                    }
 
-                OnPropertyChanged(nameof(HasSelection));
-                OnPropertyChanged(nameof(ThreadTitle));
-                OnPropertyChanged(nameof(ThreadSubtitle));
-                OnPropertyChanged(nameof(CanEditRecipient));
-                LoadThread();
-                RaiseSendCanExecute();
-                ScheduleMarkRead();
+                    OnPropertyChanged(nameof(HasSelection));
+                    OnPropertyChanged(nameof(ThreadTitle));
+                    OnPropertyChanged(nameof(ThreadSubtitle));
+                    OnPropertyChanged(nameof(CanEditRecipient));
+                    OnPropertyChanged(nameof(CanReplyToCurrent));
+                    LoadThread();
+                    RaiseSendCanExecute();
+                    ScheduleMarkRead();
+                }
             }
         }
     }
@@ -349,6 +477,7 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
             {
                 OnPropertyChanged(nameof(HasSelection));
                 OnPropertyChanged(nameof(CanEditRecipient));
+                OnPropertyChanged(nameof(CanReplyToCurrent));
                 OnPropertyChanged(nameof(ThreadTitle));
                 OnPropertyChanged(nameof(ThreadSubtitle));
             }
@@ -356,6 +485,9 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
     }
 
     public bool CanEditRecipient => IsComposingNew;
+
+    /// <summary>False when the open thread is a broadcast or alphanumeric OTP sender that cannot receive replies.</summary>
+    public bool CanReplyToCurrent => IsComposingNew || (SelectedConversation?.IsReplyable ?? true);
 
     public string ThreadTitle => IsComposingNew
         ? _loc.NewMessageTitle
@@ -388,7 +520,41 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
                 RaiseSendCanExecute();
                 OnPropertyChanged(nameof(ComposerCounter));
                 OnPropertyChanged(nameof(ShowUnicodeWarning));
+                SaveCurrentDraft();
             }
+        }
+    }
+
+    private void SaveCurrentDraft()
+    {
+        var key = IsComposingNew ? "new" : _selectedConversation?.PeerKey;
+        if (!string.IsNullOrEmpty(key))
+        {
+            _smsManager.SetSetting($"draft.{key}", _messageBody ?? string.Empty);
+        }
+    }
+
+    private void LoadDraftFor(string? peerKey)
+    {
+        if (string.IsNullOrEmpty(peerKey))
+        {
+            _messageBody = string.Empty;
+        }
+        else
+        {
+            _messageBody = _smsManager.GetSetting($"draft.{peerKey}", string.Empty);
+        }
+        OnPropertyChanged(nameof(MessageBody));
+        RaiseSendCanExecute();
+    }
+
+    public IReadOnlyList<Contact> AvailableContacts => _smsManager.GetContacts();
+
+    public void SelectRecipientContact(Contact? contact)
+    {
+        if (contact is not null)
+        {
+            NewRecipient = contact.PhoneNumber;
         }
     }
 
@@ -441,25 +607,54 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
         }
     }
 
+    private DispatcherTimer? _statusTimer;
+
     public string StatusText
     {
         get => _statusText;
-        set => SetField(ref _statusText, value);
+        set
+        {
+            if (SetField(ref _statusText, value))
+            {
+                OnPropertyChanged(nameof(HasStatusText));
+                RunOnUi(() =>
+                {
+                    _statusTimer?.Stop();
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        _statusTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+                        _statusTimer.Tick += (_, _) =>
+                        {
+                            _statusTimer?.Stop();
+                            StatusText = string.Empty;
+                        };
+                        _statusTimer.Start();
+                    }
+                });
+            }
+        }
     }
+
+    public bool HasStatusText => !string.IsNullOrEmpty(_statusText);
+
+    public void DismissStatus() => StatusText = string.Empty;
 
     public void StartNewConversation()
     {
+        SaveCurrentDraft();
         SelectedConversation = null;
         NewRecipient = string.Empty;
-        MessageBody = string.Empty;
         IsComposingNew = true;
         ThreadMessages.Clear();
+        LoadDraftFor("new");
     }
 
-    private void CancelNewConversation()
+    public void CancelNewConversation()
     {
+        SaveCurrentDraft();
         IsComposingNew = false;
         NewRecipient = string.Empty;
+        LoadDraftFor(_selectedConversation?.PeerKey);
     }
 
     /// <summary>
@@ -649,7 +844,12 @@ public sealed class ConversationsViewModel : INotifyPropertyChanged
                 (_smsManager.SendSms(recipient, body), _smsManager.EstimateSegmentCount(body)));
 
             StatusText = _loc.Queued(id, recipient, segments);
+            var draftKey = IsComposingNew ? "new" : _selectedConversation?.PeerKey;
             MessageBody = string.Empty;
+            if (!string.IsNullOrEmpty(draftKey))
+            {
+                _smsManager.SetSetting($"draft.{draftKey}", string.Empty);
+            }
 
             // A brand-new thread only exists after the first message is stored, so select it
             // once the refresh has brought it in.

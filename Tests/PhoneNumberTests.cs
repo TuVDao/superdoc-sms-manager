@@ -17,6 +17,8 @@ public class PhoneNumberTests
     [InlineData("44", "07911123456", "447911123456")] // United Kingdom
     [InlineData("81", "09012345678", "819012345678")] // Japan
     [InlineData("84", "0901234567", "84901234567")]   // Vietnam
+    [InlineData("251", "0911234567", "251911234567")] // Ethiopia (Ethio Telecom)
+    [InlineData("251", "0712345678", "251712345678")] // Ethiopia (Safaricom)
     public void LeadingZeroExpandsToTheConfiguredCountry(string country, string typed, string expected)
     {
         using var _ = new CountryScope(country);
@@ -35,6 +37,8 @@ public class PhoneNumberTests
     }
 
     [Theory]
+    [InlineData("251", "0911234567", "+251911234567", "251 911 234 567", "00251911234567", "911234567")] // Ethio Telecom
+    [InlineData("251", "0712345678", "+251712345678", "251 712 345 678", "00251712345678", "712345678")] // Safaricom Ethiopia
     [InlineData("49", "0151234567", "+49151234567", "49 151 234567", "004915 1234567")]
     [InlineData("84", "0901234567", "+84901234567", "901234567", "0084901234567")]
     [InlineData("1", "2125551234", "+1 (212) 555-1234", "12125551234", "0012125551234")]
@@ -110,6 +114,11 @@ public class PhoneNumberTests
     [InlineData("9199")]
     [InlineData("199")]
     [InlineData("191")]
+    [InlineData("804")]
+    [InlineData("704")]
+    [InlineData("999")]
+    [InlineData("777")]
+    [InlineData("994")]
     public void ShortCodesNeverReceiveACountryCode(string code)
     {
         using var _ = new CountryScope("84");
