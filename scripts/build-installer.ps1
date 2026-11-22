@@ -52,6 +52,11 @@ $isccLocations = @(
 if ($isccLocations.Count -gt 0) {
     $iscc = $isccLocations[0]
     Write-Host "Found Inno Setup compiler: $iscc" -ForegroundColor Green
+    $outputExe = Join-Path $dist "SuperDoc-SmsManager-v2.0.0-Setup-x64.exe"
+    if (Test-Path $outputExe) {
+        Remove-Item $outputExe -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 2
+    }
     Write-Host "Compiling setup installer..."
     & $iscc $issFile
     if ($LASTEXITCODE -eq 0) {
