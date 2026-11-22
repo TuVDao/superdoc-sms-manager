@@ -1065,22 +1065,6 @@ public sealed partial class MainWindow : Window
             }
         };
 
-        void OnIncomingSms(object? sender, SmsMessage sms)
-        {
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                progressRing.IsActive = false;
-                progressRing.Visibility = Visibility.Collapsed;
-                var senderName = string.IsNullOrWhiteSpace(sms.From) ? "Carrier" : sms.From;
-                messageBlock.Text = $"{messageBlock.Text}\n\n📨 Carrier response from {senderName}:\n{sms.Body}";
-                if (dialog.CloseButtonText == "Cancel")
-                {
-                    dialog.CloseButtonText = "Done";
-                }
-            });
-        }
-
-        _smsManager.MessageReceived += OnIncomingSms;
         try
         {
             var showTask = dialog.ShowAsync();
@@ -1089,7 +1073,6 @@ public sealed partial class MainWindow : Window
         }
         finally
         {
-            _smsManager.MessageReceived -= OnIncomingSms;
             session.Dispose();
         }
     }

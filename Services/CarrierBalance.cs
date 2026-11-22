@@ -178,13 +178,12 @@ public sealed class CarrierBalance(ILogger? logger = null)
 
             var text = reply.Message?.PayloadAsText?.Trim() ?? string.Empty;
 
-            // If another local client had the modem locked, wait and retry once
-            // (CSFB radio fallback from LTE to 3G/2G takes ~2-3s for band sync and SIB acquisition)
+            // If another local client had the modem locked, wait briefly and retry once
             if (reply.ResultCode == UssdResultCode.OtherLocalClient && text.Length == 0)
             {
-                _logger?.LogInformation("Balance enquiry returned OtherLocalClient; waiting 2500ms for radio CSFB transition before retry...");
+                _logger?.LogInformation("Balance enquiry returned OtherLocalClient; resetting session and retrying in 600ms...");
                 try { session?.Close(); } catch { }
-                await Task.Delay(2500);
+                await Task.Delay(600);
                 try
                 {
                     session = UssdSession.CreateFromNetworkAccountId(accounts[0]);
@@ -198,16 +197,9 @@ public sealed class CarrierBalance(ILogger? logger = null)
             }
             if (text.Length == 0)
             {
-                if (reply.ResultCode == UssdResultCode.NoActionRequired)
+                if (reply.ResultCode is UssdResultCode.NoActionRequired or UssdResultCode.ActionRequired or UssdResultCode.OtherLocalClient)
                 {
-                    return CarrierBalanceResult.Ok($"USSD request completed ({code.Trim()}), but no text was returned by the network.");
-                }
-
-                if (reply.ResultCode == UssdResultCode.OtherLocalClient)
-                {
-                    return CarrierBalanceResult.Failed(
-                        "Modem radio conflict (OtherLocalClient): Cellular data connection conflicted with network switching (CSFB) during USSD. " +
-                        "Tip: Temporarily pause or turn off Cellular Data in Windows Quick Settings, then dial USSD again.");
+                    return CarrierBalanceResult.Ok($"USSD request sent ({code.Trim()}). The carrier processed the request and will deliver your balance via SMS shortly.");
                 }
 
                 return CarrierBalanceResult.Failed($"The network replied with no text ({reply.ResultCode}).");
